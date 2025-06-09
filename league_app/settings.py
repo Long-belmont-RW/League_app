@@ -33,8 +33,13 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     #My Apps
     'users',
+    'league',
+
 
     #Third Party
+    # 'allauth',
+    # 'allauth.account',
+    # 'allauth.socialaccount',
 
     #Default
     'django.contrib.admin',
@@ -126,3 +131,19 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#SITE ID for allauth
+SITE_ID = 1
+
+#configuration for static files
+
+STATICFILES_DIRS = (
+BASE_DIR / 'static',
+)
+
+MEDIA_ROOT = BASE_DIR.parent / 'static/images'
+MEDIA_URL = '/media/'
+
+
+#Custom user model
+AUTH_USER_MODEL = "users.User"
