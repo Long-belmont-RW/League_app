@@ -144,6 +144,11 @@ BASE_DIR / 'static',
 MEDIA_ROOT = BASE_DIR.parent / 'static/images'
 MEDIA_URL = '/media/'
 
+AUTHENTICATION_BACKENDS = [
+    'users.authentication.EmailAuthBackend',
+    'users.authentication.MultiRoleAuthBackend',  # if using custom backend
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 #Custom user model
 AUTH_USER_MODEL = "users.User"
