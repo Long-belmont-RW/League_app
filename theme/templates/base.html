@@ -1,0 +1,32 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Django Tailwind</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	{% tailwind_css %}
+
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
+</head>
+
+<body class="bg-gray-100 text-gray-800"> 
+
+	<!-- NAVBAR -->
+	{% include 'navbar.html'%}
+
+	<!-- MAIN CONTENT -->
+	<main class="p-4 max-w-5xl mx-auto">
+		{% block content %}
+		{% endblock %}
+	</main>
+
+	<!-- FOOTER -->
+	
+	<!-- Flowbite JS -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+</body>
+
+</html>

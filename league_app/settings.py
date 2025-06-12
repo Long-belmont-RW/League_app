@@ -37,9 +37,10 @@ INSTALLED_APPS = [
 
 
     #Third Party
-    # 'allauth',
-    # 'allauth.account',
-    # 'allauth.socialaccount',
+    'tailwind',
+    'theme',
+    
+
 
     #Default
     'django.contrib.admin',
@@ -145,10 +146,19 @@ MEDIA_ROOT = BASE_DIR.parent / 'static/images'
 MEDIA_URL = '/media/'
 
 AUTHENTICATION_BACKENDS = [
-    'users.authentication.EmailAuthBackend',
-    'users.authentication.MultiRoleAuthBackend',  # if using custom backend
+   'users.authentication.EmailMultiRoleAuthBackend',  #custom backend
     'django.contrib.auth.backends.ModelBackend',
 ]
 
 #Custom user model
 AUTH_USER_MODEL = "users.User"
+
+#Configure tailwind
+TAILWIND_APP_NAME = 'theme'
+INTERNAL_IPS = ['127.0.0.1']
+
+NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
+
+#Redirect after login
+LOGIN_REDIRECT_URL = '/home/'
+LOGIN_REDIRECT_URL = '/login/'
