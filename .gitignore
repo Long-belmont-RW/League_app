@@ -17,3 +17,6 @@ venv/
 env/
 
 # VSCode
+
+#git
+.gitignore
