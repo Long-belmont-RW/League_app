@@ -11,8 +11,8 @@ class Personel(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     bio = models.TextField(max_length=250, null=True, blank=True)
-    birth = models.DateField()
-    picture = models.ImageField(upload_to='personel_photos/', blank=True)
+    birth = models.DateField(null=True, blank=True)
+    picture = models.ImageField(upload_to='personel_photos/', blank=True, null=True)
 
 
     class Meta:
@@ -47,8 +47,7 @@ class MatchStatus(models.TextChoices):
     CANCELLED = "CAN", "Cancelled"
 
 
-    status = models.CharField(max_length=3, choices=MatchStatus.choices, default=MatchStatus.SCHEDULED)
-
+   
 
 # --- League/Season Model ---
 class League(models.Model):  
@@ -226,7 +225,7 @@ class TeamSeasonParticipation(models.Model):
 # --- Player Stats Per Match ---
 class PlayerStats(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
-    player_participation = models.ForeignKey(PlayerSeasonParticipation, on_delete=models.CASCADE, related_name='player_stats' )
+    player_participation = models.ForeignKey(PlayerSeasonParticipation, on_delete=models.CASCADE, related_name='player_stats', null=True )
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     goals = models.PositiveIntegerField(default=0)
     assists = models.PositiveIntegerField(default=0)
