@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h2 class="text-2xl font-bold mb-4">League Table - {{ league }}</h2>
+
+    <table class="min-w-full border border-gray-200 shadow-md">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="p-2">#</th>
+                <th class="p-2">Team</th>
+                <th class="p-2">Played</th>
+                <th class="p-2">Wins</th>
+                <th class="p-2">Draws</th>
+                <th class="p-2">Losses</th>
+                <th class="p-2">GF</th>
+                <th class="p-2">GA</th>
+                <th class="p-2">GD</th>
+                <th class="p-2">Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in standings %}
+            <tr class="text-center {% cycle 'bg-white' 'bg-gray-50' %}">
+                <td class="p-2">{{ forloop.counter }}</td>
+                <td class="p-2 font-semibold">{{ t.team.name }}</td>
+                <td class="p-2">{{ t.matches_played }}</td>
+                <td class="p-2">{{ t.wins }}</td>
+                <td class="p-2">{{ t.draws }}</td>
+                <td class="p-2">{{ t.losses }}</td>
+                <td class="p-2">{{ t.goals_scored }}</td>
+                <td class="p-2">{{ t.goals_conceded }}</td>
+                <td class="p-2">{{ t.goal_difference }}</td>
+                <td class="p-2 font-bold">{{ t.points }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

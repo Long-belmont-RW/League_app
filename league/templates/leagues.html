@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content%}
+    {% for league in leagues %}
+        <h1><a href="{% url 'league_table' league.id%}">{{league.year}} ({{league.session}})</a></h1>
+    {% empty %}
+        <p><i>No leagues available</i></p>
+    {% endfor %}
+{% endblock%}
