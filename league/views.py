@@ -1,7 +1,9 @@
-from django.shortcuts import render, get_object_or_404
-from .models import League, Team, TeamSeasonParticipation
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import League, Team, TeamSeasonParticipation, Match
 
-# Create your views here.
+from league.forms import MatchForm
+from league.services import update_league_table
+from django.contrib import messages
 
 
 def home(request):
@@ -51,3 +53,46 @@ def team(request, team_id):
     }
 
     return render(request, 'team_details.html', context)
+
+
+def match_form_view(request, match_id=None):
+    
+    if match_id:
+        match = get_object_or_404(Match, id=match_id)
+        is_edit = True
+    
+    else:
+        match=None
+        is_edit = False
+    
+    if request.method == 'POST':
+        form = MatchForm(request.POST, instance=match)
+        if form.is_valid():
+            match = form.save()
+            if match.status == "FIN":
+                update_league_table(match.season)
+            
+           
+            
+            messages.success(request, f"Match {'updated' if is_edit else 'created'} successfully.")
+            return redirect('match_list')
+        else:
+            messages.error(request, "There was an error with your submission.")
+            print(form.errors) 
+    
+    else: 
+
+        form  = MatchForm(instance=match)
+    
+    context = {
+        'form':form,
+        'is_edit': is_edit,
+        'match': match
+    }
+
+    return render(request, 'match_form.html', context)
+
+def match_list_view(request):
+    matches = Match.objects.select_related('home_team', 'away_team', 'season').order_by('-date')
+    return render(request, 'match_list.html', {'matches': matches})
+

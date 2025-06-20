@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8">
+    <h1 class="text-2xl font-bold mb-4">All Matches</h1>
+    <a href="{% url 'create_match' %}" class="inline-block mb-4 px-4 py-2 bg-green-600 text-white rounded">+ Create New
+        Match</a>
+    <table class="w-full bg-white shadow rounded overflow-hidden">
+        <thead class="bg-gray-100 text-sm text-gray-600">
+            <tr>
+                <th class="p-3">Date</th>
+                <th class="p-3">Match</th>
+                <th class="p-3">Score</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for match in matches %}
+            <tr class="border-t hover:bg-gray-50">
+                <td class="p-3">{{ match.date|date:"M d, H:i" }}</td>
+                <td class="p-3">{{ match.home_team }} vs {{ match.away_team }}</td>
+                <td class="p-3">{{ match.home_score }} - {{ match.away_score }}</td>
+                <td class="p-3">{{ match.get_status_display }}</td>
+                <td class="p-3">
+                    <a href="{% url 'edit_match' match.id %}" class="text-blue-600 hover:underline">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td class="p-4 text-center" colspan="5">No matches yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

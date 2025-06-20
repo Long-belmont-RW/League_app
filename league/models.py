@@ -131,8 +131,8 @@ class Match(models.Model):
 
     def __str__(self):
         return f"{self.home_team} vs {self.away_team} on {self.date.strftime('%Y-%m-%d')}"
-
-
+    
+   
     
 
 class PlayerSeasonParticipation(models.Model):
