@@ -12,5 +12,19 @@
 
       <a href="{% url 'teams' %}" class="mt-6 inline-block text-sm text-blue-600 hover:underline">← Back to all teams</a>
     </div>
+
+    <div>
+      <ul>
+         {% for player in current_players %}
+            <li>
+              {{player.last_name}}
+            </li>
+        {% empty %}
+            <p>No players available</p>
+        {% endfor %}
+      </ul>
+     
+       
+    </div>
   </div>
 {% endblock content %}

@@ -29,6 +29,8 @@ def league_table_view(request, league_id):
 
 def team_view(request):
     teams = Team.objects.all()
+    
+    
 
     context = {
         'teams': teams
@@ -37,10 +39,15 @@ def team_view(request):
     return render(request, 'teams.html', context)
 
 def team(request, team_id):
+    """Gets the details of a registered team"""
+
     team = get_object_or_404(Team, id=team_id)
+    league = League.objects.all().first()
+    current_players = team.get_current_players(league)
 
     context = {
-        'team':team
+        'team':team,
+        'current_players':current_players
     }
 
     return render(request, 'team_details.html', context)

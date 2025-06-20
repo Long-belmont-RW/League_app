@@ -1,8 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mx-auto p-6">
-    <h2 class="text-2xl font-bold mb-4">League Table - {{ league }}</h2>
+<div class="container mx-auto p-6 place-content-center">
+    <h2 class="text-2xl font-bold mb-4 ">League Table -{% if league.session == 'F' %}
+    (Fall)
+    {% else %}
+    (Spring)
+    {% endif %} {{league.year }}</h2>
 
     <table class="min-w-full border border-gray-200 shadow-md">
         <thead class="bg-gray-100">
@@ -23,7 +27,7 @@
             {% for t in standings %}
             <tr class="text-center {% cycle 'bg-white' 'bg-gray-50' %}">
                 <td class="p-2">{{ forloop.counter }}</td>
-                <td class="p-2 font-semibold">{{ t.team.name }}</td>
+                <td class="p-2 font-semibold"><a href="{% url 'team' t.team.id%}">{{ t.team.name }}</a></td>
                 <td class="p-2">{{ t.matches_played }}</td>
                 <td class="p-2">{{ t.wins }}</td>
                 <td class="p-2">{{ t.draws }}</td>
