@@ -40,5 +40,10 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <a href="{% url 'top_stats' league.id %}" class="btn bg-blue-500 text-white rounded-full px-4 my-5 ">
+        View Top Scorers & Assisters
+    </a>
+      
 </div>
 {% endblock %}

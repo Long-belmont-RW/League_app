@@ -1,6 +1,7 @@
 from django.db import models
+
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import Sum, Q
 
 from datetime import date 
 from dateutil import relativedelta
@@ -13,6 +14,7 @@ class Personel(models.Model):
     bio = models.TextField(max_length=250, null=True, blank=True)
     birth = models.DateField(null=True, blank=True)
     picture = models.ImageField(upload_to='personel_photos/', blank=True, null=True)
+    is_active = models.BooleanField(verbose_name='active', default=True) #Identify an personel
 
 
     class Meta:
@@ -78,6 +80,8 @@ class Team(models.Model):
             playerseasonparticipation__league=league,
             playerseasonparticipation__is_active=True
         )
+    
+ 
 
 
     def __str__(self):
@@ -94,10 +98,14 @@ class Team(models.Model):
 class Coach(Personel):  
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='coaches')
     role = models.CharField(max_length=1, choices=CoachRoles.choices, default=CoachRoles.ASSISTANT)
+
+    class Meta:
+        verbose_name_plural = "Coaches"
     
    
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.get_role_display()})"
+    
 
 
 # --- Player Model ---
@@ -110,7 +118,7 @@ class Player(Personel):
     ]
 
     position = models.CharField(max_length=2, choices=POSITION_CHOICES)
-    is_active = models.BooleanField(verbose_name='active', default=True)
+    
 
 
 # --- Match Model ---
@@ -123,18 +131,53 @@ class Match(models.Model):
     date = models.DateTimeField()
     status = models.CharField(max_length=3, choices=MatchStatus.choices, default=MatchStatus.SCHEDULED)
 
+    class Meta:
+        verbose_name_plural = "Matches"
 
+
+    def check_duplicates(self):
+        """ prevents more than two matches between the same two teams in the same league"""
+        if self.home_team.id and self.away_team.id and self.season.id:
+            existing_matches = Match.objects.filter(
+            season=self.season
+            ).filter(
+            Q(home_team=self.home_team, away_team=self.away_team) |
+            Q(home_team=self.away_team, away_team=self.away_team)
+            )
+
+            #Prevents a team from playing two home games against thesame oponent
+            home_matches = Match.objects.filter(
+                season=self.season, 
+                home_team=self.home_team,
+                away_team=self.away_team
+            )
+
+        if self.pk:
+            existing_matches = existing_matches.exclude(pk=self.pk)
+            home_matches = home_matches.exclude(pk=self.pk)
+
+
+        if existing_matches.count() >= 2:
+            raise ValidationError("These teams already played each other twice in this league")
+        
+        if home_matches.exists():
+            raise ValidationError(f"{self.home_team} has already hosted {self.away_team} in this league.")
+        
+     
     def clean(self):
         """Ensures a team doesn't play against itself"""
         if self.home_team == self.away_team:
             raise ValidationError("A team cannot play against itself")
-
+        
+        #Run helper method
+        self.check_duplicates()
+        
     def __str__(self):
         return f"{self.home_team} vs {self.away_team} on {self.date.strftime('%Y-%m-%d')}"
     
    
     
-
+#----Tracks players performance per season---
 class PlayerSeasonParticipation(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
@@ -170,26 +213,26 @@ class PlayerSeasonParticipation(models.Model):
         self.matches_played = self.player_stats.count()
         self.save()
 
-
-
     class Meta:
         unique_together = ('player', 'team', 'league')
     
     def __str__(self):
         return f"{self.player} in {self.league}"
 
-    class CoachSeasonParticipation(models.Model):
-        coach = models.ForeignKey(Coach, on_delete=models.CASCADE)
-        team = models.ForeignKey(Team, on_delete=models.CASCADE)
-        league = models.ForeignKey(League, on_delete=models.CASCADE)
-        joined_at = models.DateField(auto_now_add=True)
-        left_at = models.DateField(null=True, blank=True)
-
-        class Meta:
-            unique_together = ['coach', 'team', 'league']
+#---Tracks Coach performance per season---
+class CoachSeasonParticipation(models.Model):
+    coach = models.ForeignKey(Coach, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    league = models.ForeignKey(League, on_delete=models.CASCADE)
+    joined_at = models.DateField(auto_now_add=True)
+    left_at = models.DateField(null=True, blank=True)
 
 
+    class Meta:
+        unique_together = ['coach', 'team', 'league']
 
+
+#---Tracks Team performance per season---
 class TeamSeasonParticipation(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
@@ -227,10 +270,10 @@ class PlayerStats(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
     player_participation = models.ForeignKey(PlayerSeasonParticipation, on_delete=models.CASCADE, related_name='player_stats', null=True )
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    goals = models.PositiveIntegerField(default=0)
-    assists = models.PositiveIntegerField(default=0)
-    yellow_cards = models.PositiveIntegerField(default=0)
-    red_cards = models.PositiveIntegerField(default=0)
+    goals = models.PositiveIntegerField(default=0, blank=True)
+    assists = models.PositiveIntegerField(default=0, blank=True)
+    yellow_cards = models.PositiveIntegerField(default=0, blank=True)
+    red_cards = models.PositiveIntegerField(default=0, blank=True)
 
     class Meta:
         unique_together = ['match', 'player']
@@ -238,15 +281,15 @@ class PlayerStats(models.Model):
             models.Index(fields=['match', 'player']),
             models.Index(fields=['player_participation']),
         ]
-
+        verbose_name_plural = "Player Stats"
     def clean(self):
+        # Player model must match a referenced player model in PlayerStats model
         if self.player != self.player_participation.player:
             raise ValidationError("Player must match with the participation record")
         
+        #League/Season model must match reference league model in PlayerStats model
         if self.match.season != self.player_participation.league:
             raise ValidationError("Match and participation must be in the same league")
-
-
 
     def __str__(self):
         return f"{self.player} stats in {self.match}"

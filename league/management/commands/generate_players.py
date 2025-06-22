@@ -33,7 +33,7 @@ class Command(BaseCommand):
         
         
         
-        for team in tqdm(teams, desc="Generating players ofr teams", unit="team"):     
+        for team in tqdm(teams, desc="Generating players for teams", unit="team"):     
 
             for i in tqdm(range(11), desc=f"{team.name}", leave=False):
                 #Generate random birth dates between 18 and 30 years ago

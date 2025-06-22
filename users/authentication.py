@@ -11,7 +11,7 @@ class EmailMultiRoleAuthBackend(ModelBackend):
             user = User.objects.get(email=username)
             if user.check_password(password):
                 # Multi-role logic: check if user has at least one active role
-                if not any([user.is_fan, user.is_player, user.is_coach]):
+                if not any([user.is_fan, user.is_player, user.is_coach]) and not user.is_admin:
                     return None
                 return user
         except User.DoesNotExist:

@@ -19,11 +19,12 @@ class User(AbstractUser):
     is_coach = models.BooleanField(default=False)
     is_player = models.BooleanField(default=False)
     is_fan = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email' #email would be used for authentication
     REQUIRED_FIELDS = ['username', 'gender', 'birth']
 
-    
+    @property 
     def age(self):
         if not self.birth:
             return "Age not provided"
@@ -42,7 +43,7 @@ class User(AbstractUser):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,)
     bio = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='coach_profiles/', blank=True, null=True)
+    image = models.ImageField(upload_to='user_profiles/', blank=True, null=True)
 
     coach = models.OneToOneField(Coach, on_delete=models.SET_NULL, null=True, blank=True)
     player = models.OneToOneField(Player, on_delete=models.SET_NULL, null=True, blank=True)
@@ -64,6 +65,8 @@ class UserProfile(models.Model):
         
         if self.user.is_coach:
             roles.append('Fan')
+        
+
         
         return roles
 

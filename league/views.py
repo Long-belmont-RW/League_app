@@ -1,9 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import League, Team, TeamSeasonParticipation, Match
+from django.db.models import Sum
+from django.contrib import messages
+
+
+from .models import \
+    (League, Team, TeamSeasonParticipation, Match, PlayerSeasonParticipation)
 
 from league.forms import MatchForm
 from league.services import update_league_table
-from django.contrib import messages
+
 
 
 def home(request):
@@ -70,7 +75,16 @@ def match_form_view(request, match_id=None):
         if form.is_valid():
             match = form.save()
             if match.status == "FIN":
+                #update League table
                 update_league_table(match.season)
+
+                #find all players who played in this match
+                participations = PlayerSeasonParticipation.objects.filter(
+                    player_stats__match=match
+                ).distinct()
+
+                for participation in participations:
+                    participations.update_totals()
             
            
             
@@ -92,7 +106,45 @@ def match_form_view(request, match_id=None):
 
     return render(request, 'match_form.html', context)
 
+def delete_match(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    if request.method == 'POST':
+        match.delete()
+        messages.success(request, f"{match} was successfully deleted.")
+        return redirect('match_list')
+
+    return render(request, 'delete_match.html', {'match': match})
+
+
+
 def match_list_view(request):
     matches = Match.objects.select_related('home_team', 'away_team', 'season').order_by('-date')
     return render(request, 'match_list.html', {'matches': matches})
+
+
+def top_stats_view(request, league_id):
+    league = League.objects.get(id=league_id)
+
+    top_scorers = PlayerSeasonParticipation.objects.filter(league=league)\
+        .select_related('player')\
+        .annotate(total_goals=Sum('goals'))\
+        .order_by('-total_goals')[:10]
+    
+    top_assisters = PlayerSeasonParticipation.objects.filter(league=league)\
+        .select_related('player')\
+        .annotate(total_assists=Sum('assists'))\
+        .order_by('-total_assists')[:10]
+
+    context = {
+        'league': league,
+        'top_scorers': top_scorers,
+        'top_assisters': top_assisters
+    }
+
+    return render(request, 'top_stats.html', context)
+
+
+
+
+
 

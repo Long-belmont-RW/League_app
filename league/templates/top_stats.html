@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+
+{% block content%}
+<h2 class="text-xl font-bold mb-4">Top Scorers - {{ league }}</h2>
+<ol>
+    {% for stat in top_scorers %}
+    <li>{{ stat.player }} — {{ stat.total_goals }} goals</li>
+    {% endfor %}
+</ol>
+
+<h2 class="text-xl font-bold mt-8 mb-4">Top Assisters - {{ league }}</h2>
+<ol>
+    {% for stat in top_assisters %}
+    <li>{{ stat.player }} — {{ stat.total_assists }} assists</li>
+    {% endfor %}
+</ol>
+{% endblock content%}
