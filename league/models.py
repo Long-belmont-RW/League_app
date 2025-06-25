@@ -137,20 +137,23 @@ class Match(models.Model):
 
     def check_duplicates(self):
         """ prevents more than two matches between the same two teams in the same league"""
-        if self.home_team.id and self.away_team.id and self.season.id:
-            existing_matches = Match.objects.filter(
-            season=self.season
-            ).filter(
-            Q(home_team=self.home_team, away_team=self.away_team) |
-            Q(home_team=self.away_team, away_team=self.away_team)
-            )
+        #Run only when required data is available
+        if not (self.home_team_id and self.away_team_id and self.season_id):
+            return
+        
+        existing_matches = Match.objects.filter(
+        season_id=self.season_id
+        ).filter(
+        Q(home_team_id=self.home_team_id, away_team_id=self.away_team_id) |
+        Q(home_team_id=self.away_team_id, away_team=self.home_team_id)
+        )
 
-            #Prevents a team from playing two home games against thesame oponent
-            home_matches = Match.objects.filter(
-                season=self.season, 
-                home_team=self.home_team,
-                away_team=self.away_team
-            )
+        #Prevents a team from playing two home games against thesame oponent
+        home_matches = Match.objects.filter(
+            season_id=self.season_id, 
+            home_team_id=self.home_team_id,
+            away_team_id=self.away_team_id
+        )
 
         if self.pk:
             existing_matches = existing_matches.exclude(pk=self.pk)
@@ -161,16 +164,35 @@ class Match(models.Model):
             raise ValidationError("These teams already played each other twice in this league")
         
         if home_matches.exists():
-            raise ValidationError(f"{self.home_team} has already hosted {self.away_team} in this league.")
-        
+            raise ValidationError(f"{self.home_team.name} has already hosted {self.away_team.name} in this league.")
+    
+    def check_active_status(self):     
+        # Ensure both teams are active in the selected season
+        if self.season_id and self.home_team_id and self.away_team_id:
+            active_teams = set(PlayerSeasonParticipation.objects.filter(
+                league_id=self.season_id,  # Fixed: was leagueid=self.season
+                is_active=True
+            ).values_list('team_id', flat=True))
+            
+            if self.home_team_id not in active_teams:  # Fixed: use _id instead of .id
+                raise ValidationError(f"Home team is not active in this season")
+            
+            if self.away_team_id not in active_teams:  # Fixed: use _id instead of .id
+                raise ValidationError(f"Away team is not active in this season")
+            
+            
      
     def clean(self):
         """Ensures a team doesn't play against itself"""
-        if self.home_team == self.away_team:
-            raise ValidationError("A team cannot play against itself")
         
-        #Run helper method
+        # Safely compare team IDs
+        if self.home_team_id and self.away_team_id:
+            if self.home_team_id == self.away_team_id:
+                raise ValidationError("Home team and away team must be different.")
+                
+        #Run helper methods
         self.check_duplicates()
+     
         
     def __str__(self):
         return f"{self.home_team} vs {self.away_team} on {self.date.strftime('%Y-%m-%d')}"
@@ -282,6 +304,8 @@ class PlayerStats(models.Model):
             models.Index(fields=['player_participation']),
         ]
         verbose_name_plural = "Player Stats"
+    
+     
     def clean(self):
         # Player model must match a referenced player model in PlayerStats model
         if self.player != self.player_participation.player:
@@ -290,6 +314,7 @@ class PlayerStats(models.Model):
         #League/Season model must match reference league model in PlayerStats model
         if self.match.season != self.player_participation.league:
             raise ValidationError("Match and participation must be in the same league")
-
+        
+       
     def __str__(self):
         return f"{self.player} stats in {self.match}"

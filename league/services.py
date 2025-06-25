@@ -30,7 +30,7 @@ def update_league_table(league: League):
 
         #Ensure Each team is registered in the league
 
-        home_stats, _ = TeamSeasonParticipation.objects.get(team=home, league=league)
+        home_stats, _ = TeamSeasonParticipation.objects.get_or_create(team=home, league=league)
 
         away_stats, _ = TeamSeasonParticipation.objects.get_or_create(team=away, league=league)
 

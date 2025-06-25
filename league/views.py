@@ -1,14 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum
+from django.db import transaction
 from django.contrib import messages
 
 
 from .models import \
-    (League, Team, TeamSeasonParticipation, Match, PlayerSeasonParticipation)
+    (League, Team, TeamSeasonParticipation, Match, 
+     PlayerSeasonParticipation, PlayerStats)
 
-from league.forms import MatchForm
+from league.forms import MatchForm, PlayerStatsFormSet
 from league.services import update_league_table
 
+import logging
+logger = logging.getLogger(__name__)
 
 
 def home(request):
@@ -84,7 +88,7 @@ def match_form_view(request, match_id=None):
                 ).distinct()
 
                 for participation in participations:
-                    participations.update_totals()
+                    participation.update_totals()
             
            
             
@@ -92,7 +96,7 @@ def match_form_view(request, match_id=None):
             return redirect('match_list')
         else:
             messages.error(request, "There was an error with your submission.")
-            print(form.errors) 
+            logger.info(form.errors) 
     
     else: 
 
@@ -125,15 +129,15 @@ def match_list_view(request):
 def top_stats_view(request, league_id):
     league = League.objects.get(id=league_id)
 
-    top_scorers = PlayerSeasonParticipation.objects.filter(league=league)\
-        .select_related('player')\
-        .annotate(total_goals=Sum('goals'))\
-        .order_by('-total_goals')[:10]
+    top_scorers = PlayerSeasonParticipation.objects.filter(
+        league=league,
+        goals__gt=0  # Only include players with goals
+    ).select_related('player').order_by('-goals')[:10]
     
-    top_assisters = PlayerSeasonParticipation.objects.filter(league=league)\
-        .select_related('player')\
-        .annotate(total_assists=Sum('assists'))\
-        .order_by('-total_assists')[:10]
+    top_assisters = PlayerSeasonParticipation.objects.filter(
+        league=league,
+        assists__gt=0  # Only include players with assists
+    ).select_related('player').order_by('-assists')[:10]
 
     context = {
         'league': league,
@@ -144,7 +148,89 @@ def top_stats_view(request, league_id):
     return render(request, 'top_stats.html', context)
 
 
+def edit_player_stats_view(request, match_id):
+    """
+    Edit player statistics for a specific match.
+    Create PlayerStats objects for all active players from both teams if they don't exist
+    """
+
+    match = get_object_or_404(Match, id=match_id)
+    logger.info(f"Match: {match}")
+    logger.info(f"Match season: {match.season}")
+    logger.info(f"Home team: {match.home_team}")
+    logger.info(f"Away team: {match.away_team}")
+    
+
+    #Get all active players that participated in the match
+    participations = PlayerSeasonParticipation.objects.filter(
+        league=match.season,
+        team__in=[match.home_team, match.away_team],
+        is_active=True,
+    ).select_related('player', 'team')
+
+    logger.info(f"Found {participations.count()} season particpation objects")
+
+    #Create PlayerStats objects for players who don't have yet
+    for participation in participations:
+        
+        PlayerStats.objects.get_or_create(
+            match=match,
+            player=participation.player,
+            defaults={
+                'player_participation': participation,
+                'goals': 0,
+                'assists': 0,
+                'yellow_cards': 0,
+                'red_cards': 0,
+            
+            }
+        )
+
+        
+
+    #create queryset for the formset
+    queryset = PlayerStats.objects.filter(
+        match=match,
+        player__in=[p.player for p in participations]
+    ).select_related('player', 'player_participation'). order_by('player__first_name')
 
 
+    if request.method == 'POST':
+        formset = PlayerStatsFormSet(request.POST, queryset=queryset)
+
+        if formset.is_valid():
+            try:
+                with transaction.atomic():
+                    #save all the forms in the formset
+                    saved_forms = formset.save()
 
 
+                    #update the stats of players who participated
+                    for instance in saved_forms:
+                        instance.player_participation.update_totals()
+                    
+                    messages.success(request, f'Player statistics updated successfully for {match}')
+                return redirect('match_list')
+            
+            except Exception as e:
+                messages.error(request, 'An error occurred while saving the statistics. Please try again.')
+
+                # log the error for debugging
+                logger.error(f"Error saving player stats for match {match_id}: {e}") 
+            
+        else:
+            messages.error(request, 'Please correct the erros in the form.')
+            
+   
+    else: #GET 
+        formset = PlayerStatsFormSet(queryset=queryset)
+    
+
+    context = {
+        'formset': formset,
+        'match': match,
+        
+    }
+
+
+    return render(request, 'edit_player_stats.html', context)

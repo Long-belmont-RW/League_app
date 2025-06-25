@@ -24,7 +24,8 @@
                 <td class="p-3">{{ match.get_status_display }}</td>
                 <td class="p-3">
                     <a href="{% url 'edit_match' match.id %}" class="text-blue-600 hover:underline ">Edit</a> &nbsp; &nbsp;
-                    <a href="{% url 'delete_match' match.id%}" class="text-red-600 hover:underline">Delete</a>
+                    <a href="{% url 'delete_match' match.id%}" class="text-red-600 hover:underline">Delete</a> &nbsp; &nbsp;
+                    <a href="{% url 'edit_player_stats' match.id%}" class="text-green-600 hover:underline">Stats</a>
                 </td>
             </tr>
             {% empty %}

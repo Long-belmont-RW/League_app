@@ -41,9 +41,14 @@
         </tbody>
     </table>
 
-    <a href="{% url 'top_stats' league.id %}" class="btn bg-blue-500 text-white rounded-full px-4 my-5 ">
-        View Top Scorers & Assisters
-    </a>
+<!-- Footer Stats Summary -->
+<div class="mt-12 text-center">
+    <div
+        class="inline-flex items-center gap-2 px-6 py-3 bg-white/60 backdrop-blur-sm rounded-full border border-white/30 shadow-lg">
+        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+        <span class="text-slate-600 font-medium"><a href="{% url 'top_stats' league.id %}" class="hover: text-green-500 animate-pulse">Live season statistics</a></span>
+    </div>
+</div>
       
 </div>
 {% endblock %}
