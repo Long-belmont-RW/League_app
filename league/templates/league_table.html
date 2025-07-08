@@ -8,7 +8,7 @@
     (Spring)
     {% endif %} {{league.year }}</h2>
 
-    <table class="min-w-full border border-gray-200 shadow-md">
+    <table class="min-w-full border border-gray-200 shadow-md place-content-center">
         <thead class="bg-gray-100">
             <tr>
                 <th class="p-2">#</th>
@@ -42,13 +42,13 @@
     </table>
 
 <!-- Footer Stats Summary -->
-<div class="mt-12 text-center">
+<div class="flex justify-center mt-12">
     <div
         class="inline-flex items-center gap-2 px-6 py-3 bg-white/60 backdrop-blur-sm rounded-full border border-white/30 shadow-lg">
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <span class="text-slate-600 font-medium"><a href="{% url 'top_stats' league.id %}" class="hover: text-green-500 animate-pulse">Live season statistics</a></span>
+        <span class="text-slate-600 font-medium">
+            <a href="{% url 'top_stats' league.id %}" class="hover:text-green-500 animate-pulse">Live season statistics</a>
+        </span>
     </div>
-</div>
-      
 </div>
 {% endblock %}

@@ -21,6 +21,12 @@ class MatchForm(forms.ModelForm):
             'season': forms.Select(attrs={
                 'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
             }),
+            'match_day': forms.NumberInput(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
+                'min': '1',
+                'max': '10',  # Assuming a maximum of 10 match days
+                'placeholder': 'Match Day (1-8)',
+            }),
             'home_team': forms.Select(attrs={
                 'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
             }),

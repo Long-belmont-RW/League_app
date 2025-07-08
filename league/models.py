@@ -129,6 +129,7 @@ class Match(models.Model):
     home_score = models.PositiveIntegerField(default=0)
     away_score = models.PositiveIntegerField(default=0)
     date = models.DateTimeField()
+    match_day = models.PositiveIntegerField(null=True, blank=True, default=1)  # Optional field for match day
     status = models.CharField(max_length=3, choices=MatchStatus.choices, default=MatchStatus.SCHEDULED)
 
     class Meta:

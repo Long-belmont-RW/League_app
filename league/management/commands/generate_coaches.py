@@ -68,3 +68,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"✅ Done! Created {total_coaches_created} Coaches and Registered {total_coaches_registerd} s."
         ))
+
+
+    

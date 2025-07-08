@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.db import transaction
 from django.contrib import messages
 
@@ -65,7 +65,7 @@ def team(request, team_id):
 
 
 def match_form_view(request, match_id=None):
-    
+    """A form to create match objects"""
     if match_id:
         match = get_object_or_404(Match, id=match_id)
         is_edit = True
@@ -111,6 +111,7 @@ def match_form_view(request, match_id=None):
     return render(request, 'match_form.html', context)
 
 def delete_match(request, match_id):
+    """A simple view to delete matches"""
     match = get_object_or_404(Match, id=match_id)
     if request.method == 'POST':
         match.delete()
@@ -122,11 +123,71 @@ def delete_match(request, match_id):
 
 
 def match_list_view(request):
+    """A simple view to list out current matches"""
+
     matches = Match.objects.select_related('home_team', 'away_team', 'season').order_by('-date')
-    return render(request, 'match_list.html', {'matches': matches})
+
+    # Get Search parameters
+    team_search = request.GET.get('team_search', '').strip()
+    match_day_filter = request.GET.get('match_day', '').strip() 
+    league_filter = request.GET.get('league', '').strip()
+
+    #Base queryset
+    upcoming_matches = Match.objects.select_related('home_team', 'away_team', 'season').filter(status='SCH')
+    finished_matches = Match.objects.select_related('home_team', 'away_team', 'season').filter(status='FIN')
+
+    # Filter by team name
+    if team_search:
+        team_filter = Q(home_team__name__icontains=team_search) | Q(away_team__name__icontains=team_search )
+        upcoming_matches = upcoming_matches.filter(team_filter)
+        finished_matches = finished_matches.filter(team_filter)
+
+    # Filter by match day
+    if match_day_filter:
+        try:
+            match_day = int(match_day_filter)
+            if match_day < 1 or match_day > 10:  # Assuming a maximum of 10 match days
+                messages.error(request, "Match day must be between 1 and 10.")
+            else:
+                upcoming_matches = upcoming_matches.filter(match_day=match_day)
+                finished_matches = finished_matches.filter(match_day=match_day)
+        except ValueError:
+            messages.error(request, "Invalid match day value.")
+    
+    # Filter by league
+    if league_filter:   
+        try:
+            league = League.objects.get(id=league_filter)
+            upcoming_matches = upcoming_matches.filter(season=league)
+            finished_matches = finished_matches.filter(season=league)
+        except League.DoesNotExist:
+            messages.error(request, "Invalid league selected.")
+    
+    # Order matches by date
+    upcoming_matches = upcoming_matches.order_by('date')
+    finished_matches = finished_matches.order_by('-date')
+
+    #Get all leagues for the filter dropdown
+    leagues = League.objects.all().order_by('-year', 'session')
+
+    #Get distinct matchdays for the filter dropdown
+    match_days = Match.objects.values_list('match_day', flat=True).distinct().order_by('match_day')
+
+    context = {
+        'upcoming_matches': upcoming_matches,
+        'finished_matches': finished_matches,
+        'leagues': leagues,
+        'match_days': match_days,
+        'team_search': team_search,
+        'match_day_filter': match_day_filter,
+        'league_filter': league_filter,
+    }
+
+    return render(request, 'match_list.html', context)
 
 
 def top_stats_view(request, league_id):
+    """View to display season statistics"""
     league = League.objects.get(id=league_id)
 
     top_scorers = PlayerSeasonParticipation.objects.filter(

@@ -1,39 +1,263 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto mt-8">
-    <h1 class="text-2xl font-bold mb-4">All Matches</h1>
-    <a href="{% url 'create_match' %}" class="inline-block mb-4 px-4 py-2 bg-green-600 text-white rounded">+ Create New
-        Match</a>
-    <table class="w-full bg-white shadow rounded overflow-hidden">
-        <thead class="bg-gray-100 text-sm text-gray-600">
-            <tr>
-                <th class="p-3">Date</th>
-                <th class="p-3">Match</th>
-                <th class="p-3">Score</th>
-                <th class="p-3">Status</th>
-                <th class="p-3">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for match in matches %}
-            <tr class="border-t hover:bg-gray-50">
-                <td class="p-3">{{ match.date|date:"M d, H:i" }}</td>
-                <td class="p-3">{{ match.home_team }} vs {{ match.away_team }}</td>
-                <td class="p-3">{{ match.home_score }} - {{ match.away_score }}</td>
-                <td class="p-3">{{ match.get_status_display }}</td>
-                <td class="p-3">
-                    <a href="{% url 'edit_match' match.id %}" class="text-blue-600 hover:underline ">Edit</a> &nbsp; &nbsp;
-                    <a href="{% url 'delete_match' match.id%}" class="text-red-600 hover:underline">Delete</a> &nbsp; &nbsp;
-                    <a href="{% url 'edit_player_stats' match.id%}" class="text-green-600 hover:underline">Stats</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td class="p-4 text-center" colspan="5">No matches yet.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="max-w-6xl mx-auto mt-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">All Matches</h1>
+        <a href="{% url 'create_match' %}" 
+           class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Create New Match
+        </a>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Filter Matches</h3>
+        <form method="GET" class="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:items-end">
+            <!-- Team Search -->
+            <div class="col-span-2">
+                <label for="team_search" class="block text-sm font-medium text-gray-700 mb-1">
+                    Search Team
+                </label>
+                <input 
+                    type="text" 
+                    id="team_search" 
+                    name="team_search" 
+                    value="{{ current_team_search }}"
+                    placeholder="Enter team name..."
+                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+            </div>
+            <!-- Match Day Filter -->
+            <div>
+                <label for="match_day" class="block text-sm font-medium text-gray-700 mb-1">
+                    Match Day
+                </label>
+                <select 
+                    id="match_day" 
+                    name="match_day"
+                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                    <option value="">All Match Days</option>
+                    {% for day in match_days %}
+                        <option value="{{ day }}" {% if current_match_day == day|stringformat:"s" %}selected{% endif %}>
+                            Match Day {{ day }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- League Filter -->
+            <div>
+                <label for="league" class="block text-sm font-medium text-gray-700 mb-1">
+                    League/Season
+                </label>
+                <select 
+                    id="league" 
+                    name="league"
+                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                    <option value="">All Leagues</option>
+                    {% for league in leagues %}
+                        <option value="{{ league.id }}" {% if current_league == league.id|stringformat:"s" %}selected{% endif %}>
+                            {{ league.get_session_display }} {{ league.year }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Filter Buttons -->
+            <div class="flex space-x-2 mt-6 lg:mt-0">
+                <button 
+                    type="submit"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors w-full"
+                >
+                    Filter
+                </button>
+                <a 
+                    href="{% url 'match_list' %}"
+                    class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors w-full text-center"
+                >
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Summary -->
+    {% if current_team_search or current_match_day or current_league %}
+        <div class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400">
+            <p class="text-sm text-blue-700">
+                <span class="font-medium">Showing filtered results:</span>
+                {% if current_team_search %}
+                    Teams containing "{{ current_team_search }}"
+                {% endif %}
+                {% if current_match_day %}
+                    {% if current_team_search %} • {% endif %}Match Day {{ current_match_day }}
+                {% endif %}
+                {% if current_league %}
+                    {% if current_team_search or current_match_day %} • {% endif %}
+                    {% for league in leagues %}
+                        {% if league.id|stringformat:"s" == current_league %}
+                            {{ league.get_session_display }} {{ league.year }}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- Upcoming Matches Section -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-gray-900">Upcoming Matches</h2>
+            <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                {{ upcoming_matches.count }} match{{ upcoming_matches.count|pluralize:"es" }}
+            </span>
+        </div>
+        
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match Day</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">League</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for match in upcoming_matches %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ match.date|date:"M d, Y" }}<br>
+                            <span class="text-xs text-gray-500">{{ match.date|date:"H:i" }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                                Day {{ match.match_day }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="flex items-center">
+                                <span class="font-medium">{{ match.home_team }}</span>
+                                <span class="mx-2 text-gray-400">vs</span>
+                                <span class="font-medium">{{ match.away_team }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ match.season.get_session_display }} {{ match.season.year }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                {{ match.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <a href="{% url 'edit_match' match.id %}" 
+                               class="text-blue-600 hover:text-blue-900 hover:underline">Edit</a>
+                            <a href="{% url 'delete_match' match.id %}" 
+                               class="text-red-600 hover:text-red-900 hover:underline">Delete</a>
+                            <a href="{% url 'edit_player_stats' match.id %}" 
+                               class="text-green-600 hover:text-green-900 hover:underline">Stats</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <p class="text-lg font-medium">No upcoming matches found</p>
+                                <p class="text-sm">{% if current_team_search or current_match_day or current_league %}Try adjusting your filters{% else %}Create your first match to get started{% endif %}</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Finished Matches Section -->
+    <div>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-gray-900">Finished Matches</h2>
+            <span class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
+                {{ finished_matches.count }} match{{ finished_matches.count|pluralize:"es" }}
+            </span>
+        </div>
+        
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match Day</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">League</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for match in finished_matches %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ match.date|date:"M d, Y" }}<br>
+                            <span class="text-xs text-gray-500">{{ match.date|date:"H:i" }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                                Day {{ match.match_day }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="flex items-center">
+                                <span class="font-medium">{{ match.home_team }}</span>
+                                <span class="mx-2 text-gray-400">vs</span>
+                                <span class="font-medium">{{ match.away_team }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-lg">{{ match.home_score }}</span>
+                                <span class="text-gray-400">-</span>
+                                <span class="font-bold text-lg">{{ match.away_score }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ match.season.get_session_display }} {{ match.season.year }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <a href="{% url 'edit_match' match.id %}" 
+                               class="text-blue-600 hover:text-blue-900 hover:underline">Edit</a>
+                            <a href="{% url 'delete_match' match.id %}" 
+                               class="text-red-600 hover:text-red-900 hover:underline">Delete</a>
+                            <a href="{% url 'edit_player_stats' match.id %}" 
+                               class="text-green-600 hover:text-green-900 hover:underline">Stats</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                </svg>
+                                <p class="text-lg font-medium">No finished matches found</p>
+                                <p class="text-sm">{% if current_team_search or current_match_day or current_league %}Try adjusting your filters{% else %}Matches will appear here once they're completed{% endif %}</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
