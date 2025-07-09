@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto p-6 space-y-6">
+<div class="max-w-4xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
     {% for league in leagues %}
-    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition duration-300 mx-auto ">
-        <h1 class="text-xl font-semibold text-gray-800 hover:text-blue-600 ">
+    <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition duration-300 mx-auto ">
+        <h1 class="text-lg sm:text-xl font-semibold text-gray-800 hover:text-blue-600 ">
             <a href="{% url 'league_table' league.id %}">
                 {{ league.year }}
                 {% if league.session == 'F' %}
@@ -14,7 +14,6 @@
                 {% endif %}
             </a>
         </h1>
-       
     </div>
     {% empty %}
     <div class="text-center text-gray-500 italic">

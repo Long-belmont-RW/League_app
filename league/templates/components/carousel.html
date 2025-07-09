@@ -1,0 +1,313 @@
+<style>
+        .carousel-slide {
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .carousel-indicators {
+            bottom: 20px;
+        }
+        
+        .carousel-control {
+            transition: opacity 0.3s ease;
+        }
+        
+        .carousel-control:hover {
+            opacity: 0.9;
+        }
+        
+        .slide-content {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+<!-- Hero Carousel -->
+<div class="relative overflow-hidden w-full h-80 md:h-[400px] lg:h-[480px]">
+        <!-- Carousel Container -->
+        <div id="carousel" class="relative w-full h-full">
+            <!-- Slide 1 - Main League Banner -->
+              <div class="carousel-slide absolute inset-0 w-full h-full">
+                <div class="group relative overflow-hidden w-full h-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+                    <img src="/static/images/league_banner.jpg" alt="League Banner" class="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none transition duration-300 ease-in-out group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-indigo-900/70"></div>
+                    <div class="absolute inset-0 bg-black opacity-50"></div>
+                    <div class="slide-content relative max-w-full mx-auto px-4 sm:px-10 lg:px-20 py-24 text-center flex flex-col justify-center h-full">
+                        <h1 class="text-4xl md:text-6xl font-bold mb-6">Welcome to AUN League</h1>
+                        <p class="text-xl md:text-2xl mb-8 text-gray-200">The premier university football league - Spring 2025 Season</p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="{% url 'match_list' %}" class="bg-white text-blue-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">View Fixtures</a>
+                            <a href="{% url 'league_table' latest_league.id %}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition">League Table</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2 - Championship Focus -->
+            <div class="carousel-slide absolute inset-0 w-full h-full">
+                <div class="group relative overflow-hidden w-full h-full bg-gradient-to-r from blue-300 to-indigo-300  text-white">
+                    <img src="/static/images/championship.jpg" alt="Man holding football" class="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none transition duration-300 ease-in-out group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-indigo-900/70"></div>
+                    <div class="absolute inset-0 bg-black opacity-50"></div>
+                    <div class="slide-content relative max-w-full mx-auto px-4 sm:px-10 lg:px-20 py-24 text-center flex flex-col justify-center h-full">
+                        <h1 class="text-4xl md:text-6xl font-bold mb-6">Who will will this season</h1>
+                        <p class="text-xl md:text-2xl mb-8 text-gray-200">Top Teams</p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="#" class="bg-white text-blue-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">View Fixtures</a>
+                            <a href="#" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition">View Teams</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3 - Player Spotlight -->
+            <div class="carousel-slide absolute inset-0 w-full h-full">
+                <div class="group relative overflow-hidden w-full h-full bg-gradient-to-r from-yellow-500 via-yellow-400 to-lime-500 text-white">
+                    <img src="/static/images/medium-shot-man-holding-football.jpg" alt="League Banner" class="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none transition duration-300 ease-in-out group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-indigo-900/70"></div>
+                    <div class="absolute inset-0 bg-black opacity-50"></div>
+                    <div class="slide-content relative max-w-full mx-auto px-4 sm:px-10 lg:px-20 py-24 text-center flex flex-col justify-center h-full">
+                        <h1 class="text-4xl md:text-6xl font-bold mb-6">Players</h1>
+                        <p class="text-xl md:text-2xl mb-8 text-gray-200">View all the Top Talent from AUN</p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="#" class="bg-white text-blue-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">View Players</a>
+                            <a href="#" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition">Top Players</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Slide 4 - Match Highlights -->
+            <div class="carousel-slide absolute inset-0 w-full h-full transform translate-x-full">
+                <div class="group relative overflow-hidden w-full h-full bg-gradient-to-r from-red-900 to-rose-900 text-white">
+                    <div class="absolute inset-0 bg-gradient-to-r from-red-900 to-rose-900"></div>
+                    <div class="absolute inset-0 bg-black opacity-40"></div>
+                    <div class="slide-content relative max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center flex flex-col justify-center h-full">
+                        <h1 class="text-4xl md:text-6xl font-bold mb-6">Match Highlights</h1>
+                        <p class="text-xl md:text-2xl mb-8 text-gray-200">Relive the best moments</p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="#" class="bg-white text-red-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">View Fixtures</a>
+                            <a href="#" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-red-900 transition">League Table</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Controls -->
+        <button id="prevBtn" class="carousel-control absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-all z-10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </button>
+        <button id="nextBtn" class="carousel-control absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-all z-10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+
+        <!-- Indicators -->
+        <div class="carousel-indicators absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+            <button class="indicator w-3 h-3 rounded-full bg-white opacity-70 hover:opacity-100 transition-opacity" data-slide="0"></button>
+            <button class="indicator w-3 h-3 rounded-full bg-white opacity-50 hover:opacity-100 transition-opacity" data-slide="1"></button>
+            <button class="indicator w-3 h-3 rounded-full bg-white opacity-50 hover:opacity-100 transition-opacity" data-slide="2"></button>
+            <button class="indicator w-3 h-3 rounded-full bg-white opacity-50 hover:opacity-100 transition-opacity" data-slide="3"></button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="absolute bottom-0 left-0 w-full h-1 bg-black bg-opacity-30 z-10">
+            <div id="progressBar" class="h-full bg-white transition-all duration-300 ease-linear" style="width: 0%"></div>
+        </div>
+    </div>
+
+   
+
+    
+    <script>
+        class HeroCarousel {
+            constructor() {
+                this.currentSlide = 0;
+                this.slides = document.querySelectorAll('.carousel-slide');
+                this.indicators = document.querySelectorAll('.indicator');
+                this.totalSlides = this.slides.length;
+                this.autoSlideInterval = null;
+                this.slideInterval = 5000; // 5 seconds
+                this.progressBar = document.getElementById('progressBar');
+                this.progressInterval = null;
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.updateIndicators();
+                this.startAutoSlide();
+                this.startProgressBar();
+            }
+            
+            setupEventListeners() {
+                // Previous button
+                document.getElementById('prevBtn').addEventListener('click', () => {
+                    this.prevSlide();
+                });
+                
+                // Next button
+                document.getElementById('nextBtn').addEventListener('click', () => {
+                    this.nextSlide();
+                });
+                
+                // Indicator buttons
+                this.indicators.forEach((indicator, index) => {
+                    indicator.addEventListener('click', () => {
+                        this.goToSlide(index);
+                    });
+                });
+                
+                // Pause on hover
+                const carousel = document.getElementById('carousel');
+                carousel.addEventListener('mouseenter', () => {
+                    this.pauseAutoSlide();
+                });
+                
+                carousel.addEventListener('mouseleave', () => {
+                    this.startAutoSlide();
+                });
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') {
+                        this.prevSlide();
+                    } else if (e.key === 'ArrowRight') {
+                        this.nextSlide();
+                    }
+                });
+                
+                // Touch/swipe support
+                let startX = 0;
+                let endX = 0;
+                
+                carousel.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                });
+                
+                carousel.addEventListener('touchend', (e) => {
+                    endX = e.changedTouches[0].clientX;
+                    const diff = startX - endX;
+                    
+                    if (Math.abs(diff) > 50) { // Minimum swipe distance
+                        if (diff > 0) {
+                            this.nextSlide();
+                        } else {
+                            this.prevSlide();
+                        }
+                    }
+                });
+            }
+            
+            goToSlide(index) {
+                this.currentSlide = index;
+                this.updateSlides();
+                this.updateIndicators();
+                this.restartAutoSlide();
+                this.restartProgressBar();
+            }
+            
+            nextSlide() {
+                this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+                this.updateSlides();
+                this.updateIndicators();
+                this.restartAutoSlide();
+                this.restartProgressBar();
+            }
+            
+            prevSlide() {
+                this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+                this.updateSlides();
+                this.updateIndicators();
+                this.restartAutoSlide();
+                this.restartProgressBar();
+            }
+            
+            updateSlides() {
+                this.slides.forEach((slide, index) => {
+                    const offset = (index - this.currentSlide) * 100;
+                    slide.style.transform = `translateX(${offset}%)`;
+                });
+                
+                // Trigger content animation
+                const currentSlideContent = this.slides[this.currentSlide].querySelector('.slide-content');
+                currentSlideContent.style.animation = 'none';
+                currentSlideContent.offsetHeight; // Trigger reflow
+                currentSlideContent.style.animation = 'fadeInUp 0.8s ease-out';
+            }
+            
+            updateIndicators() {
+                this.indicators.forEach((indicator, index) => {
+                    if (index === this.currentSlide) {
+                        indicator.classList.remove('opacity-50');
+                        indicator.classList.add('opacity-100');
+                    } else {
+                        indicator.classList.remove('opacity-100');
+                        indicator.classList.add('opacity-50');
+                    }
+                });
+            }
+            
+            startAutoSlide() {
+                this.autoSlideInterval = setInterval(() => {
+                    this.nextSlide();
+                }, this.slideInterval);
+            }
+            
+            pauseAutoSlide() {
+                if (this.autoSlideInterval) {
+                    clearInterval(this.autoSlideInterval);
+                }
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                }
+            }
+            
+            restartAutoSlide() {
+                this.pauseAutoSlide();
+                this.startAutoSlide();
+            }
+            
+            startProgressBar() {
+                let progress = 0;
+                const increment = 100 / (this.slideInterval / 50); // Update every 50ms
+                
+                this.progressInterval = setInterval(() => {
+                    progress += increment;
+                    this.progressBar.style.width = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        progress = 0;
+                    }
+                }, 50);
+            }
+            
+            restartProgressBar() {
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                }
+                this.progressBar.style.width = '0%';
+                this.startProgressBar();
+            }
+        }
+        
+        // Initialize carousel when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new HeroCarousel();
+        });
+    </script>

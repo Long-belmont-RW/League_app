@@ -1,24 +1,23 @@
 <!-- Custom League Navbar -->
-<nav class="bg-white border-gray-200 shadow-lg">
+<nav class="bg-indigo-900 text-white shadow-lg">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         <!-- Logo/Brand -->
         <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-            <div
-                class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-700 to-indigo-700 rounded-lg flex items-center justify-center">
                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd"
                         d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
                         clip-rule="evenodd"></path>
                 </svg>
             </div>
-            <span class="self-center text-2xl font-bold whitespace-nowrap text-gray-900">
-                AUN<span class="text-blue-600">League</span>
+            <span class="self-center text-2xl font-bold whitespace-nowrap text-white">
+                AUN<span class="text-blue-300">League</span>
             </span>
         </a>
 
         <!-- Mobile Menu Button -->
         <button data-collapse-toggle="navbar-default" type="button"
-            class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+            class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-blue-200 rounded-lg md:hidden hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
             aria-controls="navbar-default" aria-expanded="false">
             <span class="sr-only">Open main menu</span>
             <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
@@ -30,11 +29,11 @@
         <!-- Navigation Links -->
         <div class="hidden w-full md:block md:w-auto" id="navbar-default">
             <ul
-                class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white">
+                class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-blue-800 rounded-lg bg-blue-800 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-transparent">
                 <!-- Home -->
                 <li>
                     <a href="/"
-                        class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0"
+                        class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-200 md:p-0 md:hover:text-white transition-colors duration-200"
                         aria-current="page">
                         Home
                     </a>
@@ -43,7 +42,7 @@
                 <!-- Leagues Dropdown -->
                 <li class="relative">
                     <button id="leaguesDropdownButton" data-dropdown-toggle="leaguesDropdown"
-                        class="flex items-center justify-between w-full py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 md:w-auto">
+                        class="flex items-center justify-between w-full py-2 px-3 text-blue-100 rounded hover:bg-blue-800 md:hover:bg-transparent md:border-0 md:hover:text-white md:p-0 md:w-auto transition-colors duration-200">
                         Leagues
                         <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                             fill="none" viewBox="0 0 10 6">
@@ -53,16 +52,15 @@
                     </button>
                     <!-- Leagues Dropdown Menu -->
                     <div id="leaguesDropdown"
-                        class="z-10 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow w-48">
-                        <ul class="py-2 text-sm text-gray-700" aria-labelledby="leaguesDropdownButton">
+                        class="z-10 hidden font-normal bg-blue-900 divide-y divide-blue-800 rounded-lg shadow w-48">
+                        <ul class="py-2 text-sm text-blue-100" aria-labelledby="leaguesDropdownButton">
                             <li>
-                                <a href="{% url 'leagues' %}" class="block px-4 py-2 hover:bg-gray-100">Premier League</a>
+                                <a href="{% url 'leagues' %}" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Premier League</a>
                             </li>
                             <li>
                                 <a href="/leagues/championship"
-                                    class="block px-4 py-2 hover:bg-gray-100">Championship</a>
+                                    class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Championship</a>
                             </li>
-                           
                         </ul>
                     </div>
                 </li>
@@ -70,7 +68,7 @@
                 <!-- Teams -->
                 <li>
                     <a href="/teams"
-                        class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0">
+                        class="block py-2 px-3 text-blue-100 rounded hover:bg-blue-800 md:hover:bg-transparent md:border-0 md:hover:text-white md:p-0 transition-colors duration-200">
                         Teams
                     </a>
                 </li>
@@ -78,7 +76,7 @@
                 <!-- Fixtures -->
                 <li>
                     <a href="{% url 'match_list'%}"
-                        class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0">
+                        class="block py-2 px-3 text-blue-100 rounded hover:bg-blue-800 md:hover:bg-transparent md:border-0 md:hover:text-white md:p-0 transition-colors duration-200">
                         Fixtures
                     </a>
                 </li>
@@ -86,18 +84,15 @@
                 <!-- Results -->
                 <li>
                     <a href="/results"
-                        class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0">
+                        class="block py-2 px-3 text-blue-100 rounded hover:bg-blue-800 md:hover:bg-transparent md:border-0 md:hover:text-white md:p-0 transition-colors duration-200">
                         Results
                     </a>
                 </li>
 
-                <!-- Standings -->
-                
-
                 <!-- News -->
                 <li>
                     <a href="/news"
-                        class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0">
+                        class="block py-2 px-3 text-blue-100 rounded hover:bg-blue-800 md:hover:bg-transparent md:border-0 md:hover:text-white md:p-0 transition-colors duration-200">
                         News
                     </a>
                 </li>
@@ -106,10 +101,10 @@
                  {% if user.is_authenticated%}
                 <li class="relative">
                     <button id="userDropdownButton" data-dropdown-toggle="userDropdown"
-                        class="flex items-center justify-between w-full py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 md:w-auto">
+                        class="flex items-center justify-between w-full py-2 px-3 text-blue-100 rounded hover:bg-blue-800 md:hover:bg-transparent md:border-0 md:hover:text-white md:p-0 md:w-auto transition-colors duration-200">
                         <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                            <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
                                         clip-rule="evenodd"></path>
                                 </svg>
@@ -124,33 +119,31 @@
                     </button>
                     <!-- User Dropdown Menu -->
                     <div id="userDropdown"
-                        class="z-10 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow w-44">
-                        <div class="px-4 py-3 text-sm text-gray-900">
+                        class="z-10 hidden font-normal bg-blue-900 divide-y divide-blue-800 rounded-lg shadow w-44">
+                        <div class="px-4 py-3 text-sm text-blue-100">
                             <div class="font-medium">{{user.username}}</div>
-                            <div class="text-gray-500 truncate">{{user.email}}</div>
+                            <div class="text-blue-200 truncate">{{user.email}}</div>
                         </div>
-                        <ul class="py-2 text-sm text-gray-700" aria-labelledby="userDropdownButton">
+                        <ul class="py-2 text-sm text-blue-100" aria-labelledby="userDropdownButton">
                             <li>
-                                <a href="/profile" class="block px-4 py-2 hover:bg-gray-100">Profile</a>
+                                <a href="/profile" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Profile</a>
                             </li>
                             <li>
-                                <a href="/dashboard" class="block px-4 py-2 hover:bg-gray-100">Dashboard</a>
+                                <a href="/dashboard" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Dashboard</a>
                             </li>
                             <li>
-                                <a href="/settings" class="block px-4 py-2 hover:bg-gray-100">Settings</a>
+                                <a href="/settings" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Settings</a>
                             </li>
                         </ul>
                         <div class="py-2">
-                            <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign
-                                out</a>
+                            <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-blue-100 hover:bg-blue-800 hover:text-white transition-colors">Sign out</a>
                         </div>
                     </div>
                 </li>
-
                 {% else %}
                 <li>
                     <a href="{% url 'login' %}"
-                    class="bg-blue-600 hover:bg-blue-700 my-2.5 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm">
+                    class="bg-blue-700 hover:bg-blue-800 my-2.5 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 shadow-sm">
                     Login</a>
                 </li>
                 {% endif %}
@@ -158,6 +151,3 @@
         </div>
     </div>
 </nav>
-
-<!-- Demo Content -->
-<div cla

@@ -16,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 def home(request):
-    return render (request, 'home.html')
+    #get the latest league
+    latest_league = League.objects.order_by('-year', '-id').first()
+    return render (request, 'home.html', {
+        'latest_league': latest_league,})
 
 def leagues(request):
     leagues = League.objects.all()
