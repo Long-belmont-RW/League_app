@@ -46,7 +46,7 @@ def register_view(request):
             user = form.save()
             login(request, user, backend='users.authentication.EmailMultiRoleAuthBackend')  # login after registration
             messages.success(request, f"Account created for {user.username}!")
-            return redirect('/home/')  
+            return redirect('home')  
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
