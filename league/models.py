@@ -70,6 +70,7 @@ class Team(models.Model):
     name = models.CharField(max_length=50)
     logo = models.ImageField(upload_to='team_logos/', null=True, blank=True)
     bio = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         verbose_name_plural = "Teams"
@@ -134,6 +135,10 @@ class Match(models.Model):
 
     class Meta:
         verbose_name_plural = "Matches"
+        indexes = [
+            models.Index(fields=['season']),
+            models.Index(fields=['home_team', 'away_team']),
+        ]
 
 
     def check_duplicates(self):
@@ -170,16 +175,16 @@ class Match(models.Model):
     def check_active_status(self):     
         # Ensure both teams are active in the selected season
         if self.season_id and self.home_team_id and self.away_team_id:
-            active_teams = set(PlayerSeasonParticipation.objects.filter(
-                league_id=self.season_id,  # Fixed: was leagueid=self.season
+            active_teams = set(TeamSeasonParticipation.objects.filter(
+                league_id=self.season_id,  
                 is_active=True
             ).values_list('team_id', flat=True))
             
             if self.home_team_id not in active_teams:  # Fixed: use _id instead of .id
-                raise ValidationError(f"Home team is not active in this season")
+                raise ValidationError(f"{self.home_team} is not active in this season")
             
             if self.away_team_id not in active_teams:  # Fixed: use _id instead of .id
-                raise ValidationError(f"Away team is not active in this season")
+                raise ValidationError(f"{self.away_team}is not active in this season")
             
             
      
@@ -217,24 +222,26 @@ class PlayerSeasonParticipation(models.Model):
     is_captain = models.BooleanField(default=False)  # optional
     is_active = models.BooleanField(default=True) 
 
+    def get_player_stats(self):
+        """Return PlayerStats for this participation's player and league."""
+        return PlayerStats.objects.filter(
+            player=self.player,
+            match__season=self.league
+        )
+    
     def update_totals(self):
-        """
-        Recalculate cumulative stats from PlayerStats linked to this season participation.
-        
-        """
-        stats = self.player_stats.aggregate(
+        """Update aggregated stats from PlayerStats."""
+        stats = self.get_player_stats().aggregate(
             total_goals=Sum('goals'),
             total_assists=Sum('assists'),
-            total_yellow=Sum('yellow_cards'),
-            total_red=Sum('red_cards'),
+            total_yellow_cards=Sum('yellow_cards'),
+            total_red_cards=Sum('red_cards')
         )
-
         self.goals = stats['total_goals'] or 0
         self.assists = stats['total_assists'] or 0
-        self.yellow_cards = stats['total_yellow'] or 0
-        self.red_cards = stats['total_red'] or 0
-        self.matches_played = self.player_stats.count()
-        self.save()
+        self.yellow_cards = stats['total_yellow_cards'] or 0
+        self.red_cards = stats['total_red_cards'] or 0
+        self.save(update_fields=['goals', 'assists', 'yellow_cards', 'red_cards'])
 
     class Meta:
         unique_together = ('player', 'team', 'league')
@@ -291,7 +298,6 @@ class TeamSeasonParticipation(models.Model):
 # --- Player Stats Per Match ---
 class PlayerStats(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
-    player_participation = models.ForeignKey(PlayerSeasonParticipation, on_delete=models.CASCADE, related_name='player_stats', null=True )
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     goals = models.PositiveIntegerField(default=0, blank=True)
     assists = models.PositiveIntegerField(default=0, blank=True)
@@ -302,20 +308,36 @@ class PlayerStats(models.Model):
         unique_together = ['match', 'player']
         indexes = [
             models.Index(fields=['match', 'player']),
-            models.Index(fields=['player_participation']),
         ]
         verbose_name_plural = "Player Stats"
     
+    @property
+    def player_participation(self):
+        """Get the PlayerSeasonParticipation for this player in the match's league"""
+        return PlayerSeasonParticipation.objects.filter(
+            player=self.player,
+            league=self.match.season,
+            is_active=True
+        ).first()
      
     def clean(self):
-        # Player model must match a referenced player model in PlayerStats model
-        if self.player != self.player_participation.player:
-            raise ValidationError("Player must match with the participation record")
+        # Ensure the player is part of the match's teams
+        participation = self.player_participation
+        if not participation:
+            raise ValidationError(f"{self.player} is not part of any team in this match's league.")
         
-        #League/Season model must match reference league model in PlayerStats model
-        if self.match.season != self.player_participation.league:
-            raise ValidationError("Match and participation must be in the same league")
-        
+        if self.match.season != participation.league:
+            raise ValidationError("Match and player participation league mismatch.")
        
     def __str__(self):
         return f"{self.player} stats in {self.match}"
+
+
+# --- Lineup Model ---
+class Lineup(models.Model):
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='lineups')
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    players = models.ManyToManyField(Player, related_name='lineups')
+
+    def __str__(self):
+        return f"Lineup for {self.match} - {self.team}"

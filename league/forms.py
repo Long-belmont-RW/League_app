@@ -2,14 +2,40 @@ from django import forms
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.utils import timezone
-from django.db.models import Q
-from .models import Match, PlayerStats, PlayerSeasonParticipation
+from django.db.models import Q, Sum
+from .models import Match, PlayerStats, PlayerSeasonParticipation, Player, Lineup, MatchStatus
 
 
 class MatchForm(forms.ModelForm):
+
+    def clean(self):
+        """Ensure home_score and away_score matches teh sum of goals scored by players"""
+        cleaned_data = super().clean()
+        if cleaned_data.get('status') == 'FIN':
+            #get home and away scores
+            home_score = cleaned_data.get('home_score', 0)
+            away_score = cleaned_data.get('away_score', 0)
+            match = self.instance
+
+            if match.pk:
+                stats = PlayerStats.objects.filter(match=match)
+                total_goals = stats.aggregate(total=Sum('goals'))['total'] or 0
+                if home_score + away_score != total_goals:
+                    raise ValidationError("Total goals scored by players must match the sum of home and away scores.")
+            
+        return cleaned_data
+
+        # Get all player stats for this match
+        player_stats = PlayerStats.objects.filter(match=self.instance)
+
+        # Calculate total goals scored by players
+        total_goals = sum(stat.goals for stat in player_stats)
+
+        if home_score + away_score != total_goals:
+            raise ValidationError("Total goals scored by players must match the sum of home and away scores.")
     class Meta:
         model = Match
-        fields = ['season', 'home_team', 'home_score', 'away_team', 'away_score', 'date', 'status']
+        fields = ['season','match_day', 'home_team', 'home_score', 'away_team', 'away_score', 'date', 'status']
         widgets = {
             'date': forms.DateTimeInput(
                 attrs={
@@ -68,7 +94,18 @@ class PlayerStatsForm(forms.ModelForm):
     """Individual player stats form with enhanced validation and styling"""
     
     def __init__(self, *args, **kwargs):
+        self.match = kwargs.pop('match', None)
         super().__init__(*args, **kwargs)
+
+        #Get only active players in the match's league
+        if self.match:
+            active_players = PlayerSeasonParticipation.objects.filter(
+                league=self.match.season, is_active=True,
+                team__in=[self.match.home_team, self.match.away_team]
+            ).values_list('player_id', flat=True)
+
+            self.fields['player'].queryset = Player.objects.filter(id__in=active_players)
+
         # Make player field read-only but visible
         if self.instance and self.instance.pk:
             self.fields['player'].disabled = True
@@ -152,3 +189,29 @@ PlayerStatsFormSet = forms.modelformset_factory(
     # validate_min=False,
     # validate_max=False
 )
+
+
+class LineupForm(forms.ModelForm):
+    """Form for creating/editing lineups with enhanced validation and styling"""
+    
+    def __init__(self, *args, **kwargs):
+        self.match = kwargs.pop('match', None)
+        super().__init__(*args, **kwargs)
+
+        # Get only active players in the match's league
+        if self.match:
+            active_players = PlayerSeasonParticipation.objects.filter(
+                league=self.match.season, is_active=True,
+                team__in=[self.match.home_team, self.match.away_team]
+            ).values_list('player_id', flat=True)
+
+            self.fields['players'].queryset = Player.objects.filter(id__in=active_players)
+
+    class Meta:
+        model = Lineup
+        fields = ['team', 'players',]
+        widgets = {
+            'players': forms.SelectMultiple(attrs={
+                'class': 'block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'
+            })
+        }

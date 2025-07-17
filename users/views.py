@@ -6,6 +6,7 @@ from .forms import UserRegistriationForm, EmailAuthenticationForm
 
 # Login view
 def login_view(request):
+  
     if request.method == 'POST':
         form = EmailAuthenticationForm(request, data=request.POST)
 
@@ -52,6 +53,8 @@ def register_view(request):
     else:
         form = UserRegistriationForm()
     
+
+
     return render(request, 'registration/register.html', {'form': form})
 
 def dashboard(request):

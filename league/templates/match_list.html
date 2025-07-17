@@ -3,9 +3,9 @@
 {% block content %}
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-8 px-4">
   <div class="max-w-6xl mx-auto">
-    <h1 class="text-3xl font-bold text-blue-800 mb-8">Match List</h1>
+    <!-- Header Section -->
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">All Matches</h1>
+        <h1 class="text-3xl font-bold text-blue-800">Match List</h1>
         <a href="{% url 'create_match' %}" 
            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -13,6 +13,65 @@
             </svg>
             Create New Match
         </a>
+    </div>
+
+    <!-- Match Statistics Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-500">Total Matches</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ match_stats.total_matches }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-yellow-500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-500">Scheduled</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ match_stats.total_scheduled }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-red-500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-500">Live</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ match_stats.total_live }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-500">Finished</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ match_stats.total_finished }}</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Filter Section -->
@@ -30,9 +89,10 @@
                     name="team_search" 
                     value="{{ current_team_search }}"
                     placeholder="Enter team name..."
-                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-sm px-3 py-2"
+                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm px-3 py-2"
                 >
             </div>
+            
             <!-- Match Day Filter -->
             <div>
                 <label for="match_day" class="block text-sm font-medium text-gray-700 mb-1">
@@ -41,7 +101,7 @@
                 <select 
                     id="match_day" 
                     name="match_day"
-                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-sm px-3 py-2"
+                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm px-3 py-2"
                 >
                     <option value="">All Match Days</option>
                     {% for day in match_days %}
@@ -51,6 +111,7 @@
                     {% endfor %}
                 </select>
             </div>
+            
             <!-- League Filter -->
             <div>
                 <label for="league" class="block text-sm font-medium text-gray-700 mb-1">
@@ -59,7 +120,7 @@
                 <select 
                     id="league" 
                     name="league"
-                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-sm px-3 py-2"
+                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm px-3 py-2"
                 >
                     <option value="">All Leagues</option>
                     {% for league in leagues %}
@@ -69,17 +130,18 @@
                     {% endfor %}
                 </select>
             </div>
+            
             <!-- Filter Buttons -->
-            <div class="flex space-x-2 mt-2 sm:mt-6 sm:mt-0">
+            <div class="flex space-x-2">
                 <button 
                     type="submit"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors w-full text-sm"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm"
                 >
                     Filter
                 </button>
                 <a 
                     href="{% url 'match_list' %}"
-                    class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors w-full text-center text-sm"
+                    class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors text-center text-sm"
                 >
                     Clear
                 </a>
@@ -89,7 +151,7 @@
 
     <!-- Results Summary -->
     {% if current_team_search or current_match_day or current_league %}
-        <div class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400">
+        <div class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
             <p class="text-sm text-blue-700">
                 <span class="font-medium">Showing filtered results:</span>
                 {% if current_team_search %}
@@ -114,75 +176,124 @@
     <div class="mb-8">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-2xl font-bold text-gray-900">Upcoming Matches</h2>
-            <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                {{ upcoming_matches.count }} match{{ upcoming_matches.count|pluralize:"es" }}
+            <span class="bg-yellow-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full">
+                {{ upcoming_matches|length }} match{{ upcoming_matches|length|pluralize:"es" }}
             </span>
         </div>
         
-        <div class="bg-white shadow rounded-lg overflow-x-auto">
-            <table class="w-full min-w-[600px] text-xs sm:text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match Day</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">League</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for match in upcoming_matches %}
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ match.date|date:"M d, Y" }}<br>
-                            <span class="text-xs text-gray-500">{{ match.date|date:"H:i" }}</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
-                                Day {{ match.match_day }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div class="flex items-center">
-                                <span class="font-medium">{{ match.home_team }}</span>
-                                <span class="mx-2 text-gray-400">vs</span>
-                                <span class="font-medium">{{ match.away_team }}</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ match.season.get_session_display }} {{ match.season.year }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                {{ match.get_status_display }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                            <a href="{% url 'edit_match' match.id %}" 
-                               class="text-blue-600 hover:text-blue-900 hover:underline">Edit</a>
-                            <a href="{% url 'delete_match' match.id %}" 
-                               class="text-red-600 hover:text-red-900 hover:underline">Delete</a>
-                            <a href="{% url 'edit_player_stats' match.id %}" 
-                               class="text-green-600 hover:text-green-900 hover:underline">Stats</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                            <div class="flex flex-col items-center">
-                                <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                                <p class="text-lg font-medium">No upcoming matches found</p>
-                                <p class="text-sm">{% if current_team_search or current_match_day or current_league %}Try adjusting your filters{% else %}Create your first match to get started{% endif %}</p>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[700px]">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match Day</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">League</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for match in upcoming_matches %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="flex flex-col">
+                                    <span class="font-medium">{{ match.date|date:"M d, Y" }}</span>
+                                    <span class="text-xs text-gray-500">{{ match.date|date:"g:i A" }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if match.match_day %}
+                                    <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                                        Day {{ match.match_day }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-400 text-xs">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-blue-600">{{ match.home_team.name }}</span>
+                                    <span class="mx-2 text-gray-400 font-bold">VS</span>
+                                    <span class="font-medium text-red-600">{{ match.away_team.name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex flex-col">
+                                    <span class="font-medium">{{ match.season.get_session_display }}</span>
+                                    <span class="text-xs text-gray-400">{{ match.season.year }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                    {% if match.status == 'SCH' %}bg-yellow-100 text-yellow-800
+                                    {% elif match.status == 'LIV' %}bg-red-100 text-red-800
+                                    {% elif match.status == 'FIN' %}bg-green-100 text-green-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ match.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'edit_match' match.id %}" 
+                                       class="text-blue-600 hover:text-blue-900 hover:underline transition-colors">Edit</a>
+                                    <a href="{% url 'delete_match' match.id %}" 
+                                       class="text-red-600 hover:text-red-900 hover:underline transition-colors"
+                                       onclick="return confirm('Are you sure you want to delete this match?')">Delete</a>
+                                    <a href="{% url 'edit_player_stats' match.id %}" 
+                                       class="text-green-600 hover:text-green-900 hover:underline transition-colors">Stats</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium mb-2">No upcoming matches found</p>
+                                    <p class="text-sm">
+                                        {% if current_team_search or current_match_day or current_league %}
+                                            Try adjusting your filters or <a href="{% url 'match_list' %}" class="text-blue-600 hover:underline">clear all filters</a>
+                                        {% else %}
+                                            <a href="{% url 'create_match' %}" class="text-blue-600 hover:underline">Create your first match</a> to get started
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- Pagination for upcoming matches -->
+        {% if upcoming_matches.has_other_pages %}
+            <div class="flex justify-center mt-4">
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {% if upcoming_matches.has_previous %}
+                        <a href="?scheduled_page={{ upcoming_matches.previous_page_number }}{% if current_team_search %}&team_search={{ current_team_search }}{% endif %}{% if current_match_day %}&match_day={{ current_match_day }}{% endif %}{% if current_league %}&league={{ current_league }}{% endif %}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+                    
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                        Page {{ upcoming_matches.number }} of {{ upcoming_matches.paginator.num_pages }}
+                    </span>
+                    
+                    {% if upcoming_matches.has_next %}
+                        <a href="?scheduled_page={{ upcoming_matches.next_page_number }}{% if current_team_search %}&team_search={{ current_team_search }}{% endif %}{% if current_match_day %}&match_day={{ current_match_day }}{% endif %}{% if current_league %}&league={{ current_league }}{% endif %}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            Next
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Finished Matches Section -->
@@ -190,76 +301,121 @@
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-2xl font-bold text-gray-900">Finished Matches</h2>
             <span class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
-                {{ finished_matches.count }} match{{ finished_matches.count|pluralize:"es" }}
+                {{ finished_matches|length }} match{{ finished_matches|length|pluralize:"es" }}
             </span>
         </div>
         
-        <div class="bg-white shadow rounded-lg overflow-x-auto">
-            <table class="w-full min-w-[600px] text-xs sm:text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match Day</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">League</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for match in finished_matches %}
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ match.date|date:"M d, Y" }}<br>
-                            <span class="text-xs text-gray-500">{{ match.date|date:"H:i" }}</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
-                                Day {{ match.match_day }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div class="flex items-center">
-                                <span class="font-medium">{{ match.home_team }}</span>
-                                <span class="mx-2 text-gray-400">vs</span>
-                                <span class="font-medium">{{ match.away_team }}</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div class="flex items-center space-x-2">
-                                <span class="font-bold text-lg">{{ match.home_score }}</span>
-                                <span class="text-gray-400">-</span>
-                                <span class="font-bold text-lg">{{ match.away_score }}</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ match.season.get_session_display }} {{ match.season.year }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                            <a href="{% url 'edit_match' match.id %}" 
-                               class="text-blue-600 hover:text-blue-900 hover:underline">Edit</a>
-                            <a href="{% url 'delete_match' match.id %}" 
-                               class="text-red-600 hover:text-red-900 hover:underline">Delete</a>
-                            <a href="{% url 'edit_player_stats' match.id %}" 
-                               class="text-green-600 hover:text-green-900 hover:underline">Stats</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                            <div class="flex flex-col items-center">
-                                <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
-                                </svg>
-                                <p class="text-lg font-medium">No finished matches found</p>
-                                <p class="text-sm">{% if current_team_search or current_match_day or current_league %}Try adjusting your filters{% else %}Matches will appear here once they're completed{% endif %}</p>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[700px]">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match Day</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">League</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for match in finished_matches %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="flex flex-col">
+                                    <span class="font-medium">{{ match.date|date:"M d, Y" }}</span>
+                                    <span class="text-xs text-gray-500">{{ match.date|date:"g:i A" }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if match.match_day %}
+                                    <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                                        Day {{ match.match_day }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-400 text-xs">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-blue-600">{{ match.home_team.name }}</span>
+                                    <span class="mx-2 text-gray-400 font-bold">VS</span>
+                                    <span class="font-medium text-red-600">{{ match.away_team.name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="flex items-center justify-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
+                                    <span class="font-bold text-lg text-blue-600">{{ match.home_score }}</span>
+                                    <span class="text-gray-400 font-medium">-</span>
+                                    <span class="font-bold text-lg text-red-600">{{ match.away_score }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex flex-col">
+                                    <span class="font-medium">{{ match.season.get_session_display }}</span>
+                                    <span class="text-xs text-gray-400">{{ match.season.year }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'edit_match' match.id %}" 
+                                       class="text-blue-600 hover:text-blue-900 hover:underline transition-colors">Edit</a>
+                                    <a href="{% url 'delete_match' match.id %}" 
+                                       class="text-red-600 hover:text-red-900 hover:underline transition-colors"
+                                       onclick="return confirm('Are you sure you want to delete this match?')">Delete</a>
+                                    <a href="{% url 'edit_player_stats' match.id %}" 
+                                       class="text-green-600 hover:text-green-900 hover:underline transition-colors">Stats</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium mb-2">No finished matches found</p>
+                                    <p class="text-sm">
+                                        {% if current_team_search or current_match_day or current_league %}
+                                            Try adjusting your filters or <a href="{% url 'match_list' %}" class="text-blue-600 hover:underline">clear all filters</a>
+                                        {% else %}
+                                            Matches will appear here once they're completed
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- Pagination for finished matches -->
+        {% if finished_matches.has_other_pages %}
+            <div class="flex justify-center mt-4">
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {% if finished_matches.has_previous %}
+                        <a href="?finished_page={{ finished_matches.previous_page_number }}{% if current_team_search %}&team_search={{ current_team_search }}{% endif %}{% if current_match_day %}&match_day={{ current_match_day }}{% endif %}{% if current_league %}&league={{ current_league }}{% endif %}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+                    
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                        Page {{ finished_matches.number }} of {{ finished_matches.paginator.num_pages }}
+                    </span>
+                    
+                    {% if finished_matches.has_next %}
+                        <a href="?finished_page={{ finished_matches.next_page_number }}{% if current_team_search %}&team_search={{ current_team_search }}{% endif %}{% if current_match_day %}&match_day={{ current_match_day }}{% endif %}{% if current_league %}&league={{ current_league }}{% endif %}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            Next
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

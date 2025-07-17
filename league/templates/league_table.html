@@ -89,6 +89,10 @@
             ring: 2px;
             ring-color: rgba(255, 255, 255, 0.3);
         }
+
+        option{
+            color:#6c0acf;
+        }
     </style>
 
     <div class="gradient-bg">
@@ -122,6 +126,7 @@
                 </div>
                 <div class="flex gap-2">
                     <select id="sortBy" class="px-4 py-3 glass-effect rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/30">
+                        
                         <option value="position">Position</option>
                         <option value="points">Points</option>
                         <option value="goalDifference">Goal Difference</option>
@@ -136,7 +141,7 @@
             </div>
 
             <!-- Desktop Table -->
-            <div class="hidden lg:block">
+            <div class="hidden lg:block py-2">
                 <div class="glass-effect rounded-2xl overflow-hidden shadow-2xl">
                     <div class="overflow-x-auto">
                         <table class="w-full text-white">
@@ -199,7 +204,7 @@
             </div>
 
             <!-- Mobile Cards -->
-            <div class="lg:hidden grid gap-6" id="mobileCards">
+            <div class="lg:hidden grid gap-6 py-3" id="mobileCards">
                 {% for t in standings %}
                 <div class="mobile-card p-6 rounded-xl space-y-4" 
                      data-team="{{ t.team.name|lower }}"
@@ -235,7 +240,7 @@
                             <div class="text-slate-100 text-sm font-medium">Draws</div>
                         </div>
                         <div>
-                            <div class="text-2xl font-bold text-red-400">{{ t.losses }}</div>
+                            <div class="text-2xl font-bold text-red-500">{{ t.losses }}</div>
                             <div class="text-slate-100 text-sm font-medium">Losses</div>
                         </div>
                     </div>

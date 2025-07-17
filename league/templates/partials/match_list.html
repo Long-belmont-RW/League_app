@@ -1,0 +1,11 @@
+<div class="grid grid-cols-1 gap-4">
+    {% for match in matches %}
+    <div class="bg-white p-4 rounded shadow">
+        <p>{{ match.home_team }} vs {{ match.away_team }} ({{ match.date|date:"Y-m-d" }})</p>
+        <p>Score: {{ match.home_score }} - {{ match.away_score }}</p>
+        <a href="{% url 'edit_player_stats' match.id %}" class="text-blue-500">Edit Stats</a>
+    </div>
+    {% empty %}
+    <p>No matches found.</p>
+    {% endfor %}
+</div>

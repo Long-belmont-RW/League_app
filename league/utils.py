@@ -2,33 +2,31 @@
 from django.db import models
 from .models import TeamSeasonParticipation
 
+from django.db.models import F
+from .models import TeamSeasonParticipation
+
 def get_league_standings(league):
     """
-    Returns a ranked list of teams for a given league, sorted by:
-    - Points (desc)
-    - Goal difference (desc)
-    - Goals scored (desc)
+    Generate league standings for a given league, sorted by points, goal difference, and goals scored.
+    Returns a list of dictionaries with team data and calculated fields.
     """
-
-    # Get all teams in the league, with optional annotations if needed
-    teams = TeamSeasonParticipation.objects.filter(league=league).annotate(
-        goal_difference=models.F('goals_scored') - models.F('goals_conceded')
-    ).order_by(
-        '-points',               # Highest points first
-        '-goal_difference',      # Then highest goal difference
-        '-goals_scored'          # Then most goals scored
-    )
-
+    teams = TeamSeasonParticipation.objects.filter(league=league).select_related('team')
     standings = []
     for position, team in enumerate(teams, start=1):
         standings.append({
             'position': position,
-            'team': team.team.name,
-            'points': team.points,
-            'goal_difference': team.goal_difference,
+            'team': team.team,
+            'matches_played': team.matches_played,
+            'wins': team.wins,
+            'draws': team.draws,
+            'losses': team.losses,
             'goals_scored': team.goals_scored,
             'goals_conceded': team.goals_conceded,
-            'wins': team.wins,
+            'goal_difference': team.goal_difference,  # Use property directly
+            'points': team.points,
         })
-
-    return standings
+    return sorted(
+        standings,
+        key=lambda x: (x['points'], x['goal_difference'], x['goals_scored']),
+        reverse=True
+    )
