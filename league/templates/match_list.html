@@ -6,6 +6,8 @@
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-blue-800">Match List</h1>
+
+        {% if user.is_authenticated and user.is_admin %}
         <a href="{% url 'create_match' %}" 
            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -13,6 +15,7 @@
             </svg>
             Create New Match
         </a>
+        {% endif %}
     </div>
 
     <!-- Match Statistics Summary -->
@@ -236,6 +239,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex space-x-2">
+                                    {% if user.is_authenticated and user.is_admin %}
                                     <a href="{% url 'edit_match' match.id %}" 
                                        class="text-blue-600 hover:text-blue-900 hover:underline transition-colors">Edit</a>
                                     <a href="{% url 'delete_match' match.id %}" 
@@ -243,6 +247,9 @@
                                        onclick="return confirm('Are you sure you want to delete this match?')">Delete</a>
                                     <a href="{% url 'edit_player_stats' match.id %}" 
                                        class="text-green-600 hover:text-green-900 hover:underline transition-colors">Stats</a>
+                                    {% else %}
+                                    <a href="#" class="text-blue-600 hover:text-blue-900 hover:underline transition-colors">View</a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>

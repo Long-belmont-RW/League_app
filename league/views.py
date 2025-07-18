@@ -1,6 +1,8 @@
 # league/views.py
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import user_passes_test
+
 from django.urls import reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
@@ -446,7 +448,7 @@ class MatchListView(ListView):
 
 
 # Match Create/Edit View
-class MatchFormView(LoginRequiredMixin, CreateView):
+class MatchFormView(UserPassesTestMixin, CreateView, ):
     model = Match
     form_class = MatchForm
     template_name = 'match_form.html'
@@ -467,14 +469,21 @@ class MatchFormView(LoginRequiredMixin, CreateView):
         if self.get_object():
             return ['match_form.html']
         return super().get_template_names()
+    
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.is_admin
 
 # Delete Match View
-class DeleteMatchView(LoginRequiredMixin, DeleteView):
+class DeleteMatchView(UserPassesTestMixin, DeleteView):
     model = Match
     success_url = reverse_lazy('match_list')
     template_name = 'delete_match.html'
 
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.is_admin
+
 # Edit Player Stats View (HTMX-enabled)
+@user_passes_test(lambda u: u.is_authenticated and u.is_admin)
 def edit_player_stats_view(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     # Get all players for both teams in the match's league
