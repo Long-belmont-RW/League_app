@@ -130,7 +130,16 @@
                                 <a href="/profile" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Profile</a>
                             </li>
                             <li>
-                                <a href="/dashboard" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Dashboard</a>
+                                {% if user.role == 'admin'%}
+                                <a href="{% url 'admin_dashboard'%}" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Dashboard</a>
+                                {% elif user.role == 'coach'%}
+                                <a href="{% url 'coach_dashboard' %}" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Coach Dashboard</a>
+                                {% elif user.role == 'player'%}
+                                <a href="{% url 'player_dashboard' %}" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Player Dashboard</a>
+                                {% else %}
+                                <a href="{% url 'fan_dashboard' %}" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">User Dashboard</a>
+                                {% endif %}
+
                             </li>
                             <li>
                                 <a href="/settings" class="block px-4 py-2 hover:bg-blue-800 hover:text-white transition-colors">Settings</a>

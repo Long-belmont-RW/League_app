@@ -471,7 +471,7 @@ class MatchFormView(UserPassesTestMixin, CreateView, ):
         return super().get_template_names()
     
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.is_admin
+        return self.request.user.is_authenticated and self.request.user.role == 'admin'
 
 # Delete Match View
 class DeleteMatchView(UserPassesTestMixin, DeleteView):
@@ -480,10 +480,10 @@ class DeleteMatchView(UserPassesTestMixin, DeleteView):
     template_name = 'delete_match.html'
 
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.is_admin
+        return self.request.user.is_authenticated and self.request.user.role == 'admin'
 
 # Edit Player Stats View (HTMX-enabled)
-@user_passes_test(lambda u: u.is_authenticated and u.is_admin)
+@user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
 def edit_player_stats_view(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     # Get all players for both teams in the match's league

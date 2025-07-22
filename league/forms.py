@@ -20,19 +20,12 @@ class MatchForm(forms.ModelForm):
             if match.pk:
                 stats = PlayerStats.objects.filter(match=match)
                 total_goals = stats.aggregate(total=Sum('goals'))['total'] or 0
-                if home_score + away_score != total_goals:
+                if total_goals != home_score + away_score:
                     raise ValidationError("Total goals scored by players must match the sum of home and away scores.")
             
         return cleaned_data
 
-        # Get all player stats for this match
-        player_stats = PlayerStats.objects.filter(match=self.instance)
-
-        # Calculate total goals scored by players
-        total_goals = sum(stat.goals for stat in player_stats)
-
-        if home_score + away_score != total_goals:
-            raise ValidationError("Total goals scored by players must match the sum of home and away scores.")
+      
     class Meta:
         model = Match
         fields = ['season','match_day', 'home_team', 'home_score', 'away_team', 'away_score', 'date', 'status']

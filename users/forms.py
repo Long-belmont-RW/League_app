@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
 
-from .models import User, UserProfile
+from .models import User, UserProfile  # Assuming User extends AbstractUser
 
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(
@@ -13,43 +13,44 @@ class EmailAuthenticationForm(AuthenticationForm):
         super().__init__(*args, **kwargs)
         self.fields['username'].label = 'Email'
 
-class UserRegistriationForm(UserCreationForm):
+
+class UserRegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
-    role_coach = forms.BooleanField(required=False, label="Register as Coach")
-    role_player = forms.BooleanField(required=False, label="Register as Player")
-    role_fan = forms.BooleanField(required=False, label="Register as Fan", initial=True)
+    role = forms.ChoiceField(choices=User.ROLE_CHOICES)
 
     class Meta:
         model = User
+        fields = ('username', 'email', 'birth', 'gender', 'role', 'password1', 'password2')
 
-        fields = ('username', 'email', 'birth', 'gender', 'password1', 'password2')
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)  # get request context for role filtering
+        super().__init__(*args, **kwargs)
 
-    
+        if self.request and not (self.request.user.is_authenticated and self.request.user.role == 'admin'):
+            # Remove 'admin' from choices for non-admins
+            allowed_choices = [choice for choice in User.ROLE_CHOICES if choice[0] != 'admin']
+            self.fields['role'].choices = allowed_choices
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
-
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("Email already exists.")
         return email
-    
-    
 
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        # Ensure at least one role is selected
-        if not any([cleaned_data.get('role_coach'), 
-                   cleaned_data.get('role_player'), 
-                   cleaned_data.get('role_fan')]):
-            raise forms.ValidationError("Please select at least one role.")
-        return cleaned_data
+    def clean_role(self):
+        role = self.cleaned_data.get('role')
+        if role == 'admin':
+            if not (self.request and self.request.user.is_authenticated and self.request.user.role == 'admin'):
+                raise forms.ValidationError("Only admins can register admin accounts.")
+        return role
 
     def save(self, commit=True):
-        user =  super().save(commit=False)
+        user = super().save(commit=False)
         user.email = self.cleaned_data['email']
-        user.is_coach = self.cleaned_data.get('role_coach', False)
-        user.is_player = self.cleaned_data.get('role_player', False)
-        user.is_fan = self.cleaned_data.get('role_fan', True)
+        user.role = self.cleaned_data['role']
+
+        # Optional: Set is_staff based on role
+        user.is_staff = (user.role == 'admin')
 
         if commit:
             user.save()

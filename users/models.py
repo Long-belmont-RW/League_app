@@ -11,18 +11,30 @@ class GenderChoices(models.TextChoices):
     FEMALE = 'F', 'Female'
     
 
-
 class User(AbstractUser):
-    email = models.EmailField(unique=True) #Email would be unique
+    ROLE_CHOICES = (
+        ('admin', 'Admin'),
+        ('player', 'Player'),
+        ('coach', 'Coach'),
+        ('fan', 'Fan'),
+    )
+
+    email = models.EmailField(unique=True)
     birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GenderChoices.choices, default=GenderChoices.MALE)
-    is_coach = models.BooleanField(default=False)
-    is_player = models.BooleanField(default=False)
-    is_fan = models.BooleanField(default=True)
-    is_admin = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'email' #email would be used for authentication
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='fan')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+
+
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'gender', 'birth']
+
+    def save(self, *args, **kwargs):
+        # Automatically set is_staff if user is an admin
+        self.is_staff = self.role == 'admin'
+        super().save(*args, **kwargs)
 
     @property 
     def age(self):
@@ -34,41 +46,27 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-    
+
     def clean(self):
         if self.birth and self.birth > date.today():
-           raise ValidationError({'birth': 'Birth date cannot be in the future'})
+            raise ValidationError({'birth': 'Birth date cannot be in the future'})
 
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,)
     bio = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='user_profiles/', blank=True, null=True)
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
     coach = models.OneToOneField(Coach, on_delete=models.SET_NULL, null=True, blank=True)
     player = models.OneToOneField(Player, on_delete=models.SET_NULL, null=True, blank=True)
+
 
     def __str__(self):
         return f"{self.user.username} - Profile"
     
 
     @property
-    def roles(self):
-        """Return a list of user's active roles"""
-        roles = []
-
-        if self.user.is_fan:
-            roles.append('Fan')
-        
-        if self.user.is_player:
-            roles.append('Fan')
-        
-        if self.user.is_coach:
-            roles.append('Fan')
-        
-
-        
-        return roles
-
-
-
+    def role(self):
+        return self.user.role.capitalize()

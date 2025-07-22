@@ -145,7 +145,7 @@ MEDIA_ROOT = BASE_DIR.parent / 'static/images'
 MEDIA_URL = '/media/'
 
 AUTHENTICATION_BACKENDS = [
-   'users.authentication.EmailMultiRoleAuthBackend',  #custom backend
+   'users.authentication.EmailRoleAuthBackend',  #custom backend
     'django.contrib.auth.backends.ModelBackend',
 ]
 
