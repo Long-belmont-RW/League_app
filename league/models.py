@@ -2,8 +2,9 @@ from django.db import models
 
 from django.core.exceptions import ValidationError
 from django.db.models import Sum, Q
+from django.utils import timezone
 
-from datetime import date 
+from datetime import datetime, date, time, timedelta
 from dateutil import relativedelta
 
 
@@ -57,6 +58,7 @@ class League(models.Model):
     session = models.CharField(max_length=1, choices=SessionChoice.choices)
     is_active = models.BooleanField(default=True)
     logo = models.ImageField(upload_to='league_logos/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name_plural = "Leagues"
@@ -97,15 +99,14 @@ class Team(models.Model):
 
 # --- Coach Model ---
 class Coach(Personel):  
-    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='coaches')
     role = models.CharField(max_length=1, choices=CoachRoles.choices, default=CoachRoles.ASSISTANT)
+
 
     class Meta:
         verbose_name_plural = "Coaches"
-    
-   
+
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.get_role_display()})"
+        return f"{self.first_name} {self.last_name} - ({self.get_role_display()})"
     
 
 
@@ -133,6 +134,8 @@ class Match(models.Model):
     match_day = models.PositiveIntegerField(null=True, blank=True, default=1)  # Optional field for match day
     status = models.CharField(max_length=3, choices=MatchStatus.choices, default=MatchStatus.SCHEDULED)
 
+    actual_kickoff_time = models.DateTimeField(null=True, blank=True)  # Optional kickoff time, incase of timing issues
+
     class Meta:
         verbose_name_plural = "Matches"
         indexes = [
@@ -140,6 +143,79 @@ class Match(models.Model):
             models.Index(fields=['home_team', 'away_team']),
         ]
 
+    
+    def save(self, *args, **kwargs):
+        """Override save method to check live status and update kickoff time."""
+        
+        try:
+            old_instance = Match.objects.get(pk=self.pk)
+        except Match.DoesNotExist:
+            old_instance = None
+        
+       #Set kickoff time only when match status transitions to LIVE
+        is_going_live = self.status == self.status.LIVE and (old_instance is None or old_instance.status != self.status.LIVE)
+
+        if is_going_live and not self.actual_kickoff_time:
+            self.actual_kickoff_time = timezone.now()
+        
+        super().save(*args, **kwargs)
+
+    def get_current_minute(self):
+        """Returns the current minute of the match 
+        if the match is live, otherwise returns None."""
+
+
+        if self.status != MatchStatus.LIVE:
+            return None
+        
+        #Determine the actual kickoff time:
+        kickoff_time = self.actual_kickoff_time if self.actual_kickoff_time else self.date
+
+        #Track current time
+        now = timezone.now() 
+
+        #Ensure that kickoff time is not in the future
+        if kickoff_time > now:
+            return 0
+        
+        #Calculate the elapsed time since kickoff
+        elapsed_time = now - kickoff_time
+        #Convert elapsed time to minutes
+        return int(elapsed_time.total_seconds() // 60)
+
+    @property
+    def get_display_minute(self):
+        """
+        Returns a user-friendly string for displaying the match minute, and 
+        handling extra time formatting (e.g "90 + 2")
+        """
+        current_minutes = self.get_current_minute()
+        
+        if current_minutes is None:
+            return ""
+        
+        #Ensure the match is not longer than 90 minutes
+        if current_minutes > 90:
+            extra_time = current_minutes - 90
+            return f"90 + {extra_time}'"
+        
+            
+        return f"{current_minutes}'"
+        
+        
+
+        
+    def get_winner(self):
+        """Returns the winning team or None if it's a draw."""
+        if self.home_score > self.away_score:
+            return self.home_team
+        elif self.away_score > self.home_score:
+            return self.away_team
+        return None
+    
+    def get_match_events(self):
+        """Returns all PlayerStats related to this match."""
+        return PlayerStats.objects.filter(match=self)
 
     def check_duplicates(self):
         """ prevents more than two matches between the same two teams in the same league"""
@@ -216,6 +292,8 @@ class PlayerSeasonParticipation(models.Model):
     assists = models.IntegerField(default=0)
     yellow_cards = models.IntegerField(default=0)
     red_cards = models.IntegerField(default=0)
+    clean_sheets = models.IntegerField(default=0)  
+    
 
     joined_at = models.DateField(auto_now_add=True)
     left_at = models.DateField(null=True, blank=True)
@@ -260,6 +338,9 @@ class CoachSeasonParticipation(models.Model):
 
     class Meta:
         unique_together = ['coach', 'team', 'league']
+    
+    def __str__(self):
+        return f"{self.coach} with {self.team} in {self.league.session} ({self.league.year})"
 
 
 #---Tracks Team performance per season---

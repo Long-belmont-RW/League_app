@@ -203,13 +203,13 @@
                         <li class="text-gray-300">
                             <p class="text-sm text-gray-400 mb-1">Season Completion:</p>
                             <div class="bg-gray-700 w-full h-3 rounded-full overflow-hidden">
-                                <div class="bg-green-600 h-full w-[50%]"></div> <!-- Example: 50% completion -->
+                                <div class="bg-green-600 h-full w-[{{ season_progress }}%]"></div> 
                             </div>
-                            <p class="text-xs text-gray-400 mt-1">50% Complete</p>
+                            <p class="text-xs text-gray-400 mt-1">{{ season_progress }}% Complete</p>
                         </li>
                         <li class="flex justify-between items-center text-gray-300">
                             <span>Next Match Date:</span>
-                            <span class="text-gray-400">August 5, 2025</span>
+                            <span class="text-gray-400">{{ latest_match.date}}</span>
                         </li>
                     </ul>
                 </div>

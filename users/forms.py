@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
-
+from league.models import Coach
 from .models import User, UserProfile  # Assuming User extends AbstractUser
 
 class EmailAuthenticationForm(AuthenticationForm):
@@ -20,7 +20,7 @@ class UserRegistrationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'birth', 'gender', 'role', 'password1', 'password2')
+        fields = ('username', 'email', 'birth', 'gender', 'role')
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)  # get request context for role filtering
@@ -49,9 +49,8 @@ class UserRegistrationForm(UserCreationForm):
         user.email = self.cleaned_data['email']
         user.role = self.cleaned_data['role']
 
-        # Optional: Set is_staff based on role
+        # Set is_staff based on role
         user.is_staff = (user.role == 'admin')
-
         if commit:
             user.save()
         return user

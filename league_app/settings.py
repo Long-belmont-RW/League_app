@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,8 +33,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     #My Apps
-    'users',
-    'league',
+    'users.apps.UsersConfig',
+    'league.apps.LeagueConfig',
 
 
     #Third Party
@@ -141,8 +142,10 @@ STATICFILES_DIRS = (
 BASE_DIR / 'static',
 )
 
-MEDIA_ROOT = BASE_DIR.parent / 'static/images'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTHENTICATION_BACKENDS = [
    'users.authentication.EmailRoleAuthBackend',  #custom backend
@@ -162,7 +165,7 @@ LOGIN_REDIRECT_URL = '/home/'
 LOGIN_REDIRECT_URL = '/login/'
 
 
-import os
+
 
 LOGGING = {
     'version': 1,
@@ -195,6 +198,12 @@ LOGGING = {
         'league': {  # Replace with your app name
             'handlers': ['file', 'console'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+
+        'users': { # This is the logger for your 'users' app
+            'handlers': ['console', 'file'],
+            'level': 'INFO', # Set this to DEBUG to see the 'debug' messages from your signal
             'propagate': False,
         },
     },
