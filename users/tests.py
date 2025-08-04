@@ -69,7 +69,7 @@ class UserViewsAndSignalsTest(TestCase):
         self.coach_obj = Coach.objects.get(userprofile__user=self.coach_user)
 
         #Player joins Team for the league
-        PlayerSeasonParticipation.objects.create(
+        self.player_participation = PlayerSeasonParticipation.objects.create(
             player=self.player_obj,
             team=self.team,
             league=self.league
@@ -173,6 +173,7 @@ class UserViewsAndSignalsTest(TestCase):
 
     
     def test_login_view_invalid_credentials(self):
+        
         """
         Tests the login view with incorrect password.
         """
@@ -198,5 +199,74 @@ class UserViewsAndSignalsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'player_dashboard.html')
 
+        #--- Context Assertations ---
+        self.assertIn('player_team', response.context)
+        self.assertEqual(response.context['player_team'], self.player_participation)
+
+        self.assertIn('upcoming_matches', response.context)
+        self.assertQuerySetEqual(
+            response.context['upcoming_matches'],
+            [self.upcoming_match],
+            transform=lambda x: x
+        )
+    
+    def test_coach_dashboard(self):
+        """
+        Tests access rules for Coach dashboard
+        """
+
+        self.client.login(email='coach@example.com', password='password123')
+        response = self.client.get(reverse('coach_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'coach_dashboard.html')
 
 
+
+        # --- Context Assertions ---
+        self.assertEqual(response.context['coach_team'], self.coach_participation)
+        self.assertQuerySetEqual(
+            response.context['upcoming_matches'],
+            [self.upcoming_match],
+            transform=lambda x: x
+        )
+        # Check that the coach's team's player is in the context
+        self.assertIn(self.player_participation, response.context['players'])
+
+    
+
+    def test_fan_dashboard(self):
+        """
+        tests access rules for fan dashboard
+        """
+
+        self.client.login(email='fan@example.com', password='password123')
+        response = self.client.get(reverse('fan_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fan_dashboard.html')
+
+        # --- Context Assertions ---
+        self.assertEqual(response.context['latest_league'], self.league)
+        self.assertIn(self.upcoming_match, response.context['matches'])
+        
+        # Check that both teams are in the context
+        teams_in_context = [tsp.team for tsp in response.context['teams']]
+        self.assertIn(self.team, teams_in_context)
+        self.assertIn(self.team2, teams_in_context)
+
+
+    def test_dashboard_access_for_wrong_roles(self):
+        """
+        Ensures users with incorrect roles are redirected from dashboards
+        """
+
+        # Fan tries to access player dashboard
+        self.client.login(email='fan@example.com', password='password123')
+        response = self.client.get(reverse('player_dashboard'))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('player_dashboard')}")
+
+        # Player tries to access coach dashboard
+        self.client.login(email='player@example.com', password='password123')
+        response = self.client.get(reverse('coach_dashboard'))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('coach_dashboard')}")
