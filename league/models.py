@@ -1,7 +1,7 @@
 from django.db import models
 
 from django.core.exceptions import ValidationError
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F, Case, When, IntegerField
 from django.utils import timezone
 
 from datetime import datetime, date, time, timedelta
@@ -367,6 +367,48 @@ class TeamSeasonParticipation(models.Model):
         unique_together = ["team", "league"]
         ordering = ['-points', '-goals_scored', 'goals_conceded']
     
+    
+    def update_stats(self):
+        """
+        Recalculates all stats for this team participation record using
+        efficient database aggregation.
+        """
+        team = self.team
+        season = self.league
+
+        # Aggregate stats from home matches
+        home_matches = Match.objects.filter(
+            season=season, home_team=team, status=MatchStatus.FINISHED
+        ).aggregate(
+            home_wins=Sum(Case(When(home_score__gt=F('away_score'), then=1), default=0, output_field=IntegerField())),
+            home_draws=Sum(Case(When(home_score=F('away_score'), then=1), default=0, output_field=IntegerField())),
+            home_losses=Sum(Case(When(home_score__lt=F('away_score'), then=1), default=0, output_field=IntegerField())),
+            goals_scored=Sum('home_score', default=0),
+            goals_conceded=Sum('away_score', default=0)
+        )
+
+        # Aggregate stats from away matches
+        away_matches = Match.objects.filter(
+            season=season, away_team=team, status=MatchStatus.FINISHED
+        ).aggregate(
+            away_wins=Sum(Case(When(away_score__gt=F('home_score'), then=1), default=0, output_field=IntegerField())),
+            away_draws=Sum(Case(When(away_score=F('home_score'), then=1), default=0, output_field=IntegerField())),
+            away_losses=Sum(Case(When(away_score__lt=F('home_score'), then=1), default=0, output_field=IntegerField())),
+            goals_scored=Sum('away_score', default=0),
+            goals_conceded=Sum('home_score', default=0)
+        )
+
+        # Combine and save the results
+        self.wins = (home_matches['home_wins'] or 0) + (away_matches['away_wins'] or 0)
+        self.draws = (home_matches['home_draws'] or 0) + (away_matches['away_draws'] or 0)
+        self.losses = (home_matches['home_losses'] or 0) + (away_matches['away_losses'] or 0)
+        self.goals_scored = (home_matches['goals_scored'] or 0) + (away_matches['goals_scored'] or 0)
+        self.goals_conceded = (home_matches['goals_conceded'] or 0) + (away_matches['goals_conceded'] or 0)
+        
+        self.matches_played = self.wins + self.draws + self.losses
+        self.points = (self.wins * 3) + self.draws
+        
+        self.save()
     
     def __str__(self):  
         return f"{self.team} in {self.league.session} ({self.league.year})"
