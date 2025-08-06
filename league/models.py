@@ -153,7 +153,7 @@ class Match(models.Model):
             old_instance = None
         
        #Set kickoff time only when match status transitions to LIVE
-        is_going_live = self.status == self.status.LIVE and (old_instance is None or old_instance.status != self.status.LIVE)
+        is_going_live = self.status == MatchStatus.LIVE and (old_instance is None or old_instance.status != MatchStatus.LIVE)
 
         if is_going_live and not self.actual_kickoff_time:
             self.actual_kickoff_time = timezone.now()
@@ -356,6 +356,8 @@ class TeamSeasonParticipation(models.Model):
     losses = models.IntegerField(default=0)
     draws = models.IntegerField(default=0)
     matches_played = models.IntegerField(default=0)
+
+    
 
 
     @property

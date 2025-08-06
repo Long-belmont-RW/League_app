@@ -1,5 +1,7 @@
 from django.test import TestCase, Client
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+
 from datetime import datetime, timedelta, time
 from unittest.mock import patch
 from django.urls import reverse
@@ -7,72 +9,16 @@ from django.urls import reverse
 import pytest, pytz
 from freezegun import freeze_time
 
-from league.models import Team, League, Match, MatchStatus
+from league.models import (Team, League, Match, MatchStatus, 
+        TeamSeasonParticipation, Coach, Player, 
+        Lineup, CoachSeasonParticipation)
+
+from users.models import UserProfile
 from league.services import update_league_table
 
 
-
-# @pytest.mark.django_db
-# def test_league_table_calculation():
-#     league = League.objects.create(year=2025, session="S")
-#     team1 = Team.objects.create(name="Alpha FC")
-#     team2 = Team.objects.create(name="Beta FC")
-
-#     Match.objects.create(
-#         season=league,
-#         home_team=team1,
-#         away_team=team2,
-#         home_score=2,
-#         away_score=1,
-#         date="2025-06-01T15:00:00Z",
-#         status=MatchStatus.FINISHED
-#     )
-
-#     update_league_table(league)
-
-#     team1_participation = team1.teamseasonparticipation_set.get(league=league)
-#     team2_participation = team2.teamseasonparticipation_set.get(league=league)
-
-#     assert team1_participation.points == 3
-#     assert team1_participation.wins == 1
-#     assert team1_participation.goals_scored == 2
-
-#     assert team2_participation.losses == 1
-#     assert team2_participation.goals_conceded == 2
-
-
-
-# class MatchListViewTests(TestCase):
-#     def setUp(self):
-#         self.client = Client()
-#         self.league = League.objects.create(year=2025, session='S', is_active=True)
-#         self.team1 = Team.objects.create(name="Team A")
-#         self.team2 = Team.objects.create(name="Team B")
-#         self.match1 = Match.objects.create(
-#             season=self.league, home_team=self.team1, away_team=self.team2,
-#             date='2025-07-15T10:00:00Z', status=MatchStatus.SCHEDULED, match_day=1
-#         )
-#         self.match2 = Match.objects.create(
-#             season=self.league, home_team=self.team2, away_team=self.team1,
-#             date='2025-07-14T10:00:00Z', status=MatchStatus.FINISHED,
-#             home_score=2, away_score=1, match_day=1
-#         )
-
-#     def test_match_list_view(self):
-#         response = self.client.get(reverse('match_list'))
-#         self.assertEqual(response.status_code, 200)
-#         self.assertContains(response, "Scheduled Matches")
-#         self.assertContains(response, "Finished Matches")
-#         self.assertContains(response, f"{self.team1} vs {self.team2}")
-#         self.assertContains(response, "2 - 1")
-
-#     def test_team_filter(self):
-#         response = self.client.get(reverse('match_list') + f'?team={self.team1.id}')
-#         self.assertEqual(response.status_code, 200)
-#         self.assertContains(response, f"Showing matches for team: {self.team1}")
-#         self.assertContains(response, f"{self.team1} vs {self.team2}")
-#         self.assertNotContains(response, "No scheduled matches found")
-
+#Get the custom User model 
+User = get_user_model()
 
 class MatchModelTests(TestCase):
     """
@@ -272,3 +218,123 @@ class MatchModelTests(TestCase):
         )
         self.assertEqual(match.get_current_minute(), 0)
         self.assertEqual(match.get_display_minute, "0'")
+
+
+
+class SignalAndStatUpdateTests(TestCase):
+    """Tests the automated logic for updating league tables via signals"""
+
+    def setUp(self):
+        """Set up a league, two teams, and their participation records."""
+        self.league = League.objects.create(year=2025, session="S", is_active=True)
+        self.team1 = Team.objects.create(name="Blue Dragons")
+        self.team2 = Team.objects.create(name="Red Phoenix")
+
+        # Create the participation records that store the stats
+        self.team1_participation = TeamSeasonParticipation.objects.create(
+            team=self.team1, league=self.league
+        )
+        self.team2_participation = TeamSeasonParticipation.objects.create(
+            team=self.team2, league=self.league
+        )
+
+    def test_stats_update_correctly_when_match_is_finished(self):
+        """
+        Tests that when a match is saved as FINISHED, the stats for
+        both teams are calculated and saved correctly.
+        """
+        # Create a finished match where team1 wins
+        Match.objects.create(
+            season=self.league,
+            home_team=self.team1,
+            away_team=self.team2,
+            home_score=2,
+            away_score=1,
+            date=timezone.now(),
+            status=MatchStatus.FINISHED
+        )
+
+        # Refresh the participation objects from the database to get the updated stats
+        self.team1_participation.refresh_from_db()
+        self.team2_participation.refresh_from_db()
+
+        # Assertions for the winning team (Team 1)
+        self.assertEqual(self.team1_participation.points, 3)
+        self.assertEqual(self.team1_participation.wins, 1)
+        self.assertEqual(self.team1_participation.matches_played, 1)
+        self.assertEqual(self.team1_participation.goals_scored, 2)
+        self.assertEqual(self.team1_participation.goals_conceded, 1)
+
+        # Assertions for the losing team (Team 2)
+        self.assertEqual(self.team2_participation.points, 0)
+        self.assertEqual(self.team2_participation.losses, 1)
+        self.assertEqual(self.team2_participation.matches_played, 1)
+
+    def test_stats_revert_when_match_is_no_longer_finished(self):
+        """
+        Tests the "status reversion" case. If a finished match is changed
+        back to 'Scheduled', the stats should be recalculated and reset.
+        """
+        # Create and save a finished match
+        match = Match.objects.create(
+            season=self.league,
+            home_team=self.team1,
+            away_team=self.team2,
+            home_score=3,
+            away_score=0,
+            date=timezone.now(),
+            status=MatchStatus.FINISHED
+        )
+
+        # Verify the initial stats update
+        self.team1_participation.refresh_from_db()
+        self.assertEqual(self.team1_participation.points, 3)
+        self.assertEqual(self.team1_participation.wins, 1)
+
+
+        # "Un-finish" the match by changing its status
+        match.status = MatchStatus.SCHEDULED
+        match.save()
+
+        # Refresh the participation objects again and assert stats are reset
+        self.team1_participation.refresh_from_db()
+        self.team2_participation.refresh_from_db()
+
+        # Assertions for Team 1 - stats should be back to zero
+        self.assertEqual(self.team1_participation.points, 0)
+        self.assertEqual(self.team1_participation.wins, 0)
+        self.assertEqual(self.team1_participation.matches_played, 0)
+
+        # Assertions for Team 2 - stats should remain zero
+        self.assertEqual(self.team2_participation.points, 0)
+        self.assertEqual(self.team2_participation.losses, 0)
+        self.assertEqual(self.team2_participation.matches_played, 0)
+    
+    def test_deleting_finished_match_reverts_stats(self):
+        """
+        Tests that if a finished match is deleted entirely, the stats
+        are correctly recalculated and reverted.
+        """
+        # Create and save a finished match
+        match = Match.objects.create(
+            season=self.league,
+            home_team=self.team1,
+            away_team=self.team2,
+            home_score=1,
+            away_score=1, # A draw
+            date=timezone.now(),
+            status=MatchStatus.FINISHED
+        )
+
+        # Verify initial stats
+        self.team1_participation.refresh_from_db()
+        self.assertEqual(self.team1_participation.points, 1)
+        self.assertEqual(self.team1_participation.draws, 1)
+
+        # Delete the match
+        match.delete()
+
+        # Refresh and assert stats are reset
+        self.team1_participation.refresh_from_db()
+        self.assertEqual(self.team1_participation.points, 0)
+        self.assertEqual(self.team1_participation.draws, 0)

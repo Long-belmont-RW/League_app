@@ -2,17 +2,21 @@
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import user_passes_test
+from django.contrib import messages
 
 from django.urls import reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
+from django.db import transaction
 from django.db.models import Sum, Q, F, Prefetch
-from .models import League, Lineup, Team, Match, Player, PlayerSeasonParticipation, PlayerStats, MatchStatus, TeamSeasonParticipation
+from .models import League, Lineup, Team, Match, Player, PlayerSeasonParticipation, PlayerStats, MatchStatus, \
+    TeamSeasonParticipation, CoachSeasonParticipation
 from .forms import MatchForm, PlayerStatsForm, PlayerStatsFormSet, LineupForm
 from .utils import get_league_standings
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
 
 # Home View (Displays recent matches and top scorers)
 def home(request):
@@ -465,10 +469,52 @@ class MatchFormView(UserPassesTestMixin, CreateView, ):
             kwargs['instance'] = self.get_object()
         return kwargs
 
+    def form_valid(self, form):
+        """
+        Override the handle status change and redirect to player stats editing
+        """
+        #Get the match instance before saving to check its old status
+        old_instance = self.get_object()
+        old_status = old_instance.status if old_instance else None
+
+        #if it is a new_match
+        new_match = form.save(commit=False)
+
+        #Check if the status is transitioning to Finished
+        if new_match.status == MatchStatus.FINISHED and old_status != MatchStatus.FINISHED:
+
+            #Using transaction.atomic() to ensure all or nothing is saved
+            with transaction.atomic():
+                new_match.save()
+
+                #Auto-Create PlayerStats for all players in the Lineup
+                home_lineup = Lineup.objects.filter(match=new_match, team=new_match.home_team).first()
+                away_lineup = Lineup.objects.filter(match=new_match, team=new_match.away_team).first()
+
+                players_in_match = []
+                if home_lineup:
+                     players_in_match.extend(home_lineup.players.all())
+                if away_lineup:
+                    players_in_match.extend(away_lineup.players.all())
+
+                for player in set(players_in_match): # Use set to avoid duplicates
+                    PlayerStats.objects.get_or_create(match=new_match, player=player)
+
+            messages.success(self.request, f"Match score saved. Please enter player stats for {new_match}.")
+            # Redirect to the player stats editing page
+            return redirect('edit_player_stats', match_id=new_match.pk)
+
+        # If status is not changing to FINISHED, proceed as normal
+        form.save()
+        messages.success(self.request, "Match saved successfully.")
+        return redirect(self.success_url)
+
     def get_template_names(self):
         if self.get_object():
             return ['match_form.html']
         return super().get_template_names()
+
+   
     
     def test_func(self):
         return self.request.user.is_authenticated and self.request.user.role == 'admin'
@@ -482,60 +528,115 @@ class DeleteMatchView(UserPassesTestMixin, DeleteView):
     def test_func(self):
         return self.request.user.is_authenticated and self.request.user.role == 'admin'
 
-# Edit Player Stats View (HTMX-enabled)
+# Edit Player Stats View 
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
 def edit_player_stats_view(request, match_id):
-    match = get_object_or_404(Match, id=match_id)
-    # Get all players for both teams in the match's league
-    home_players = match.home_team.get_current_players(match.season)
-    away_players = match.away_team.get_current_players(match.season)
-    all_players = list(home_players) + list(away_players)
-    # Ensure PlayerStats exist for all players in this match
-    for player in all_players:
-        PlayerStats.objects.get_or_create(match=match, player=player)
-    # Now get all PlayerStats for this match
-    formset = PlayerStatsFormSet(
-        queryset=PlayerStats.objects.filter(match=match),
-        form_kwargs={'match': match}
+    match = get_object_or_404(Match.objects.select_related('home_team', 'away_team', 'season'), 
+                              id=match_id) #Get match object with related teams
+
+    # We query player stats based on the match. The previous view ensures they exist.
+    queryset = PlayerStats.objects.filter(match=match).select_related('player').prefetch_related(
+        Prefetch(
+            'player__playerseasonparticipation_set',
+            queryset=PlayerSeasonParticipation.objects.filter(
+                league=match.season, is_active=True
+            ).select_related('team'), # Also prefetch the team from the participation!
+            to_attr='participation' 
+        )
     )
+
     if request.method == 'POST':
-        formset = PlayerStatsFormSet(request.POST, form_kwargs={'match': match})
+        formset = PlayerStatsFormSet(request.POST, queryset=queryset, form_kwargs={'match': match})
+
         if formset.is_valid():
-            for form in formset:
-                if form.has_changed():
-                    stat = form.save(commit=False)
-                    stat.match = match
-                    stat.save()
-                redirect_url = reverse_lazy('match_list')
-                return redirect(redirect_url,)
-        #     html = render_to_string('league/partials/player_stats_formset.html', {
-        #         'formset': formset, 'match': match
-        #     }, request=request)
-        #     return HttpResponse(html)
-        # html = render_to_string('partials/player_stats_formset.html', {
-        #     'formset': formset, 'match': match
-        # }, request=request)
-        # return HttpResponse(html)
-    html = render_to_string('edit_player_stats.html', {
-        'formset': formset, 'match': match
-    }, request=request)
+            total_goals_from_stats = 0
+            for form in formset.cleaned_data:
+                # formset.cleaned_data is a list of dicts
+                if form: # The form could be empty if not changed
+                    total_goals_from_stats += form.get('goals', 0)
+            
+            total_score_from_match = match.home_score + match.away_score
+            if total_goals_from_stats != total_score_from_match:
+                # Add a global error to the formset
+                messages.error(request, f"Validation Error: The total goals from players ({total_goals_from_stats}) does not match the final score ({total_score_from_match}).")
+            else:
+                # All checks passed, save the stats and trigger updates
+                with transaction.atomic():
+                    formset.save() # This will trigger your PlayerStats post_save signal automatically
+                
+                messages.success(request, "Player stats have been updated successfully!")
+                return redirect('match_list')
+    else: #Get Request
 
-    return HttpResponse(html)
+        formset = PlayerStatsFormSet(queryset=queryset, form_kwargs={'match': match})
 
-# Lineup Create View
-class LineupCreateView(LoginRequiredMixin, CreateView):
-    model = Lineup
-    form_class = LineupForm
-    template_name = 'lineup_form.html'
+        context = {
+            'formset': formset,
+            'match': match,
+        }
+        return render(request, 'edit_player_stats.html', context)
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['match'] = Match.objects.get(id=self.kwargs['match_id'])
-        return kwargs
 
-    def form_valid(self, form):
-        form.instance.match = Match.objects.get(id=self.kwargs['match_id'])
-        return super().form_valid(form)
+#The improvise view for managing lineups
+def manage_lineup_view(request, match_id):
+    #Get the match object and user
+    match = get_object_or_404(Match, pk=match_id)
+    user = request.user
 
-    def get_success_url(self):
-        return reverse_lazy('match_list')
+    # --- Permission Checks 
+    is_admin = user.is_staff and user.role == 'admin'
+    is_home_coach = False
+    is_away_coach = False
+
+    # Check for coach role based on your UserProfile model
+    if hasattr(user, 'userprofile') and user.userprofile.coach:
+        coach_profile = user.userprofile.coach
+
+        if CoachSeasonParticipation.objects.filter(coach=coach_profile, team=match.home_team, league=match.season).exists():
+            is_home_coach = True
+        if CoachSeasonParticipation.objects.filter(coach=coach_profile, team=match.away_team, league=match.season).exists():
+            is_away_coach = True
+        
+    # Deny access if the user has no permissions for this page
+    if not (is_admin or is_home_coach or is_away_coach):
+        raise PermissionDenied("You do not have permission to manage this lineup.")
+
+
+    # --- Form & Instance Setup ---
+    home_lineup, _ = Lineup.objects.get_or_create(match=match, team=match.home_team)
+    away_lineup, _ = Lineup.objects.get_or_create(match=match, team=match.away_team)
+
+    home_form = None
+    away_form = None
+
+    # ---Post request---
+    if request.method == 'POST':
+        #Admin or homecoach submitting the home lineup
+        if 'submit_home_lineup' in request.POST and (is_admin or is_home_coach):
+            form = LineupForm(request.POST, instance=home_lineup)
+            if form.is_valid():
+                form.save()
+                messages.success(request, f"{match.home_team}'s lineup has been updated.")
+                return redirect('manage_lineup', match_id=match_id)
+            
+        # Admin or away coach submitting the away lineup
+        elif 'submit_away_lineup' in request.POST and (is_admin or is_away_coach):
+            form = LineupForm(request.POST, instance=away_lineup)
+            if form.is_valid():
+                form.save()
+                messages.success(request, f"{match.away_team}'s lineup has been updated.")
+                return redirect('manage_lineup', match_id=match_id)
+
+    # --- GET Logic (or after a failed POST) ---
+    if is_admin or is_home_coach:
+        home_form = LineupForm(instance=home_lineup)
+    
+    if is_admin or is_away_coach:
+        away_form = LineupForm(instance=away_lineup)
+
+    context = {
+        'match': match,
+        'home_form': home_form,
+        'away_form': away_form,
+    }
+    return render(request, 'manage_lineup.html', context)

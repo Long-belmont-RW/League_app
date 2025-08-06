@@ -13,5 +13,4 @@ urlpatterns = [
     path('matches/delete/<int:pk>/', views.DeleteMatchView.as_view(), name='delete_match'),
     path('matches/', views.MatchListView.as_view(), name='match_list'),
     path('matches/stats/<int:match_id>/', views.edit_player_stats_view, name='edit_player_stats'),
-    path('matches/<int:match_id>/lineup/create/', views.LineupCreateView.as_view(), name='lineup_create'),
-]
+    path('matches/<int:match_id>/lineup/', views.manage_lineup_view, name='manage_lineup')]

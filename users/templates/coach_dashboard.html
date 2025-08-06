@@ -185,6 +185,13 @@
                         <p class="text-sm text-gray-400">{{ latest_match.date|date:"M d, Y" }}</p>
                         <p class="text-sm text-gray-400">{{latest_match.date|time:"P"}}</p>
                     </div>
+                     <div>
+
+                {# This link will take the coach to the lineup page #}
+                <a href="{% url 'manage_lineup' latest_match.id%}" class="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700">
+                    Set Lineup
+                </a>
+            </div>
                 </div>
             </div>
                     
