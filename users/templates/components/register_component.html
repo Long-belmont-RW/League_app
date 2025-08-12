@@ -1,0 +1,89 @@
+<div class="w-full max-w-md mx-auto text-white place-content-center backdrop-blur py-5">
+    <div class="bg-gray-800 rounded-2xl shadow-xl border-gray-700 overflow-hidden">
+
+        <div class="bg-gray-700 px-8 py-6 text-center">
+            <div class="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold mb-2">Create Your Account</h1>
+        </div>
+
+        <div class="p-8">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                    <div class="bg-red-900 border border-red-700 text-red-300 px-4 py-3 rounded relative">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <p class="text-sm">{{ error }}</p>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                {% for field in form %}
+                    {% if field.name != 'password' and field.name != 'password2' and field.name != 'role' %}
+                    <div class="relative">
+                        <label for="{{ field.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                            {{ field.label }}
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <input type="{{ field.field.widget.input_type }}" id="{{ field.id_for_label }}" name="{{ field.name }}"
+                                class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-4 py-3 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700"
+                                placeholder="Enter your {{ field.label|lower }}" 
+                                {% if field.value %}value="{{ field.value }}"{% endif %}
+                                {% if field.field.required %}required{% endif %}>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+
+                {% for field in form %}
+                    {% if field.name == 'password' or field.name == 'password2' or field.name == 'role' %}
+                     <div class="relative">
+                        <label for="{{ field.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                            {{ field.label }}
+                        </label>
+                        {% if field.name == 'role' %}
+                             <select id="{{ field.id_for_label }}" name="{{ field.name }}"
+                                class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full py-3 pl-4 pr-8 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700">
+                                <option value="">Select your role</option>
+                                {% for choice in field.field.choices %}
+                                    <option value="{{ choice.0 }}" {% if field.value == choice.0 %}selected{% endif %}>
+                                        {{ choice.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                             <input type="password" id="{{ field.id_for_label }}" name="{{ field.name }}"
+                                class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-4 py-3 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700"
+                                placeholder="Enter your password" 
+                                required>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+
+                <button type="submit"
+                    class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition duration-200 transform hover:scale-105">
+                    Register
+                </button>
+            </form>
+        </div>
+        
+        <div class="px-8 pb-8 text-center">
+            <a href="{% url 'login' %}" class="text-indigo-400 hover:underline text-sm">
+                Already have an account? Login here
+            </a>
+        </div>
+    </div>
+</div>

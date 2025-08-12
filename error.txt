@@ -1,0 +1,30 @@
+Internal Server Error: /content/invite/player/
+Traceback (most recent call last):
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\USER\Documents\Projects\Django\League App\League_app\content\views.py", line 32, in invite_player_view
+    process_invitation(request, email, 'player', team_id=team.id)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\contextlib.py", line 85, in inner
+    return func(*args, **kwds)
+  File "C:\Users\USER\Documents\Projects\Django\League App\League_app\content\services.py", line 35, in process_invitation
+    invitation = Invitation.objects.create(
+        email=email,
+    ...<2 lines>...
+        invited_by=request.user
+    )
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 661, in create      
+    obj = self.model(**kwargs)
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\base.py", line 569, in __init__     
+    raise TypeError(
+    ...<2 lines>...
+    )
+TypeError: Invitation() got unexpected keyword arguments: 'invited_by'
+[11/Aug/2025 12:35:43] "POST /content/invite/player/ HTTP/1.1" 500 108424

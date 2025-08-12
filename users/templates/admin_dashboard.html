@@ -174,10 +174,14 @@
                 <div class="bg-gray-800 rounded-xl p-6 shadow-md">
                     <h5 class="font-semibold text-white text-lg mb-4">Quick Actions</h5>
                     <div class="grid grid-cols-2 gap-4">
-                        <button class="bg-gray-700 text-gray-300 p-3 rounded-lg flex flex-col items-center hover:bg-gray-600 transition-colors duration-200">
+                        <a href="{% url 'register' %}" class="bg-gray-700 text-gray-300 p-3 rounded-lg flex flex-col items-center hover:bg-gray-600 transition-colors duration-200">
                             <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             <span class="text-xs">Add User</span>
-                        </button>
+                        </a>
+                        <a href="{% url 'invite_coach' %}" class="bg-gray-700 text-gray-300 p-3 rounded-lg flex flex-col items-center hover:bg-gray-600 transition-colors duration-200">
+                            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21v-2.355M12 14.005a4 4 0 01-4-4v-1.292m8 0V9.654a4 4 0 01-4 4m-6 8h12a2 2 0 002-2v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            <span class="text-xs">Invite Coach</span>
+                        </a>
                         <button class="bg-gray-700 text-gray-300 p-3 rounded-lg flex flex-col items-center hover:bg-gray-600 transition-colors duration-200">
                             <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                             <span class="text-xs">Manage Matches</span>
@@ -236,7 +240,7 @@
                         </li>
                         <li class="flex justify-between items-center text-gray-300">
                             <span>Advanced admin:</span>
-                            <span class="text-gray-400"><a href=""></a></span>
+                            <span class="text-gray-400"><a href="{% url 'admin:index' %}" class="text-indigo-400 hover:underline">Go to Admin</a></span>
                         </li>
                     </ul>
                 </div>

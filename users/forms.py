@@ -54,3 +54,25 @@ class UserRegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+class InvitationRegistrationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'birth', 'gender')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        # In the context of an invitation, the user shouldn't exist with this email.
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("A user with this email already exists.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        # The role will be set in the view from the invitation object.
+        if commit:
+            user.save()
+        return user

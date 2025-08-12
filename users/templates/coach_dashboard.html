@@ -178,6 +178,7 @@
 
             <div class="bg-gray-800 rounded-xl p-6 shadow-md">
                 <h5 class="font-semibold text-white text-lg mb-4">Next Game</h5>
+                {% if latest_match %}
                 <div class="flex items-center bg-gray-700 p-4 rounded-lg">
                     <svg class="w-10 h-10 mr-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     <div>
@@ -193,6 +194,11 @@
                 </a>
             </div>
                 </div>
+                {% else %}
+                <div class="bg-gray-700 p-4 rounded-lg text-center">
+                    <p class="text-gray-400">No upcoming matches scheduled.</p>
+                </div>
+                {% endif %}
             </div>
                     
 
@@ -225,7 +231,12 @@
 
             <!-- Display all players in the team -->
             <div class="bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-3">
-                <h3 class="text-lg font-bold text-white mb-4">All Players</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white">All Players</h3>
+                    <a href="{% url 'invite_player' %}" class="bg-green-600 text-white text-xs px-3 py-1 rounded-full hover:bg-green-700 transition-colors duration-200">
+                        Invite Player
+                    </a>
+                </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 

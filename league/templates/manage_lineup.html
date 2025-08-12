@@ -2,8 +2,7 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">
-        {# Title adapts based on the user's role #}
+    <h1 class="text-2xl font-bold mb-4 text-white">
         {% if request.user.role == 'admin' %}
             Manage Lineups for {{ match }}
         {% else %}
@@ -13,28 +12,30 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        {# Only show the Home Team form if the context variable exists #}
         {% if home_form %}
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Home Team: {{ match.home_team.name }}</h2>
+        <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4 text-white">Home Team: {{ match.home_team.name }}</h2>
             <form method="post">
                 {% csrf_token %}
-                {{ home_form.as_p }}
-                <button type="submit" name="submit_home_lineup" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <div class="space-y-4">
+                    {{ home_form.as_p }}
+                </div>
+                <button type="submit" name="submit_home_lineup" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     Save Home Lineup
                 </button>
             </form>
         </div>
         {% endif %}
 
-        {# Only show the Away Team form if the context variable exists #}
         {% if away_form %}
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Away Team: {{ match.away_team.name }}</h2>
+        <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4 text-white">Away Team: {{ match.away_team.name }}</h2>
             <form method="post">
                 {% csrf_token %}
-                {{ away_form.as_p }}
-                <button type="submit" name="submit_away_lineup" class="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                <div class="space-y-4">
+                    {{ away_form.as_p }}
+                </div>
+                <button type="submit" name="submit_away_lineup" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
                     Save Away Lineup
                 </button>
             </form>

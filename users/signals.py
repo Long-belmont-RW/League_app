@@ -65,9 +65,7 @@ def create_user_profile_and_linked_object(sender, instance, created, **kwargs):
                     player_obj = Player.objects.create(
                         first_name=player_first_name,
                         last_name=player_last_name,
-                        # Add any other required fields for Player model here, e.g., position, jersey_number
-                        # For now, assuming first_name and last_name are sufficient for basic creation.
-                        # You might need to add default values or additional logic for other Player fields.
+                        position='MF' # Default position
                     )
                     logger.info(f"Player object created for user: {instance.username} (Player ID: {player_obj.id})")
 

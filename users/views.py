@@ -4,12 +4,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Q, F
 from .models import UserProfile, User
-from league.models import Coach, Player, Match, PlayerSeasonParticipation, League, MatchStatus, CoachSeasonParticipation \
-    , TeamSeasonParticipation
+from league.models import Coach, Player, Match, PlayerSeasonParticipation, League, MatchStatus, CoachSeasonParticipation, TeamSeasonParticipation
 from django.utils import timezone
 
 from .utils import get_season_progress
-from .forms import UserRegistrationForm, EmailAuthenticationForm
+from .forms import UserRegistrationForm, EmailAuthenticationForm, InvitationRegistrationForm
+from content.models import Invitation
 import logging
 
 #set up logging
@@ -50,24 +50,67 @@ def logout_view(request):
     return redirect('login')
 
 def register_view(request):
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST, request=request)  # Pass request to the form
-        # Check if the form is valid    
-        if form.is_valid():
-            user = form.save()
+    token = request.GET.get('token')
+    invitation = None
+    if token:
+        try:
+            invitation = Invitation.objects.get(token=token, is_accepted=False)
+            if invitation.is_expired():
+                messages.error(request, 'This invitation has expired.')
+                return redirect('home')
+        except Invitation.DoesNotExist:
+            messages.error(request, 'Invalid invitation link.')
+            return redirect('home')
 
-            # Automatically log in the user after registration
-            login(request, user, backend='users.authentication.EmailRoleAuthBackend')  # login after registration
+    form_class = InvitationRegistrationForm if invitation else UserRegistrationForm
+
+    if request.method == 'POST':
+        form = form_class(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            if invitation:
+                user.email = invitation.email
+                user.role = invitation.role
+            user.save() # The signal will now create the UserProfile and Player/Coach object
+
+            if invitation:
+                team = invitation.team
+                latest_league = League.objects.latest('created_at')
+                user_profile = UserProfile.objects.get(user=user)
+
+                if user.role == 'player':
+                    PlayerSeasonParticipation.objects.create(player=user_profile.player, team=team, league=latest_league)
+                elif user.role == 'coach':
+                    CoachSeasonParticipation.objects.create(coach=user_profile.coach, team=team, league=latest_league)
+                
+                invitation.is_accepted = True
+                invitation.save()
+
+            login(request, user, backend='users.authentication.EmailRoleAuthBackend')
             messages.success(request, f"Account created for {user.username}!")
-            return redirect('home')  
+            
+            if invitation:
+                if invitation.role == 'coach':
+                    return redirect('coach_dashboard')
+                elif invitation.role == 'player':
+                    return redirect('player_dashboard')
+            
+            return redirect('home')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = UserRegistrationForm(request=request)  # Pass request to the form
-    
+        initial_data = {}
+        if invitation:
+            initial_data['email'] = invitation.email
+        
+        if invitation:
+            form = InvitationRegistrationForm(initial=initial_data)
+            form.fields['email'].widget.attrs['readonly'] = True
+        else:
+            form = UserRegistrationForm(request=request)
 
 
-    return render(request, 'registration/register.html', {'form': form})
+    return render(request, 'registration/register.html', {'form': form, 'invitation': invitation})
 
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
 def admin_dashboard_view(request): 

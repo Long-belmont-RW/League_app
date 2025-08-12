@@ -1,11 +1,57 @@
-<div class="grid grid-cols-1 gap-4">
-    {% for match in matches %}
-    <div class="bg-white p-4 rounded shadow">
-        <p>{{ match.home_team }} vs {{ match.away_team }} ({{ match.date|date:"Y-m-d" }})</p>
-        <p>Score: {{ match.home_score }} - {{ match.away_score }}</p>
-        <a href="{% url 'edit_player_stats' match.id %}" class="text-blue-500">Edit Stats</a>
-    </div>
-    {% empty %}
-    <p>No matches found.</p>
-    {% endfor %}
+<div class="overflow-x-auto">
+    <table class="w-full min-w-[700px]">
+        <thead class="bg-gray-700">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date & Time</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Match</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Score</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="bg-gray-800 divide-y divide-gray-700">
+            {% for match in matches %}
+            <tr class="hover:bg-gray-700 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    <div class="flex flex-col">
+                        <span class="font-medium">{{ match.date|date:"M d, Y" }}</span>
+                        <span class="text-xs text-gray-400">{{ match.date|date:"g:i A" }}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    <span class="font-medium">{{ match.home_team.name }}</span> vs <span class="font-medium">{{ match.away_team.name }}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-white font-bold">
+                    {{ match.home_score }} - {{ match.away_score }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                        {% if match.status == 'SCH' %}bg-yellow-900 text-yellow-200
+                        {% elif match.status == 'LIV' %}bg-red-900 text-red-200
+                        {% elif match.status == 'FIN' %}bg-green-900 text-green-200
+                        {% else %}bg-gray-700 text-gray-200{% endif %}">
+                        {{ match.get_status_display }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                        {% if user.is_authenticated and user.is_staff%}
+                        <a href="{% url 'edit_match' match.id %}" class="text-indigo-400 hover:underline">Edit</a>
+                        <a href="{% url 'delete_match' match.id %}" class="text-red-400 hover:underline">Delete</a>
+                        <a href="{% url 'edit_player_stats' match.id %}" class="text-green-400 hover:underline">Stats</a>
+                        {% else %}
+                        <a href="#" class="text-indigo-400 hover:underline">View</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                    <p class="text-lg font-medium">No matches found</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>

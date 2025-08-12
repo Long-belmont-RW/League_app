@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     #My Apps
     'users.apps.UsersConfig',
     'league.apps.LeagueConfig',
+    'content.apps.ContentConfig',
 
 
     #Third Party
@@ -164,7 +165,12 @@ NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
 LOGIN_REDIRECT_URL = '/home/'
 LOGIN_REDIRECT_URL = '/login/'
 
-
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = ''
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
 
 
 LOGGING = {
@@ -203,8 +209,14 @@ LOGGING = {
 
         'users': { # This is the logger for your 'users' app
             'handlers': ['console', 'file'],
-            'level': 'INFO', # Set this to DEBUG to see the 'debug' messages from your signal
+            'level': 'INFO',
             'propagate': False,
         },
+
+        'content':{
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        }
     },
 }
