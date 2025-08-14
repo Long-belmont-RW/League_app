@@ -11,9 +11,9 @@ from freezegun import freeze_time
 
 from league.models import (Team, League, Match, MatchStatus, 
         TeamSeasonParticipation, Coach, Player, 
-        Lineup, CoachSeasonParticipation)
+        Lineup, CoachSeasonParticipation, PlayerSeasonParticipation)
 
-from users.models import UserProfile
+from users.models import UserProfile, Notification
 from league.services import update_league_table
 
 
@@ -338,3 +338,60 @@ class SignalAndStatUpdateTests(TestCase):
         self.team1_participation.refresh_from_db()
         self.assertEqual(self.team1_participation.points, 0)
         self.assertEqual(self.team1_participation.draws, 0)
+
+
+class LineupNotificationTests(TestCase):
+    """Ensure players get in-app and email notifications when selection changes."""
+
+    def setUp(self):
+        self.league = League.objects.create(year=2025, session='S', is_active=True)
+        self.team1 = Team.objects.create(name='Test Dragons')
+        self.team2 = Team.objects.create(name='Test Knights')
+
+        # Users and profiles
+        self.user = get_user_model().objects.create_user(
+            username='p1', email='p1@example.com', password='x', role='player'
+        )
+        self.profile = UserProfile.objects.get(user=self.user)
+
+        # Participation
+        self.psp = PlayerSeasonParticipation.objects.create(
+            player=self.profile.player, team=self.team1, league=self.league
+        )
+
+        # Match and lineup
+        self.match = Match.objects.create(
+            season=self.league,
+            home_team=self.team1,
+            away_team=self.team2,
+            date=timezone.now(),
+            status=MatchStatus.SCHEDULED,
+        )
+        self.lineup = Lineup.objects.create(match=self.match, team=self.team1)
+
+    @patch('league.signals.push_user_notification')
+    @patch('league.signals.send_mail')
+    def test_notification_created_on_add_and_remove(self, mock_send_mail, mock_push):
+        initial_count = Notification.objects.filter(user=self.user).count()
+
+        # Add to lineup -> should notify and email
+        self.lineup.players.add(self.profile.player)
+        self.assertEqual(
+            Notification.objects.filter(user=self.user).count(), initial_count + 1
+        )
+        self.assertTrue(
+            Notification.objects.filter(user=self.user, title__icontains='lineup').exists()
+        )
+
+        # Remove from lineup -> should notify and email again
+        self.lineup.players.remove(self.profile.player)
+        self.assertEqual(
+            Notification.objects.filter(user=self.user).count(), initial_count + 2
+        )
+        self.assertTrue(
+            Notification.objects.filter(user=self.user, title__icontains='removed').exists()
+        )
+
+        # Email + realtime called for both actions
+        self.assertEqual(mock_send_mail.call_count, 2)
+        self.assertEqual(mock_push.call_count, 2)

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="w-full max-w-6xl mx-auto text-white py-5 px-4">
+    <div class="bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-gray-700 px-4 py-6 md:px-8 text-center">
+            <h1 class="text-3xl font-bold text-white">Gameweek {{ week.index }} Summary</h1>
+            <p class="text-lg text-gray-300">{{ week.name }}</p>
+        </div>
+        <div class="p-4 md:p-8 space-y-8">
+            <!-- Team Rankings -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-400">Team Rankings</h2>
+                <div class="bg-gray-700 rounded-lg overflow-hidden">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-900">
+                            <tr class="text-left">
+                                <th class="p-4 font-bold">Rank</th>
+                                <th class="p-4 font-bold">Team</th>
+                                <th class="p-4 font-bold">Manager</th>
+                                <th class="p-4 font-bold">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-600">
+                            {% for e in entries %}
+                            <tr class="hover:bg-gray-600 transition-colors duration-200">
+                                <td class="p-4 font-medium">{{ e.rank }}</td>
+                                <td class="p-4">{{ e.fantasy_team.name }}</td>
+                                <td class="p-4 text-gray-400">{{ e.fantasy_team.user.username }}</td>
+                                <td class="p-4 font-semibold">{{ e.points_week }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td class="p-6 text-center text-gray-500" colspan="4">No team entries for this week.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Player Points -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-400">Top Player Performances</h2>
+                <div class="bg-gray-700 rounded-lg overflow-hidden">
+                    <table class="min-w-full">
+                         <thead class="bg-gray-900">
+                            <tr class="text-left">
+                                <th class="p-4 font-bold">Player</th>
+                                <th class="p-4 font-bold">Fantasy Team</th>
+                                <th class="p-4 font-bold">Points</th>
+                                <th class="p-4 font-bold">Breakdown</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-600">
+                            {% for ps in player_stats %}
+                            <tr class="hover:bg-gray-600 transition-colors duration-200">
+                                <td class="p-4 font-medium">
+                                    {{ ps.fantasy_player.player.first_name }} {{ ps.fantasy_player.player.last_name }}
+                                    <span class="text-gray-400">({{ ps.fantasy_player.player.get_position_display }})</span>
+                                </td>
+                                <td class="p-4 text-gray-300">{{ ps.fantasy_player.fantasy_team.name }}</td>
+                                <td class="p-4 font-semibold">{{ ps.points }}</td>
+                                <td class="p-4 text-sm text-gray-400">{{ ps.breakdown|linebreaksbr }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td class="p-6 text-center text-gray-500" colspan="4">No player stats available for this week.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+             <div class="mt-6 text-center">
+                <a href="{% url 'fantasy:league_detail' league.id %}" class="font-medium text-indigo-400 hover:text-indigo-300 transition-colors duration-200">&larr; Back to League Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

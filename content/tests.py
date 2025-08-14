@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from .models import Invitation
-from league.models import Team, League
+from league.models import Team, League, SessionChoice, Coach, CoachSeasonParticipation
 import uuid
 from unittest.mock import patch, MagicMock
 from django.utils import timezone
@@ -25,7 +25,7 @@ class ContentViewsTest(TestCase):
             role='admin'
         )
         self.team = Team.objects.create(name="Test Team")
-        self.league = League.objects.create(year=2025)
+        self.league = League.objects.create(year=2025, session=SessionChoice.FALL)
         self.invitation = Invitation.objects.create(
             email='newcoach@example.com',
             role='coach',
@@ -39,8 +39,6 @@ class ContentViewsTest(TestCase):
         """
         response = self.client.get(reverse('accept_invitation', args=[self.invitation.token]))
         self.assertRedirects(response, reverse('register') + f'?token={self.invitation.token}')
-
-    from league.models import Team, League, Coach, CoachSeasonParticipation
 
     def test_accept_invitation_post_flow(self):
         """
@@ -77,8 +75,8 @@ class ContentViewsTest(TestCase):
         self.assertTrue(self.invitation.is_accepted)
 
         # 5. Verify that the coach and team participation are created
-        self.assertTrue(Coach.objects.filter(user=new_user).exists())
-        coach = Coach.objects.get(user=new_user)
+        self.assertTrue(Coach.objects.filter(userprofile__user=new_user).exists())
+        coach = Coach.objects.get(userprofile__user=new_user)
         self.assertTrue(CoachSeasonParticipation.objects.filter(coach=coach, team=self.invitation.team).exists())
 
 class ProcessInvitationTest(TestCase):
@@ -131,7 +129,7 @@ class ProcessInvitationTest(TestCase):
         
         # Create an expired invitation
         expired_invitation = Invitation.objects.create(email=email, role='player', team=self.team)
-        expired_invitation.created_at = timezone.now() - timedelta(days=4)
+        expired_invitation.expires_at = timezone.now() - timedelta(days=1)
         expired_invitation.save()
         
         result = process_invitation(request, email, 'player', self.team.id)
@@ -141,3 +139,17 @@ class ProcessInvitationTest(TestCase):
         # The old one should be deleted, and a new one created.
         self.assertEqual(Invitation.objects.filter(email=email).count(), 1)
         mock_send_mail.assert_called_once()
+
+    @patch('content.services.send_mail')
+    def test_cannot_invite_when_active_invite_exists(self, mock_send_mail):
+        request = MagicMock()
+        request.user = self.user
+        request.build_absolute_uri.return_value = 'http://testserver/accept/some-token'
+
+        email = 'dupe@example.com'
+        Invitation.objects.create(email=email, role='player', team=self.team)
+
+        result = process_invitation(request, email, 'player', self.team.id)
+        self.assertFalse(result)
+        # no additional sends
+        mock_send_mail.assert_not_called()

@@ -1,8 +1,11 @@
 # league/signals.py
-from django.db.models.signals import post_save, post_delete, pre_save
+from django.db.models.signals import post_save, post_delete, pre_save, m2m_changed
 from django.dispatch import receiver
-from .models import PlayerStats, Match, TeamSeasonParticipation, MatchStatus
+from .models import PlayerStats, Match, TeamSeasonParticipation, MatchStatus, Lineup
 from django.db.models import Q, F
+from django.core.mail import send_mail
+from users.models import UserProfile, Notification
+from users.utils import push_user_notification
 
 @receiver(pre_save, sender=Match)
 def store_old_match_status(sender, instance, **kwargs):
@@ -74,3 +77,49 @@ def update_team_season_stats_on_delete(sender, instance, **kwargs):
         
         if away_team_participation:
             away_team_participation.update_stats()
+
+
+@receiver(m2m_changed, sender=Lineup.players.through)
+def notify_players_on_lineup_change(sender, instance: Lineup, action, reverse, pk_set, **kwargs):
+    """Notify players when they are added to or removed from a lineup."""
+    if action not in {"post_add", "post_remove"}:
+        return
+
+    match = instance.match
+    team = instance.team
+    added = action == "post_add"
+
+    for player_pk in pk_set:
+        try:
+            # Find the user linked to this Player via UserProfile
+            user_profile = UserProfile.objects.select_related('user').get(player_id=player_pk)
+            user = user_profile.user
+        except UserProfile.DoesNotExist:
+            continue
+
+        title = "You are in the lineup" if added else "You were removed from the lineup"
+        message = (
+            f"{team.name} vs {match.away_team if team == match.home_team else match.home_team} on "
+            f"{match.date.strftime('%Y-%m-%d %H:%M')} — status: {'Selected' if added else 'Removed'}."
+        )
+
+        # Create in-app notification
+        note = Notification.objects.create(user=user, title=title, message=message)
+
+        # Push realtime update
+        try:
+            push_user_notification(user.id, {"title": note.title, "message": note.message})
+        except Exception:
+            pass
+
+        # Send email notification (best moved to a background task in production)
+        try:
+            send_mail(
+                subject=title,
+                message=message,
+                from_email='noreply@league.local',
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+        except Exception:
+            pass

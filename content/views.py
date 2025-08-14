@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
@@ -10,6 +11,7 @@ from .services import process_invitation
 from league.models import CoachSeasonParticipation, League
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def invite_player_view(request):
     if request.user.role != 'coach':
         messages.error(request, "Only coaches can invite players.")
@@ -22,10 +24,16 @@ def invite_player_view(request):
             
             try:
                 coach_profile = request.user.userprofile
-                latest_league = League.objects.latest('created_at')
-                coach_season_participation = CoachSeasonParticipation.objects.get(coach=coach_profile.coach, league=latest_league)
+                active_league = League.objects.filter(is_active=True).order_by('-created_at').first()
+                if not active_league:
+                    messages.error(request, "No active league found.")
+                    return redirect('coach_dashboard')
+                coach_season_participation = CoachSeasonParticipation.objects.select_related('team').get(
+                    coach=coach_profile.coach,
+                    league=active_league
+                )
                 team = coach_season_participation.team
-            except (UserProfile.DoesNotExist, League.DoesNotExist, CoachSeasonParticipation.DoesNotExist):
+            except (UserProfile.DoesNotExist, CoachSeasonParticipation.DoesNotExist):
                 messages.error(request, "Could not determine your team. Please contact an administrator.")
                 return redirect('coach_dashboard')
 
@@ -38,7 +46,11 @@ def invite_player_view(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def invite_coach(request):
+    if request.user.role != 'admin':
+        messages.error(request, "Only admins can invite coaches.")
+        return redirect('home')
     if request.method == 'POST':
         form = CoachInvitationForm(request.POST)
         if form.is_valid():
@@ -51,6 +63,7 @@ def invite_coach(request):
     
     return render(request, 'invite_coach.html', {'form': form})
 
+@require_http_methods(["GET"]) 
 def accept_invitation(request, token):
     try:
         invitation = Invitation.objects.get(token=token, is_accepted=False)

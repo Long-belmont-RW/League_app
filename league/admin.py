@@ -8,7 +8,9 @@ class TeamSeasonParticipaationAdmin(admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("first_name", "last_name", "position", "price", "is_active")
+    list_filter = ("position", "is_active")
+    search_fields = ("first_name", "last_name")
 
 
 @admin.register(PlayerStats)

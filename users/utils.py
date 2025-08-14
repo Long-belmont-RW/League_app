@@ -1,3 +1,16 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+
+def push_user_notification(user_id: int, payload: dict) -> None:
+    """Push a realtime notification to a specific user group."""
+    channel_layer = get_channel_layer()
+    if not channel_layer:
+        return
+    async_to_sync(channel_layer.group_send)(
+        f"user_{user_id}",
+        {"type": "notify", "data": payload},
+    )
 from league.models import Match, League
 
 

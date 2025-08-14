@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="w-full max-w-4xl mx-auto text-white py-5 px-4">
+    <div class="bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-gray-700 px-4 py-6 md:px-8 text-center">
+            <h1 class="text-3xl font-bold text-white">Transfer History</h1>
+            <p class="text-lg text-gray-300">{{ league.name }}</p>
+        </div>
+        <div class="p-4 md:p-8">
+            <div class="bg-gray-700 rounded-lg overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-900">
+                        <tr class="text-left">
+                            <th class="p-4 font-bold">Date</th>
+                            <th class="p-4 font-bold">Gameweek</th>
+                            <th class="p-4 font-bold text-green-400">Player In</th>
+                            <th class="p-4 font-bold text-red-400">Player Out</th>
+                            <th class="p-4 font-bold">Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-600">
+                        {% for t in transfers %}
+                        <tr class="hover:bg-gray-600 transition-colors duration-200">
+                            <td class="p-4 text-gray-400">{{ t.created_at|date:"d M Y, H:i" }}</td>
+                            <td class="p-4">GW {{ t.fantasy_match_week.index }}</td>
+                            <td class="p-4 font-medium">
+                                {{ t.player_in.first_name }} {{ t.player_in.last_name }}
+                            </td>
+                            <td class="p-4 font-medium">
+                                {% if t.player_out %}
+                                    {{ t.player_out.first_name }} {{ t.player_out.last_name }}
+                                {% else %}
+                                    <span class="text-gray-500">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 font-semibold">
+                                {% if t.cost > 0 %}
+                                    -{{t.cost}} pts
+                                {% else %}
+                                    Free
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td class="p-6 text-center text-gray-500" colspan="5">You haven't made any transfers yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+             <div class="mt-6 text-center">
+                <a href="{% url 'fantasy:my_team' league.id %}" class="font-medium text-indigo-400 hover:text-indigo-300 transition-colors duration-200">&larr; Back to My Team</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

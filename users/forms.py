@@ -26,6 +26,13 @@ class UserRegistrationForm(UserCreationForm):
         self.request = kwargs.pop('request', None)  # get request context for role filtering
         super().__init__(*args, **kwargs)
 
+        # Improve UX: use date picker for birth
+        if 'birth' in self.fields:
+            try:
+                self.fields['birth'].widget.input_type = 'date'
+            except Exception:
+                pass
+
         if self.request and not (self.request.user.is_authenticated and self.request.user.role == 'admin'):
             # Remove 'admin' from choices for non-admins
             allowed_choices = [choice for choice in User.ROLE_CHOICES if choice[0] != 'admin']
@@ -76,3 +83,12 @@ class InvitationRegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Improve UX: use date picker for birth
+        if 'birth' in self.fields:
+            try:
+                self.fields['birth'].widget.input_type = 'date'
+            except Exception:
+                pass

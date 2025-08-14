@@ -1,0 +1,97 @@
+{% load static %} {% load fantasy_extras %}
+
+<div class="w-20 text-center">
+  <div class="relative">
+    <img
+      src="{% static 'images/player_default.png' %}"
+      alt="{{ fp.player.last_name }}"
+      class="w-full h-auto rounded-t-md"
+    />
+    <div class="absolute top-0 right-0 flex gap-1 p-1">
+      {% if fp.is_captain %}
+      <span
+        class="flex items-center justify-center w-5 h-5 text-xs bg-yellow-500 text-black font-bold rounded-full"
+        >C</span
+      >
+      {% endif %} {% if fp.is_vice_captain %}
+      <span
+        class="flex items-center justify-center w-5 h-5 text-xs bg-gray-400 text-black font-bold rounded-full"
+        >V</span
+      >
+      {% endif %}
+    </div>
+  </div>
+  <div class="bg-gray-900 p-1 rounded-b-md">
+    <p class="text-white text-sm font-semibold truncate">
+      {{ fp.player.last_name }}
+    </p>
+    <p class="text-gray-400 text-xs">
+      £{{ fp.price_at_purchase|floatformat:1 }}m
+    </p>
+  </div>
+  {% if not is_bench %}
+  <div class="mt-1 flex justify-center gap-1">
+    <form method="post" class="inline-block">
+      {% csrf_token %}
+      <input type="hidden" name="set_captain" value="1" />
+      <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
+      <button
+        title="Make Captain"
+        type="submit"
+        class="px-1.5 py-0.5 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 {% if not deadline_open or fp.is_captain %}opacity-50 cursor-not-allowed{% endif %}"
+        {%
+        if
+        not
+        deadline_open
+        or
+        fp.is_captain
+        %}disabled{%
+        endif
+        %}
+      >
+        C
+      </button>
+    </form>
+    <form method="post" class="inline-block">
+      {% csrf_token %}
+      <input type="hidden" name="set_vice_captain" value="1" />
+      <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
+      <button
+        title="Make Vice-Captain"
+        type="submit"
+        class="px-1.5 py-0.5 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 {% if not deadline_open or fp.is_vice_captain %}opacity-50 cursor-not-allowed{% endif %}"
+        {%
+        if
+        not
+        deadline_open
+        or
+        fp.is_vice_captain
+        %}disabled{%
+        endif
+        %}
+      >
+        V
+      </button>
+    </form>
+    <form method="post" class="inline-block">
+      {% csrf_token %}
+      <input type="hidden" name="remove_player" value="1" />
+      <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
+      <button
+        title="Remove Player"
+        type="submit"
+        class="px-1.5 py-0.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 {% if not deadline_open %}opacity-50 cursor-not-allowed{% endif %}"
+        {%
+        if
+        not
+        deadline_open
+        %}disabled{%
+        endif
+        %}
+      >
+        X
+      </button>
+    </form>
+  </div>
+  {% endif %}
+</div>

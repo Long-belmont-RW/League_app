@@ -120,6 +120,7 @@ class Player(Personel):
     ]
 
     position = models.CharField(max_length=2, choices=POSITION_CHOICES)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Market price for fantasy budget calculations")
     
 
 

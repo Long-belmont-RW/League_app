@@ -4,7 +4,18 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Q, F
 from .models import UserProfile, User
-from league.models import Coach, Player, Match, PlayerSeasonParticipation, League, MatchStatus, CoachSeasonParticipation, TeamSeasonParticipation
+from league.models import (
+    Coach,
+    Player,
+    Match,
+    PlayerSeasonParticipation,
+    League,
+    MatchStatus,
+    CoachSeasonParticipation,
+    TeamSeasonParticipation,
+    PlayerStats,
+    Lineup,
+)
 from django.utils import timezone
 
 from .utils import get_season_progress
@@ -263,13 +274,20 @@ def player_dashboard_view(request):
         logger.error(f"Player profile not found for user: {request.user.username}")
         messages.error(request, "Player profile not found.")
 
-    #Get the latest league
-    latest_league = League.objects.order_by('-created_at').first()
+    # Resolve active league with safe fallback
+    latest_league = (
+        League.objects.filter(is_active=True).order_by('-created_at').first()
+        or League.objects.order_by('-created_at').first()
+    )
     logger.info(f"Latest league: {latest_league.year if latest_league else 'None'}")
 
     if latest_league:
           # Get the player's recent team
-        player_team = PlayerSeasonParticipation.objects.filter(player=player_profile.player, league=latest_league).first()
+        player_team = (
+            PlayerSeasonParticipation.objects.select_related('team', 'player', 'league')
+            .filter(player=player_profile.player, league=latest_league)
+            .first()
+        )
         logger.info(f"Player team: {player_team.team.name if player_team else 'None'}")
         
         # Check if the player has a team
@@ -293,33 +311,81 @@ def player_dashboard_view(request):
     
 
 
-    # --- New/Modified Query for Upcoming Matches ---
-    now = timezone.now() # Get the current time in the active timezone
+    # Upcoming matches and next match
+    upcoming_matches = (
+        Match.objects.filter(
+            Q(home_team=player_team.team) | Q(away_team=player_team.team),
+            season=latest_league,
+            status=MatchStatus.SCHEDULED,
+        )
+        .select_related('home_team', 'away_team')
+        .order_by('date')
+    )
 
-    upcoming_matches = Match.objects.filter(
-        Q(home_team=player_team.team) | Q(away_team=player_team.team),
-       # Match date is greater than or equal to now
-        status=MatchStatus.SCHEDULED # Only show scheduled matches
-    ).order_by('date') # Order by date ascending for upcoming matches
-    logger.debug(f"Upcoming matches for player {player_profile.user.username}: {upcoming_matches.count()} matches found")
+    next_match = upcoming_matches.first()
+    logger.info(
+        f"Next match for player {player_profile.user.username}: {getattr(next_match, 'id', None)}"
+    )
 
-    # Get the latest *completed* match for the player (if you still need it for context elsewhere)
-    # This assumes 'matches' was originally meant to be all matches regardless of status/date.
-    # If not, you might need a separate query for 'latest_match' or filter the 'matches' further.
-    latest_completed_match = Match.objects.filter(
-        Q(home_team=player_team.team) | Q(away_team=player_team.team),
-        status=MatchStatus.FINISHED # Or any other 'finished' status
-    ).order_by('-date').first()
-    logger.debug(f"Latest completed match for player {player_profile.user.username}: {latest_completed_match.id if latest_completed_match else 'None'}")
-    
-    # Get the latest match for the player
-    latest_match = upcoming_matches.first()
-    logger.info(f"Latest match for player {player_profile.user.username}: {latest_match.id if latest_match else 'None'}")
-    if not latest_match:
-        logger.error(f"No matches found for player: {player_profile.user.username}")
-        messages.error(request, "No matches found for the player.")
-        
-    logger.info(f"Rendering image Url: {player_profile.image.url if player_profile.image else 'No image available'}")
+    # Is player named in lineup for next match?
+    is_in_lineup = False
+    if next_match and player_team:
+        try:
+            is_in_lineup = Lineup.objects.filter(
+                match=next_match, team=player_team.team, players=player_profile.player
+            ).exists()
+        except Exception:
+            is_in_lineup = False
+
+    # Latest completed match
+    latest_completed_match = (
+        Match.objects.filter(
+            Q(home_team=player_team.team) | Q(away_team=player_team.team),
+            season=latest_league,
+            status=MatchStatus.FINISHED,
+        )
+        .select_related('home_team', 'away_team')
+        .order_by('-date')
+        .first()
+    )
+
+    # Recent contributions (last 5 matches)
+    recent_stats = (
+        PlayerStats.objects.filter(player=player_profile.player, match__season=latest_league)
+        .select_related('match', 'match__home_team', 'match__away_team')
+        .order_by('-match__date')[:5]
+    )
+
+    # Season totals from participation record
+    season_totals = None
+    if player_team:
+        season_totals = {
+            'goals': player_team.goals,
+            'assists': player_team.assists,
+            'yellow_cards': player_team.yellow_cards,
+            'red_cards': player_team.red_cards,
+            'clean_sheets': player_team.clean_sheets,
+            'matches_played': player_team.matches_played,
+        }
+
+    # Mini league table
+    team_table = (
+        TeamSeasonParticipation.objects.filter(league=latest_league)
+        .select_related('team')
+        .all()
+    )
+
+    # Lightweight notifications
+    notifications = []
+    if next_match:
+        notifications.append(
+            f"Upcoming match: {next_match.home_team} vs {next_match.away_team}"
+        )
+        notifications.append(
+            "You are in the lineup." if is_in_lineup else "You are not named in the lineup yet."
+        )
+    if latest_completed_match:
+        notifications.append("Last result recorded. Check your contributions below.")
 
     
     context = {
@@ -327,10 +393,14 @@ def player_dashboard_view(request):
         'player_team': player_team,
         'all_teams': all_teams,
         'upcoming_matches': upcoming_matches,
+        'next_match': next_match,
+        'is_in_lineup': is_in_lineup,
         'latest_completed_match': latest_completed_match,
-        'latest_match': latest_match,
+        'recent_stats': recent_stats,
+        'season_totals': season_totals,
+        'team_table': team_table,
         'latest_league': latest_league,
-
+        'notifications': notifications,
     }
 
 

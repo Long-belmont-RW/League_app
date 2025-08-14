@@ -1,31 +1,44 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="container mx-auto mt-8 p-4">
-    <div class="max-w-md mx-auto bg-gray-800 rounded-xl shadow-md overflow-hidden md:max-w-2xl">
-        <div class="md:flex">
-            <div class="p-8 w-full">
-                <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">Invite a New Player</div>
-                <p class="mt-2 text-gray-400">Send an invitation to a new player to join your team.</p>
-                <form method="post" novalidate class="mt-4">
-                    {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-4">
-                            <label for="{{ field.id_for_label }}" class="block text-gray-300 text-sm font-bold mb-2">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.help_text %}
-                                <p class="text-gray-500 text-xs italic">{{ field.help_text }}</p>
-                            {% endif %}
-                            {% for error in field.errors %}
-                                <p class="text-red-500 text-xs italic">{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
-                        Send Invitation
-                    </button>
-                </form>
-            </div>
-        </div>
+{% extends "base.html" %} {% block content %}
+<div class="w-full max-w-md mx-auto text-white py-5">
+  <div class="bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+    <div class="bg-gray-700 px-8 py-6 text-center">
+      <h1 class="text-2xl font-bold mb-2 text-white">Invite Player</h1>
+      <p class="text-sm text-gray-300">
+        Send an invitation to a new player to join your team.
+      </p>
     </div>
+
+    <div class="p-8">
+      <form method="post" class="space-y-6">
+        {% csrf_token %} {% if form.non_field_errors %}
+        <div
+          class="bg-red-900 border border-red-700 text-red-200 p-4 rounded-lg"
+        >
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %} {% for field in form %}
+        <div>
+          <label
+            for="{{ field.id_for_label }}"
+            class="block mb-2 text-sm font-semibold text-gray-300"
+            >{{ field.label }}</label
+          >
+          {{ field }} {% if field.errors %}
+          <p class="mt-2 text-sm text-red-400">{{ field.errors|striptags }}</p>
+          {% endif %} {% if field.help_text %}
+          <p class="mt-1 text-xs text-gray-400">{{ field.help_text }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        <button
+          type="submit"
+          class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-500 font-semibold rounded-xl text-sm px-5 py-3 text-center"
+        >
+          Send Invitation
+        </button>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}

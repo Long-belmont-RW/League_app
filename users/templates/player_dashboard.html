@@ -1,35 +1,98 @@
 {% extends 'base.html' %} {% block content %}
-<div class="flex flex-col lg:flex-row min-h-screen bg-gray-900 text-gray-100 font-sans">
+<div
+  class="flex flex-col lg:flex-row min-h-screen bg-gray-900 text-gray-100 font-sans"
+>
   <!-- Sidebar -->
-  <div id="player-sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-4 lg:p-6 flex flex-col justify-between z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+  <div
+    id="player-sidebar"
+    class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-4 lg:p-6 flex flex-col justify-between z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out"
+  >
     <div>
       <div class="flex items-center mb-8">
         {% if not player_profile.image %}
-        <img src="https://placehold.co/40x40/00b894/ffffff?text=PL" alt="Player Profile" class="w-10 h-10 rounded-full mr-3" />
+        <img
+          src="https://placehold.co/40x40/00b894/ffffff?text=PL"
+          alt="Player Profile"
+          class="w-10 h-10 rounded-full mr-3"
+        />
         {% else %}
-        <img src="{{ player_profile.image.url }}" alt="Player Profile" class="w-10 h-10 rounded-full object-cover" />
+        <img
+          src="{{ player_profile.image.url }}"
+          alt="Player Profile"
+          class="w-10 h-10 rounded-full object-cover"
+        />
         {% endif %}
         <div>
-          <h2 class="text-white font-semibold text-lg px-1">{{player_profile.player}}</h2>
+          <h2 class="text-white font-semibold text-lg px-1">
+            {{player_profile.player}}
+          </h2>
           <p class="text-gray-400 text-sm">{{player_profile.user.email}}</p>
         </div>
       </div>
 
       <nav class="space-y-4">
-        <a href="#" class="flex items-center text-white bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        <a
+          href="#"
+          class="flex items-center text-white bg-gray-700 p-3 rounded-lg transition-colors duration-200"
+        >
+          <svg
+            class="w-5 h-5 mr-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+            ></path>
+          </svg>
           Dashboard
         </a>
-        <a href="#" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6m0 6a2 2 0 100-4 2 2 0 000 4zm0 0c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6"></path></svg>
+        <a
+          href="#"
+          class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200"
+        >
+          <svg
+            class="w-5 h-5 mr-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 19V6l12-3v13M9 19c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6m0 6a2 2 0 100-4 2 2 0 000 4zm0 0c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6"
+            ></path>
+          </svg>
           My Stats
         </a>
       </nav>
     </div>
 
     <div class="space-y-4">
-      <a href="{% url 'logout' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+      <a
+        href="{% url 'logout' %}"
+        class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200"
+      >
+        <svg
+          class="w-5 h-5 mr-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+          ></path>
+        </svg>
         Log out
       </a>
     </div>
@@ -38,19 +101,200 @@
   <!-- Main Content Area -->
   <div class="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 bg-gray-900">
     <!-- Header -->
-    <header class="flex flex-col sm:flex-row items-center justify-between mb-8 bg-gray-800 p-4 rounded-xl shadow-md">
+    <header
+      class="flex flex-col sm:flex-row items-center justify-between mb-8 bg-gray-800 p-4 rounded-xl shadow-md"
+    >
       <div class="flex items-center w-full sm:w-auto mb-4 sm:mb-0">
-        <button id="player-sidebar-toggle" class="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 lg:hidden mr-4">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        <button
+          id="player-sidebar-toggle"
+          class="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 lg:hidden mr-4"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            ></path>
+          </svg>
         </button>
         <h1 class="text-2xl font-bold text-white">Player Dashboard</h1>
       </div>
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left column: Next match and recent matches -->
       <div class="lg:col-span-2 space-y-6">
+        <!-- Next Match Card -->
         <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-          <h2 class="text-2xl font-bold text-white">Welcome, {{ player_profile.player}}!</h2>
+          <h2 class="text-xl font-semibold text-white mb-4">Next Match</h2>
+          {% if next_match %}
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-300">
+                {{ next_match.home_team }} vs {{ next_match.away_team }}
+              </p>
+              <p class="text-gray-400 text-sm">
+                {{ next_match.date|date:'D, M j, g:i a' }}
+              </p>
+            </div>
+            <div>
+              {% if is_in_lineup %}
+              <span
+                class="px-3 py-1 text-xs font-medium rounded-full bg-green-900 text-green-200 border border-green-700"
+                >In Lineup</span
+              >
+              {% else %}
+              <span
+                class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-900 text-yellow-200 border border-yellow-700"
+                >Not Selected</span
+              >
+              {% endif %}
+            </div>
+          </div>
+          {% else %}
+          <p class="text-gray-400">No upcoming match scheduled.</p>
+          {% endif %}
+        </div>
+
+        <!-- Recent Matches Card -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+          <h2 class="text-xl font-semibold text-white mb-4">Recent Matches</h2>
+          {% if recent_stats %}
+          <ul class="divide-y divide-gray-700">
+            {% for s in recent_stats %}
+            <li class="py-3 flex items-center justify-between">
+              <div>
+                <p class="text-gray-300">
+                  {{ s.match.home_team }} vs {{ s.match.away_team }}
+                </p>
+                <p class="text-gray-500 text-xs">
+                  {{ s.match.date|date:'D, M j' }}
+                </p>
+              </div>
+              <div class="flex gap-2 text-xs">
+                {% if s.goals %}<span
+                  class="px-2 py-1 rounded bg-indigo-900 text-indigo-200 border border-indigo-700"
+                  >G {{ s.goals }}</span
+                >{% endif %} {% if s.assists %}<span
+                  class="px-2 py-1 rounded bg-blue-900 text-blue-200 border border-blue-700"
+                  >A {{ s.assists }}</span
+                >{% endif %} {% if s.yellow_cards %}<span
+                  class="px-2 py-1 rounded bg-yellow-900 text-yellow-200 border border-yellow-700"
+                  >YC {{ s.yellow_cards }}</span
+                >{% endif %} {% if s.red_cards %}<span
+                  class="px-2 py-1 rounded bg-red-900 text-red-200 border border-red-700"
+                  >RC {{ s.red_cards }}</span
+                >{% endif %}
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-gray-400">No recent match contributions yet.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Right column: Season stats, table, notifications -->
+      <div class="space-y-6">
+        <!-- Season Stats -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+          <h2 class="text-xl font-semibold text-white mb-4">Season Stats</h2>
+          {% if season_totals %}
+          <dl class="grid grid-cols-2 gap-4 text-sm">
+            <div class="p-3 bg-gray-700 rounded-lg">
+              <dt class="text-gray-400">Goals</dt>
+              <dd class="text-white text-lg font-bold">
+                {{ season_totals.goals }}
+              </dd>
+            </div>
+            <div class="p-3 bg-gray-700 rounded-lg">
+              <dt class="text-gray-400">Assists</dt>
+              <dd class="text-white text-lg font-bold">
+                {{ season_totals.assists }}
+              </dd>
+            </div>
+            <div class="p-3 bg-gray-700 rounded-lg">
+              <dt class="text-gray-400">Yellow Cards</dt>
+              <dd class="text-white text-lg font-bold">
+                {{ season_totals.yellow_cards }}
+              </dd>
+            </div>
+            <div class="p-3 bg-gray-700 rounded-lg">
+              <dt class="text-gray-400">Red Cards</dt>
+              <dd class="text-white text-lg font-bold">
+                {{ season_totals.red_cards }}
+              </dd>
+            </div>
+            <div class="p-3 bg-gray-700 rounded-lg">
+              <dt class="text-gray-400">Clean Sheets</dt>
+              <dd class="text-white text-lg font-bold">
+                {{ season_totals.clean_sheets }}
+              </dd>
+            </div>
+            <div class="p-3 bg-gray-700 rounded-lg">
+              <dt class="text-gray-400">Matches Played</dt>
+              <dd class="text-white text-lg font-bold">
+                {{ season_totals.matches_played }}
+              </dd>
+            </div>
+          </dl>
+          {% else %}
+          <p class="text-gray-400">No season data available.</p>
+          {% endif %}
+        </div>
+
+        <!-- Team Table (mini) -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+          <h2 class="text-xl font-semibold text-white mb-4">League Table</h2>
+          {% if team_table %}
+          <table class="w-full text-left text-sm">
+            <thead class="text-gray-400">
+              <tr>
+                <th class="py-2">Team</th>
+                <th class="py-2 text-center">Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in team_table %}
+              <tr
+                class="border-t border-gray-700 {% if row.team.id == player_team.team.id %}bg-gray-700/40{% endif %}"
+              >
+                <td class="py-2">{{ row.team.name }}</td>
+                <td class="py-2 text-center font-semibold">{{ row.points }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-gray-400">No standings yet.</p>
+          {% endif %}
+        </div>
+
+        <!-- Notifications -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+          <h2 class="text-xl font-semibold text-white mb-4">Notifications</h2>
+          {% if notifications or request.user.notifications.all %}
+          <ul class="list-disc pl-6 space-y-2 text-gray-300">
+            {% for note in notifications %}
+            <li>{{ note }}</li>
+            {% endfor %} {% for n in request.user.notifications.all|slice:':5'
+            %}
+            <li>
+              <span class="font-semibold">{{ n.title }}:</span> {{ n.message }}
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-gray-400">No notifications.</p>
+          {% endif %}
         </div>
       </div>
     </div>

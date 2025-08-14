@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'league.apps.LeagueConfig',
     'content.apps.ContentConfig',
+    'fantasy.apps.FantasyConfig',
 
 
     #Third Party
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -81,6 +83,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'league_app.wsgi.application'
+ASGI_APPLICATION = 'league_app.asgi.application'
+
+# Channels layer (in-memory for dev)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
+}
 
 
 # Database
