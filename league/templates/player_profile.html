@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto p-4 sm:p-6 lg:p-8 bg-gray-900 text-gray-100">
+
+    <!-- Player Header -->
+    <div class="flex flex-col sm:flex-row items-center bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+        {% if player.picture %}
+            <img src="{{ player.picture.url }}" alt="{{ player.first_name }} {{ player.last_name }}" class="w-32 h-32 rounded-full object-cover mr-8 border-4 border-gray-700">
+        {% else %}
+            <img src="https://placehold.co/128x128/00b894/ffffff?text={{ player.first_name|slice:':1' }}{{ player.last_name|slice:':1' }}" alt="Player" class="w-32 h-32 rounded-full mr-8 border-4 border-gray-700">
+        {% endif %}
+        <div>
+            <h1 class="text-4xl font-bold text-white">{{ player.first_name }} {{ player.last_name }}</h1>
+            <p class="text-gray-400 text-lg">{{ player.get_position_display }}</p>
+            {% if player.age %}
+            <p class="text-gray-400">Age: {{ player.age }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Player Bio and Details -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div class="md:col-span-2 bg-gray-800 p-6 rounded-xl shadow-md">
+            <h2 class="text-2xl font-semibold text-white mb-4">Biography</h2>
+            <p class="text-gray-300">{{ player.bio|default:"No biography available." }}</p>
+        </div>
+        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+            <h2 class="text-2xl font-semibold text-white mb-4">Details</h2>
+            <dl class="text-gray-300">
+                <div class="flex justify-between py-2 border-b border-gray-700">
+                    <dt class="font-semibold">Position</dt>
+                    <dd>{{ player.get_position_display }}</dd>
+                </div>
+                <div class="flex justify-between py-2 border-b border-gray-700">
+                    <dt class="font-semibold">Fantasy Price</dt>
+                    <dd>${{ player.price|floatformat:2 }}</dd>
+                </div>
+                 <div class="flex justify-between py-2">
+                    <dt class="font-semibold">Status</dt>
+                    <dd>{% if player.is_active %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>{% else %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>{% endif %}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Playing History -->
+    <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+        <h2 class="text-2xl font-semibold text-white mb-4">Playing History</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Season</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Team</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Matches</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Goals</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Assists</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Yellow Cards</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Red Cards</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Clean Sheets</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-gray-800 divide-y divide-gray-700">
+                    {% for participation in season_participations %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{{ participation.league }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.team.name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.matches_played }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.goals }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.assists }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.yellow_cards }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.red_cards }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.clean_sheets }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-400">No playing history found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

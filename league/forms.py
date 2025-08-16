@@ -3,7 +3,7 @@ from django import forms
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.utils import timezone
 from django.db.models import Q, Sum
-from .models import Match, PlayerStats, PlayerSeasonParticipation, Player, Lineup, MatchStatus, TeamSeasonParticipation
+from .models import Match, PlayerStats, PlayerSeasonParticipation, Player, Lineup, MatchStatus, TeamSeasonParticipation, MatchEvent
 
 
 class MatchForm(forms.ModelForm):
@@ -235,3 +235,37 @@ class LineupForm(forms.ModelForm):
                 'class': 'space-y-2'
             })
         }
+
+class MatchEventForm(forms.ModelForm):
+    class Meta:
+        model = MatchEvent
+        fields = ['player', 'event_type', 'commentary']
+        widgets = {
+            'player': forms.Select(attrs={
+                'class': 'bg-gray-700 border border-gray-600 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-4 py-3'
+            }),
+            'event_type': forms.Select(attrs={
+                'class': 'bg-gray-700 border border-gray-600 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-4 py-3'
+            }),
+            'commentary': forms.Textarea(attrs={
+                'class': 'bg-gray-700 border border-gray-600 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-4 py-3',
+                'rows': 3
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        match = kwargs.pop('match', None)
+        super().__init__(*args, **kwargs)
+
+        if match:
+            # Get players from both home and away lineups
+            home_lineup = Lineup.objects.filter(match=match, team=match.home_team).first()
+            away_lineup = Lineup.objects.filter(match=match, team=match.away_team).first()
+            
+            player_ids = []
+            if home_lineup:
+                player_ids.extend(home_lineup.players.values_list('id', flat=True))
+            if away_lineup:
+                player_ids.extend(away_lineup.players.values_list('id', flat=True))
+
+            self.fields['player'].queryset = Player.objects.filter(id__in=player_ids)

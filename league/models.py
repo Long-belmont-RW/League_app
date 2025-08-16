@@ -5,7 +5,7 @@ from django.db.models import Sum, Q, F, Case, When, IntegerField
 from django.utils import timezone
 
 from datetime import datetime, date, time, timedelta
-from dateutil import relativedelta
+from dateutil.relativedelta import relativedelta
 
 
 #---Abstract Class---
@@ -457,6 +457,32 @@ class PlayerStats(models.Model):
        
     def __str__(self):
         return f"{self.player} stats in {self.match}"
+
+
+# --- Match Event Model ---
+class MatchEvent(models.Model):
+    EVENT_TYPE_CHOICES = [
+        ("GOAL", "Goal"),
+        ("ASSIST", "Assist"),
+        ("YELLOW_CARD", "Yellow Card"),
+        ("RED_CARD", "Red Card"),
+        ("SUBSTITUTION", "Substitution"),
+        ("COMMENTARY", "Commentary"),
+    ]
+
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name="events")
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, null=True, blank=True) # Can be null for general commentary
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES)
+    minute = models.PositiveIntegerField()
+    commentary = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['minute']
+
+    def __str__(self):
+        if self.player:
+            return f"{self.minute}' - {self.get_event_type_display()} for {self.player}"
+        return f"{self.minute}' - {self.get_event_type_display()}"
 
 
 # --- Lineup Model ---

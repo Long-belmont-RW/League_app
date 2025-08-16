@@ -11,10 +11,10 @@ from freezegun import freeze_time
 
 from league.models import (Team, League, Match, MatchStatus, 
         TeamSeasonParticipation, Coach, Player, 
-        Lineup, CoachSeasonParticipation, PlayerSeasonParticipation)
-
+        Lineup, CoachSeasonParticipation, PlayerSeasonParticipation, MatchEvent)
 from users.models import UserProfile, Notification
 from league.services import update_league_table
+from .forms import MatchEventForm
 
 
 #Get the custom User model 
@@ -395,3 +395,104 @@ class LineupNotificationTests(TestCase):
         # Email + realtime called for both actions
         self.assertEqual(mock_send_mail.call_count, 2)
         self.assertEqual(mock_push.call_count, 2)
+
+
+class MatchDetailsViewTests(TestCase):
+    def setUp(self):
+        # Set up a client
+        self.client = Client()
+        
+        # Create a league and teams
+        self.league = League.objects.create(year=2025, session="S", is_active=True)
+        self.home_team = Team.objects.create(name="Home Lions")
+        self.away_team = Team.objects.create(name="Away Tigers")
+
+        # Create players
+        self.home_player = Player.objects.create(first_name="Home", last_name="Player")
+        self.away_player = Player.objects.create(first_name="Away", last_name="Player")
+        self.other_player = Player.objects.create(first_name="Other", last_name="Player")
+
+        # Create a match
+        self.match = Match.objects.create(
+            season=self.league,
+            home_team=self.home_team,
+            away_team=self.away_team,
+            date=timezone.now() + timedelta(hours=1),
+            status=MatchStatus.SCHEDULED
+        )
+
+        # Create lineups
+        self.home_lineup = Lineup.objects.create(match=self.match, team=self.home_team)
+        self.home_lineup.players.add(self.home_player)
+        
+        self.away_lineup = Lineup.objects.create(match=self.match, team=self.away_team)
+        self.away_lineup.players.add(self.away_player)
+
+        # URL for the match details view
+        self.details_url = reverse('match_details', args=[self.match.id])
+
+    def test_match_details_view_loads_successfully(self):
+        """Tests that the match details page loads with a 200 status code."""
+        response = self.client.get(self.details_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'league/match_details.html')
+        self.assertIn('form', response.context)
+        self.assertIsInstance(response.context['form'], MatchEventForm)
+
+    def test_add_event_when_match_not_live(self):
+        """Tests adding an event to a match that is not live sets the minute to 0."""
+        self.assertEqual(self.match.status, MatchStatus.SCHEDULED)
+        
+        post_data = {
+            'player': self.home_player.id,
+            'event_type': 'GOAL',
+            'commentary': 'Early goal!'
+        }
+        response = self.client.post(self.details_url, data=post_data)
+
+        # Check redirect and event creation
+        self.assertEqual(response.status_code, 302) # Should redirect after successful post
+        self.assertTrue(MatchEvent.objects.filter(match=self.match, player=self.home_player).exists())
+        
+        # Check that the minute is 0
+        event = MatchEvent.objects.get(match=self.match, player=self.home_player)
+        self.assertEqual(event.minute, 0)
+
+    @freeze_time("2025-08-15 15:30:00")
+    def test_add_event_when_match_is_live(self):
+        """Tests adding an event to a live match captures the correct minute."""
+        # Set the match to live, starting 15 minutes ago
+        self.match.status = MatchStatus.LIVE
+        self.match.actual_kickoff_time = timezone.now() - timedelta(minutes=15)
+        self.match.save()
+
+        post_data = {
+            'player': self.away_player.id,
+            'event_type': 'YELLOW_CARD',
+            'commentary': 'A tactical foul.'
+        }
+        response = self.client.post(self.details_url, data=post_data)
+
+        # Check redirect and event creation
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(MatchEvent.objects.filter(match=self.match, player=self.away_player).exists())
+
+        # Check that the minute is correctly captured
+        event = MatchEvent.objects.get(match=self.match, player=self.away_player)
+        self.assertEqual(event.minute, 15)
+
+    def test_event_form_only_shows_lineup_players(self):
+        """Tests that the player dropdown in the form is correctly filtered."""
+        response = self.client.get(self.details_url)
+        form = response.context['form']
+        
+        # Get the queryset of the player field
+        form_player_queryset = form.fields['player'].queryset
+        
+        # Check that the players in the form are the ones in the lineup
+        self.assertIn(self.home_player, form_player_queryset)
+        self.assertIn(self.away_player, form_player_queryset)
+        
+        # Check that a player not in the lineup is NOT in the form choices
+        self.assertNotIn(self.other_player, form_player_queryset)
+        self.assertEqual(len(form_player_queryset), 2)

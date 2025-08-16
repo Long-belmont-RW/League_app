@@ -11,7 +11,7 @@ from django.db import transaction
 from django.db.models import Sum, Q, F, Prefetch
 from .models import League, Lineup, Team, Match, Player, PlayerSeasonParticipation, PlayerStats, MatchStatus, \
     TeamSeasonParticipation, CoachSeasonParticipation
-from .forms import MatchForm, PlayerStatsForm, PlayerStatsFormSet, LineupForm
+from .forms import MatchForm, PlayerStatsForm, PlayerStatsFormSet, LineupForm, MatchEventForm
 from .utils import get_league_standings
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -640,3 +640,48 @@ def manage_lineup_view(request, match_id):
         'away_form': away_form,
     }
     return render(request, 'manage_lineup.html', context)
+
+
+def player_profile(request, player_id):
+    player = get_object_or_404(Player, id=player_id)
+    season_participations = PlayerSeasonParticipation.objects.filter(player=player).select_related('team', 'league').order_by('-league__year', '-league__session')
+    
+    context = {
+        'player': player,
+        'season_participations': season_participations,
+    }
+    return render(request, 'league/player_profile.html', context)
+
+
+def match_details(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    home_lineup = Lineup.objects.filter(match=match, team=match.home_team).first()
+    away_lineup = Lineup.objects.filter(match=match, team=match.away_team).first()
+    events = match.events.all().select_related('player')
+
+    if request.method == 'POST':
+        form = MatchEventForm(request.POST, match=match)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.match = match
+            if match.status == 'LIV':
+                event.minute = match.get_current_minute()
+            else:
+                # Handle cases where match is not live, maybe default to 0 or prompt for it
+                event.minute = 0 # Or some other default
+            event.save()
+            return redirect('match_details', match_id=match.id)
+    else:
+        form = MatchEventForm(match=match)
+
+    context = {
+        'match': match,
+        'home_lineup': home_lineup,
+        'away_lineup': away_lineup,
+        'events': events,
+        'form': form,
+    }
+
+    return render(request, 'league/match_details.html', context)
+
+

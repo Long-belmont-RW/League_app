@@ -44,22 +44,26 @@
                 {% if current_players %}
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {% for player in current_players %}
-                    <div class="bg-gray-700 rounded-2xl p-6 text-white">
+                    <a href="{% url 'player_profile' player.id %}" class="block bg-gray-700 rounded-2xl p-6 text-white hover:bg-gray-600 transition-colors duration-200">
                         <div class="flex items-center space-x-4 mb-4">
                             <div class="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center shadow-lg">
-                                <span class="text-white font-bold text-xl">{{ player.first_name|first|default:player.last_name|first }}</span>
+                                {% if player.picture %}
+                                    <img src="{{ player.picture.url }}" alt="{{ player.first_name }}" class="w-16 h-16 rounded-full object-cover">
+                                {% else %}
+                                    <span class="text-white font-bold text-xl">{{ player.first_name|first|default:player.last_name|first }}</span>
+                                {% endif %}
                             </div>
                             <div class="flex-1">
                                 <h3 class="font-bold text-lg mb-1">{{ player.first_name }} {{ player.last_name }}</h3>
                                 {% if player.position %}
-                                <p class="text-sm text-gray-400 mb-1">{{ player.position }}</p>
+                                <p class="text-sm text-gray-400 mb-1">{{ player.get_position_display }}</p>
                                 {% endif %}
                                 {% if player.jersey_number %}
                                 <p class="text-sm font-bold text-indigo-400">#{{ player.jersey_number }}</p>
                                 {% endif %}
                             </div>
                         </div>
-                    </div>
+                    </a>
                     {% endfor %}
                 </div>
                 {% else %}
@@ -68,6 +72,32 @@
                     <p class="text-lg text-gray-400">Players will appear here once they're added to the team.</p>
                 </div>
                 {% endif %}
+            </div>
+
+            <!-- Matches Section -->
+            <div class="px-8 py-12 bg-gray-800 border-t border-gray-700">
+                <h2 class="text-4xl font-bold text-white mb-10">Matches</h2>
+                <div class="space-y-4">
+                    {% for match in matches %}
+                        <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between">
+                            <div>
+                                <p class="text-lg font-semibold text-white">{{ match.home_team.name }} vs {{ match.away_team.name }}</p>
+                                <p class="text-sm text-gray-400">{{ match.date|date:"F d, Y" }}</p>
+                            </div>
+                            <div class="text-lg font-bold text-white">
+                                {{ match.home_score }} - {{ match.away_score }}
+                            </div>
+                            {% if user.is_authenticated and user.role == 'admin' %}
+                            <div class="flex space-x-2">
+                                <a href="{% url 'manage_lineup' match.id %}" class="px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700">Set Lineup</a>
+                                <a href="{% url 'match_details' match.id %}" class="px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">Update Events</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-400">No matches scheduled for this team in the active season.</p>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>

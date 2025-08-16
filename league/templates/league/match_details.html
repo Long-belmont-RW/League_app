@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto p-4 sm:p-6 lg:p-8 bg-gray-900 text-gray-100">
+
+    <!-- Match Header -->
+    <div class="bg-gray-800 p-6 rounded-xl shadow-md mb-8 text-center">
+        <h1 class="text-4xl font-bold text-white">{{ match.home_team }} vs {{ match.away_team }}</h1>
+        <p class="text-gray-400 text-lg">{{ match.season }} - {{ match.date|date:"F j, Y, g:i a" }}</p>
+        <p class="text-2xl font-bold text-indigo-400 mt-2">{{ match.home_score }} - {{ match.away_score }}</p>
+        <p class="text-sm text-gray-500">Status: {{ match.get_status_display }}</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mb-8">
+        <div class="border-b border-gray-700">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button id="lineup-tab" onclick="showTab('lineup')" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg text-indigo-400 border-indigo-500">Lineup</button>
+                <button id="highlights-tab" onclick="showTab('highlights')" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg text-gray-400 hover:text-gray-200 hover:border-gray-300">Highlights</button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Lineup Content -->
+    <div id="lineup-content" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Home Team Lineup -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+            <h2 class="text-2xl font-semibold text-white mb-4">{{ match.home_team.name }}</h2>
+            {% if home_lineup and home_lineup.players.all %}
+                <ul>
+                    {% for player in home_lineup.players.all %}
+                        <li class="text-gray-300 py-2 border-b border-gray-700">{{ player.first_name }} {{ player.last_name }} ({{ player.get_position_display }})</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-gray-400">Lineup not available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Away Team Lineup -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+            <h2 class="text-2xl font-semibold text-white mb-4">{{ match.away_team.name }}</h2>
+            {% if away_lineup and away_lineup.players.all %}
+                <ul>
+                    {% for player in away_lineup.players.all %}
+                        <li class="text-gray-300 py-2 border-b border-gray-700">{{ player.first_name }} {{ player.last_name }} ({{ player.get_position_display }})</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-gray-400">Lineup not available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Highlights Content -->
+    <div id="highlights-content" class="hidden">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+            <h2 class="text-2xl font-semibold text-white mb-4">Add Match Event</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>{{ form.event_type }}</div>
+                    <div>{{ form.player }}</div>
+                    <div>{{ form.commentary }}</div>
+                </div>
+                <button type="submit" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Add Event</button>
+            </form>
+        </div>
+
+        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
+            <h2 class="text-2xl font-semibold text-white mb-4">Match Highlights</h2>
+            <div class="relative border-l-2 border-gray-700 ml-4">
+                {% for event in events %}
+                    <div class="mb-8 ml-8">
+                        <span class="absolute -left-4 flex items-center justify-center w-8 h-8 bg-indigo-600 rounded-full ring-8 ring-gray-900 text-white">{{ event.minute }}'</span>
+                        <h3 class="text-lg font-semibold text-white">{{ event.get_event_type_display }}</h3>
+                        {% if event.player %}
+                            <p class="text-gray-400">{{ event.player.first_name }} {{ event.player.last_name }}</p>
+                        {% endif %}
+                        {% if event.commentary %}
+                            <p class="text-gray-300 mt-1">{{ event.commentary }}</p>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="text-gray-400 ml-8">No highlights available for this match yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const lineupTab = document.getElementById('lineup-tab');
+    const highlightsTab = document.getElementById('highlights-tab');
+    const lineupContent = document.getElementById('lineup-content');
+    const highlightsContent = document.getElementById('highlights-content');
+
+    function showTab(tabName) {
+        if (tabName === 'lineup') {
+            lineupContent.classList.remove('hidden');
+            highlightsContent.classList.add('hidden');
+            lineupTab.classList.add('text-indigo-400', 'border-indigo-500');
+            lineupTab.classList.remove('text-gray-400', 'hover:text-gray-200', 'hover:border-gray-300');
+            highlightsTab.classList.add('text-gray-400', 'hover:text-gray-200', 'hover:border-gray-300');
+            highlightsTab.classList.remove('text-indigo-400', 'border-indigo-500');
+        } else if (tabName === 'highlights') {
+            lineupContent.classList.add('hidden');
+            highlightsContent.classList.remove('hidden');
+            highlightsTab.classList.add('text-indigo-400', 'border-indigo-500');
+            highlightsTab.classList.remove('text-gray-400', 'hover:text-gray-200', 'hover:border-gray-300');
+            lineupTab.classList.add('text-gray-400', 'hover:text-gray-200', 'hover:border-gray-300');
+            lineupTab.classList.remove('text-indigo-400', 'border-indigo-500');
+        }
+    }
+</script>
+{% endblock %}

@@ -35,12 +35,11 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div class="flex space-x-2">
+                        <a href="{% url 'match_details' match.id %}" class="text-blue-400 hover:underline">Details</a>
                         {% if user.is_authenticated and user.is_staff%}
                         <a href="{% url 'edit_match' match.id %}" class="text-indigo-400 hover:underline">Edit</a>
                         <a href="{% url 'delete_match' match.id %}" class="text-red-400 hover:underline">Delete</a>
                         <a href="{% url 'edit_player_stats' match.id %}" class="text-green-400 hover:underline">Stats</a>
-                        {% else %}
-                        <a href="#" class="text-indigo-400 hover:underline">View</a>
                         {% endif %}
                     </div>
                 </td>
