@@ -1,0 +1,9 @@
+<!-- league/templates/partials/player_card.html -->
+
+<div class="player-card bg-gray-800 border border-gray-600 rounded-md p-2 text-white text-center cursor-grab active:cursor-grabbing flex flex-col items-center shadow-lg"
+     data-player-id="{{ player.id }}" 
+     data-position="{{ player.position }}">
+    <img src="{{ player.player_profile.picture.url | default:'/static/images/default-avatar.png' }}" alt="{{ player.last_name }}" class="w-10 h-10 rounded-full object-cover mb-1">
+    <span class="text-sm font-semibold truncate w-full">{{ player.last_name }}</span>
+    <span class="text-xs text-gray-400">{{ player.position }}</span>
+</div>

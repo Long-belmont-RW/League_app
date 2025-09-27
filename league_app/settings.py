@@ -26,8 +26,7 @@ SECRET_KEY = 'django-insecure-_stmcv%3h^o3(37==ly6@a2&z9x=oc5^&kk+che)ja46hc91c4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']  # Change this in production to your domain or IP
 
 # Application definition
 
@@ -42,10 +41,16 @@ INSTALLED_APPS = [
     #Third Party
     'tailwind',
     'theme',
-    
+    'widget_tweaks',
+    'debug_toolbar',
+    'allauth', 
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 
 
     #Default
+    'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -63,6 +68,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    #Third Party
+    'allauth.account.middleware.AccountMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'league_app.urls'
@@ -160,21 +169,72 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTHENTICATION_BACKENDS = [
    'users.authentication.EmailRoleAuthBackend',  #custom backend
+    'allauth.account.auth_backends.AuthenticationBackend', #django-allauth authentication
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-#Custom user model
+#Custom user model and all auth configuration
 AUTH_USER_MODEL = "users.User"
+
+
+# ==============================================================================
+# ALLAUTH SETTINGS
+# ==============================================================================
+SITE_ID = 1
+
+# This setting is used by allauth to redirect after a successful login.
+LOGIN_REDIRECT_URL = '/' 
+LOGOUT_REDIRECT_URL = '/login/' # Or your desired landing page
+
+# Use the custom adapters
+ACCOUNT_ADAPTER = 'league.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'league.adapters.CustomSocialAccountAdapter'
+
+# --- Core Account Settings ---
+ACCOUNT_LOGIN_METHODS = {"email"}              # replaces deprecated ACCOUNT_AUTHENTICATION_METHOD
+ACCOUNT_SIGNUP_FIELDS = []  # Social signup should not require password fields; email is provided by the provider
+ACCOUNT_EMAIL_VERIFICATION = "optional"        # or "mandatory" if you want strict verification
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "[League App] "
+ACCOUNT_UNIQUE_EMAIL = True
+
+# --- Social Account Settings ---
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Automatically sign up users on successful social login
+SOCIALACCOUNT_LOGIN_ON_GET = True # Avoids an intermediary confirmation page
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none' # We trust the social provider's email
+SOCIALACCOUNT_EMAIL_REQUIRED = True # Ensures we get an email from the provider
+
+# Do not use allauth's built-in signup form.
+ACCOUNT_SIGNUP_FORM_CLASS = None
+
+
+# --- Provider-Specific Settings ---
+# You can add settings for other providers like GitHub here.
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    },
+    'github': {
+        'SCOPE': [
+            'user:email',
+        ],
+    }
+}
+# ==============================================================================
+
+
 
 # tailwind Configuration
 TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = ['127.0.0.1']
 NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
 
-#Redirect after login
-LOGIN_REDIRECT_URL = '/home/'
-LOGIN_REDIRECT_URL = '/login/'
-
+#Email configuration for console display
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = ''
 EMAIL_PORT = 587
@@ -230,3 +290,7 @@ LOGGING = {
         }
     },
 }
+
+INTERNAL_IPS = [
+        '127.0.0.1',
+    ]

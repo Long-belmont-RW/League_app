@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Complete Your Profile{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full bg-gray-800 p-8 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-bold text-center text-white mb-6">Complete Your Profile</h2>
+        <p class="text-center text-gray-400 mb-6">Welcome! Please provide a few more details to finish setting up your account.</p>
+        
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label for="{{ form.birth.id_for_label }}" class="block text-gray-300 text-sm font-bold mb-2">{{ form.birth.label }}</label>
+                {% render_field form.birth class="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 text-gray-200 leading-tight focus:outline-none focus:shadow-outline" %}
+                {% if form.birth.help_text %}
+                    <p class="text-gray-500 text-xs italic mt-2">{{ form.birth.help_text }}</p>
+                {% endif %}
+                {% for error in form.birth.errors %}
+                    <p class="text-red-500 text-xs italic mt-2">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="mb-6">
+                <label for="{{ form.gender.id_for_label }}" class="block text-gray-300 text-sm font-bold mb-2">{{ form.gender.label }}</label>
+                {% render_field form.gender class="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 text-gray-200 leading-tight focus:outline-none focus:shadow-outline" %}
+                {% if form.gender.help_text %}
+                    <p class="text-gray-500 text-xs italic mt-2">{{ form.gender.help_text }}</p>
+                {% endif %}
+                {% for error in form.gender.errors %}
+                    <p class="text-red-500 text-xs italic mt-2">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
+                    Save and Continue
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

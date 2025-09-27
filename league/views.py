@@ -1,4 +1,5 @@
 # league/views.py
+import json
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import user_passes_test
@@ -9,14 +10,15 @@ from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.db import transaction
 from django.db.models import Sum, Q, F, Prefetch
-from .models import League, Lineup, Team, Match, Player, PlayerSeasonParticipation, PlayerStats, MatchStatus, \
-    TeamSeasonParticipation, CoachSeasonParticipation
-from .forms import MatchForm, PlayerStatsForm, PlayerStatsFormSet, LineupForm, MatchEventForm
+
+from .models import League, Lineup, Team, Match, Player, PlayerSeasonParticipation, PlayerStats, MatchStatus,     TeamSeasonParticipation, CoachSeasonParticipation, LineupPlayer
+from .forms import LineupPlayerForm, MatchForm, PlayerStatsForm, PlayerStatsFormSet, LineupFormSet, MatchEventForm, ValidatingLineupFormSet
 from .utils import get_league_standings
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django import forms as django_forms
 
 # Home View (Displays recent matches and top scorers)
 def home(request):
@@ -570,76 +572,11 @@ def edit_player_stats_view(request, match_id):
 
         formset = PlayerStatsFormSet(queryset=queryset, form_kwargs={'match': match})
 
-        context = {
-            'formset': formset,
-            'match': match,
-        }
-        return render(request, 'edit_player_stats.html', context)
-
-
-#The improvise view for managing lineups
-def manage_lineup_view(request, match_id):
-    #Get the match object and user
-    match = get_object_or_404(Match, pk=match_id)
-    user = request.user
-
-    # --- Permission Checks 
-    is_admin = user.is_staff and user.role == 'admin'
-    is_home_coach = False
-    is_away_coach = False
-
-    # Check for coach role based on your UserProfile model
-    if hasattr(user, 'userprofile') and user.userprofile.coach:
-        coach_profile = user.userprofile.coach
-
-        if CoachSeasonParticipation.objects.filter(coach=coach_profile, team=match.home_team, league=match.season).exists():
-            is_home_coach = True
-        if CoachSeasonParticipation.objects.filter(coach=coach_profile, team=match.away_team, league=match.season).exists():
-            is_away_coach = True
-        
-    # Deny access if the user has no permissions for this page
-    if not (is_admin or is_home_coach or is_away_coach):
-        raise PermissionDenied("You do not have permission to manage this lineup.")
-
-
-    # --- Form & Instance Setup ---
-    home_lineup, _ = Lineup.objects.get_or_create(match=match, team=match.home_team)
-    away_lineup, _ = Lineup.objects.get_or_create(match=match, team=match.away_team)
-
-    home_form = None
-    away_form = None
-
-    # ---Post request---
-    if request.method == 'POST':
-        #Admin or homecoach submitting the home lineup
-        if 'submit_home_lineup' in request.POST and (is_admin or is_home_coach):
-            form = LineupForm(request.POST, instance=home_lineup)
-            if form.is_valid():
-                form.save()
-                messages.success(request, f"{match.home_team}'s lineup has been updated.")
-                return redirect('manage_lineup', match_id=match_id)
-            
-        # Admin or away coach submitting the away lineup
-        elif 'submit_away_lineup' in request.POST and (is_admin or is_away_coach):
-            form = LineupForm(request.POST, instance=away_lineup)
-            if form.is_valid():
-                form.save()
-                messages.success(request, f"{match.away_team}'s lineup has been updated.")
-                return redirect('manage_lineup', match_id=match_id)
-
-    # --- GET Logic (or after a failed POST) ---
-    if is_admin or is_home_coach:
-        home_form = LineupForm(instance=home_lineup)
-    
-    if is_admin or is_away_coach:
-        away_form = LineupForm(instance=away_lineup)
-
     context = {
+        'formset': formset,
         'match': match,
-        'home_form': home_form,
-        'away_form': away_form,
     }
-    return render(request, 'manage_lineup.html', context)
+    return render(request, 'edit_player_stats.html', context)
 
 
 def player_profile(request, player_id):
@@ -685,3 +622,105 @@ def match_details(request, match_id):
     return render(request, 'league/match_details.html', context)
 
 
+def manage_lineup_view(request, match_id):
+    """
+    View to create or edit lineups for a specific match.
+    Refactored to simplify data fetching and improve performance.
+    """
+    match = get_object_or_404(Match.objects.select_related('home_team', 'away_team', 'season'), pk=match_id)
+    user = request.user
+
+    # --- Permission Checks ---
+    is_admin = user.is_staff and getattr(user, 'role', None) == 'admin'
+    is_home_coach = False
+    is_away_coach = False
+
+    # Check for coach role based on your UserProfile model
+    if hasattr(user, 'userprofile') and hasattr(user.userprofile, 'coach') and user.userprofile.coach:
+        coach = user.userprofile.coach
+        is_home_coach = CoachSeasonParticipation.objects.filter(coach=coach, team=match.home_team, league=match.season).exists()
+        is_away_coach = CoachSeasonParticipation.objects.filter(coach=coach, team=match.away_team, league=match.season).exists()
+
+    if not (is_admin or is_home_coach or is_away_coach):
+        raise PermissionDenied("You do not have permission to manage this lineup.")
+
+    # --- POST Request Logic ---
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            team_id = data.get('team_id')
+            
+            # Ensure the user is authorized to edit this team's lineup
+            if not (is_admin or (is_home_coach and int(team_id) == match.home_team.id) or (is_away_coach and int(team_id) == match.away_team.id)):
+                 raise PermissionDenied("You are not authorized to modify this team's lineup.")
+
+            starter_ids = data.get('starters', [])
+            substitute_ids = data.get('substitutes', [])
+            formation = data.get('formation', '4-4-2')
+
+            lineup, _ = Lineup.objects.get_or_create(team_id=team_id, match=match)
+
+            with transaction.atomic():
+                # Clear existing players for this lineup
+                lineup.lineupplayer_set.all().delete()
+
+                # Create new LineupPlayer entries
+                players_to_create = []
+                for player_id in starter_ids:
+                    players_to_create.append(LineupPlayer(lineup=lineup, player_id=player_id, is_starter=True))
+                for player_id in substitute_ids:
+                    players_to_create.append(LineupPlayer(lineup=lineup, player_id=player_id, is_starter=False))
+                
+                LineupPlayer.objects.bulk_create(players_to_create)
+
+                # Update the formation
+                lineup.formation = formation
+                lineup.save()
+
+            return JsonResponse({'status': 'success', 'message': 'Lineup saved successfully!'})
+        except (KeyError, json.JSONDecodeError) as e:
+            return JsonResponse({'status': 'error', 'message': f'Invalid data provided: {str(e)}'}, status=400)
+        except Exception as e:
+            # Log the exception e
+            return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)
+
+    # --- GET Request Logic ---
+    def get_team_context(team):
+        lineup, _ = Lineup.objects.get_or_create(team=team, match=match)
+        
+        # Fetch starters and substitutes in one query
+        lineup_players = LineupPlayer.objects.filter(lineup=lineup).select_related('player')
+        starters = [lp.player for lp in lineup_players if lp.is_starter]
+        substitutes = [lp.player for lp in lineup_players if not lp.is_starter]
+        
+        lineup_player_ids = {p.id for p in starters} | {p.id for p in substitutes}
+
+        # Get all active players for the team in the current season
+        all_team_players = PlayerSeasonParticipation.objects.filter(
+            team=team, 
+            league=match.season,
+            is_active=True
+        ).select_related('player').distinct()
+
+        # Determine available reserves
+        reserves = [psp.player for psp in all_team_players if psp.player.id not in lineup_player_ids]
+
+        return {
+            'team': team,
+            'lineup': lineup,
+            'starters': starters,
+            'substitutes': substitutes,
+            'reserves': reserves,
+            'formations': ['4-4-2', '4-3-3', '3-5-2', '4-2-3-1', '5-3-2'],
+        }
+
+    context = {
+        'match': match,
+        'home_context': get_team_context(match.home_team),
+        'away_context': get_team_context(match.away_team),
+        'save_lineup_url': reverse_lazy('manage_lineup', kwargs={'match_id': match.id}),
+        'can_edit_home': is_admin or is_home_coach,
+        'can_edit_away': is_admin or is_away_coach,
+    }
+    
+    return render(request, 'league/manage_lineup_redesigned.html', context)

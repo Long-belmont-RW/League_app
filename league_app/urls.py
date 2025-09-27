@@ -26,6 +26,7 @@ urlpatterns = [
     path('', include('league.urls')),
     path('fantasy/', include('fantasy.urls', namespace='fantasy')),
    path('accounts/', include('users.urls')),
+   path('authentication/', include('allauth.urls')),
    path('content/', include('content.urls')),
    
 ]
@@ -33,3 +34,9 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
     document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+        import debug_toolbar
+        urlpatterns = [
+            path('__debug__/', include(debug_toolbar.urls)),
+        ] + urlpatterns

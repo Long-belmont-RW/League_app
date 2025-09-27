@@ -1,0 +1,57 @@
+{% load league_extras %}
+
+<div class="team-column" id="lineup-manager-{{ team_context.team.id }}" data-team-id="{{ team_context.team.id }}" data-team-type="{{ team_type }}">
+    <h3 class="text-center">{{ team_context.team.name }}</h3>
+
+    <div class="lineup-controls">
+        <div class="col-7">
+            <label for="formation-select-{{ team_context.team.id }}" class="form-label fw-bold">Formation</label>
+            <select id="formation-select-{{ team_context.team.id }}" class="form-select formation-select">
+                {% for f in formations %}
+                    <option value="{{ f }}" {% if team_context.lineup.formation == f %}selected{% endif %}>{{ f }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button class="btn btn-primary save-lineup-btn">Save Lineup</button>
+    </div>
+
+    <!-- Pitch Area -->
+    <div class="pitch pitch-area">
+        {% with formation_slots=team_context.lineup.formation|get_formation_slots %}
+        {% with starters=team_context.starters %}
+            <div class="pitch-row">
+                {% for _ in "x"|ljust:formation_slots.FW %}<div class="player-slot fw-slot"></div>{% endfor %}
+            </div>
+            <div class="pitch-row">
+                {% for _ in "x"|ljust:formation_slots.MF %}<div class="player-slot mf-slot"></div>{% endfor %}
+            </div>
+            <div class="pitch-row">
+                {% for _ in "x"|ljust:formation_slots.DF %}<div class="player-slot df-slot"></div>{% endfor %}
+            </div>
+            <div class="pitch-row">
+                <div class="player-slot gk-slot"></div>
+            </div>
+        {% endwith %}
+        {% endwith %}
+    </div>
+
+    <!-- Substitutes Bench -->
+    <div class="player-list-container substitutes-bench">
+        <h5 class="text-muted">Substitutes</h5>
+        <div class="player-list subs-list">
+            {% for player in team_context.substitutes %}
+                {% include 'league/partials/_player_card.html' with player=player %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Available Players Pool -->
+    <div class="player-list-container available-players-pool">
+        <h5 class="text-muted">Available Players</h5>
+        <div class="player-list available-list">
+            {% for player in team_context.available_players %}
+                {% include 'league/partials/_player_card.html' with player=player %}
+            {% endfor %}
+        </div>
+    </div>
+</div>

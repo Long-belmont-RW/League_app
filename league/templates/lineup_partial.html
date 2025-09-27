@@ -1,0 +1,48 @@
+{% load league_extras %}
+
+<div class="team-lineup-manager" id="lineup-manager-{{ team_context.team.id }}" data-team-id="{{ team_context.team.id }}" data-team-type="{{ team_type }}">
+    <h4 class="text-center">{{ team_context.team.name }}</h4>
+
+    <!-- Formation Selector and Save Button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="col-md-6">
+            <label for="formation-select-{{ team_context.team.id }}" class="form-label">Formation</label>
+            <select id="formation-select-{{ team_context.team.id }}" class="form-select formation-select">
+                {% for formation_option in formations %}
+                    <option value="{{ formation_option }}" {% if team_context.lineup.formation == formation_option %}selected{% endif %}>{{ formation_option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button class="btn btn-primary save-lineup-btn">Save Lineup</button>
+    </div>
+
+    <!-- Pitch -->
+    <div class="pitch" data-formation="{{ team_context.lineup.formation }}">
+        {% with formation_slots=team_context.lineup.formation|get_formation_slots %}
+        <div class="pitch-row forwards">
+            {% for _ in "x"|ljust:formation_slots.FW %}<div class="player-slot" data-position="FW"></div>{% endfor %}
+        </div>
+        <div class="pitch-row midfielders">
+            {% for _ in "x"|ljust:formation_slots.MF %}<div class="player-slot" data-position="MF"></div>{% endfor %}
+        </div>
+        <div class="pitch-row defenders">
+            {% for _ in "x"|ljust:formation_slots.DF %}<div class="player-slot" data-position="DF"></div>{% endfor %}
+        </div>
+        <div class="pitch-row goalkeeper">
+            <div class="player-slot" data-position="GK"></div>
+        </div>
+        {% endwith %}
+    </div>
+
+    <!-- Substitutes Bench -->
+    <div class="player-list-container substitutes-bench mt-3">
+        <h5>Substitutes (Max 7)</h5>
+        <div class="player-list" id="substitutes-{{ team_context.team.id }}"></div>
+    </div>
+
+    <!-- Available Players -->
+    <div class="player-list-container available-players-pool mt-3">
+        <h5>Available Players</h5>
+        <div class="player-list" id="available-{{ team_context.team.id }}"></div>
+    </div>
+</div>

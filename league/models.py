@@ -484,12 +484,32 @@ class MatchEvent(models.Model):
             return f"{self.minute}' - {self.get_event_type_display()} for {self.player}"
         return f"{self.minute}' - {self.get_event_type_display()}"
 
+class LineupPlayer(models.Model):
+    """Intermediary model to link a Player to a Lineup with extra data."""
+    lineup = models.ForeignKey('Lineup', on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    is_starter = models.BooleanField(default=True, help_text="Is this player in the starting lineup?")
+    
+    class Meta:
+        unique_together = ('lineup', 'player') # A player can only be in a lineup once
+        ordering = ['-is_starter', 'player__last_name'] # Starters first
+
+    def __str__(self):
+        status = "Starter" if self.is_starter else "Substitute"
+        return f"{self.player} ({status}) in {self.lineup.team.name} lineup"
 
 # --- Lineup Model ---
 class Lineup(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='lineups')
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    players = models.ManyToManyField(Player, related_name='lineups')
+    players = models.ManyToManyField(Player, through='LineupPlayer', related_name='lineups')
+    formation = models.CharField(max_length=10, blank=True, null=True, default='4-4-2')
 
     def __str__(self):
         return f"Lineup for {self.match} - {self.team}"
+
+    def get_starters(self):
+        return self.lineupplayer_set.filter(is_starter=True).select_related('player')
+
+    def get_substitutes(self):
+        return self.lineupplayer_set.filter(is_starter=False).select_related('player')

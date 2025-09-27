@@ -3,7 +3,7 @@ from django import forms
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.utils import timezone
 from django.db.models import Q, Sum
-from .models import Match, PlayerStats, PlayerSeasonParticipation, Player, Lineup, MatchStatus, TeamSeasonParticipation, MatchEvent
+from .models import Match, PlayerStats, PlayerSeasonParticipation, Player, Lineup, MatchStatus, TeamSeasonParticipation, MatchEvent, LineupPlayer
 
 
 class MatchForm(forms.ModelForm):
@@ -202,40 +202,102 @@ PlayerStatsFormSet = forms.modelformset_factory(
 )
 
 
-class LineupForm(forms.ModelForm):
-    """Form for creating/editing lineups with enhanced validation and styling"""
-    
+# league/forms.py
+
+class LineupPlayerForm(forms.ModelForm):
+    # This new field will control whether a player is in the lineup or not.
+    is_selected = forms.BooleanField(
+        required=False, 
+        widget=forms.CheckboxInput(attrs={
+            'class': 'w-5 h-5 text-indigo-500 bg-gray-700 border-gray-600 rounded focus:ring-indigo-600'
+        })
+    )
+
     def __init__(self, *args, **kwargs):
+        self.eligible_ids = set(kwargs.pop('eligible_ids', []) or [])
         super().__init__(*args, **kwargs)
 
-        # Get the Lineup instance passed from the view
-        instance = kwargs.get('instance')
-
-        if instance and instance.match and instance.team:
-            match = instance.match
-            team = instance.team
-        
-        #---Filter the players
-        #Get a list of player IDs who are active for this specific session
-
-        active_players_for_team = PlayerSeasonParticipation.objects.filter(
-                league=match.season,
-                team=team,
-                is_active=True
-            ).values_list('player_id', flat=True)
-
-        # Set the queryset for the 'players' field to ONLY show those active players.
-        self.fields['players'].queryset = Player.objects.filter(id__in=active_players_for_team)
-
     class Meta:
-        model = Lineup
-        fields = ['players',]
+        model = LineupPlayer
+        # We only need `is_starter` from the model now.
+        fields = ['player', 'is_starter']
         widgets = {
-            'players': forms.CheckboxSelectMultiple(attrs={
-                'class': 'space-y-2'
-            })
+            # Player will be a hidden input; we'll display the name manually.
+            'player': forms.HiddenInput(),
+            'is_starter': forms.CheckboxInput(attrs={
+                'class': 'w-5 h-5 text-indigo-500 bg-gray-700 border-gray-600 rounded focus:ring-indigo-600'
+            }),
         }
 
+    @property
+    def player_obj(self):
+        """Return the Player instance referenced by this form's player field for display in templates."""
+        p = self.initial.get('player')
+        if isinstance(p, Player):
+            return p
+        # If initial contained a PK (e.g., from POST re-render), try resolving it
+        try:
+            if p:
+                return Player.objects.get(pk=p)
+        except Player.DoesNotExist:
+            pass
+        # Try from bound data
+        key = self.add_prefix('player')
+        pk = self.data.get(key)
+        try:
+            if pk:
+                return Player.objects.get(pk=pk)
+        except Player.DoesNotExist:
+            return None
+        return None
+
+    def clean(self):
+        cleaned = super().clean()
+        player = cleaned.get('player')
+        # Validate the hidden player input belongs to the eligible roster
+        if player and self.eligible_ids and player.id not in self.eligible_ids:
+            raise ValidationError("Selected player is not eligible for this lineup.")
+        return cleaned
+
+from django.forms import BaseInlineFormSet
+
+class ValidatingLineupFormSet(BaseInlineFormSet):
+    REQUIRED_STARTERS = 11  # enforce exactly 11 starters
+
+    def clean(self):
+        super().clean()
+        starters = 0
+        seen_players = set()
+        for form in self.forms:
+            if not hasattr(form, 'cleaned_data'):
+                continue
+            # Skip forms with errors so we don't KeyError
+            if form.errors:
+                continue
+            is_selected = form.cleaned_data.get('is_selected', False)
+            player = form.cleaned_data.get('player')
+            is_starter = form.cleaned_data.get('is_starter', False)
+            if not player:
+                continue
+            # prevent duplicate players in POST tampering
+            if player.id in seen_players:
+                raise ValidationError("Each player can only appear once in the lineup.")
+            seen_players.add(player.id)
+            if is_selected and is_starter:
+                starters += 1
+        if starters != self.REQUIRED_STARTERS:
+            raise ValidationError(f"You must select exactly {self.REQUIRED_STARTERS} starters.")
+
+# CREATE the formset factory
+LineupFormSet = forms.inlineformset_factory(
+    Lineup,                      # Parent model
+    LineupPlayer,                # The 'through' model
+    form=LineupPlayerForm,       # The form for each item in the set
+    fields=('player', 'is_starter'),
+    extra=0,                     # No extra empty forms
+    can_delete=True,             # Allow removing players from the lineup
+    formset=ValidatingLineupFormSet
+)
 class MatchEventForm(forms.ModelForm):
     class Meta:
         model = MatchEvent

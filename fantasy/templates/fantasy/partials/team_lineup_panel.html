@@ -1,0 +1,79 @@
+<!-- league/templates/league/partials/team_lineup_panel.html -->
+{% load static league_extras %}
+
+<div class="bg-gray-800/50 rounded-lg p-4 space-y-4 border border-gray-700">
+    <!-- TOP CONTROL BAR -->
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 p-2 bg-gray-900/50 rounded-md">
+        <h2 class="text-2xl font-bold">{{ team_context.team.name }}</h2>
+        <div class="flex items-center gap-4">
+            <!-- CSRF token needs to be here for the JS to find it within the team manager scope -->
+            {% csrf_token %}
+            <select id="{{ team_prefix }}-formation-select" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500">
+                {% for formation_option in team_context.formations %}
+                    <option value="{{ formation_option }}" {% if team_context.lineup.formation == formation_option %}selected{% endif %}>{{ formation_option }}</option>
+                {% endfor %}
+            </select>
+            <button id="{{ team_prefix }}-save-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors">Save Lineup</button>
+        </div>
+    </div>
+    
+    <!-- VALIDATION/MESSAGE AREA -->
+    <div id="{{ team_prefix }}-message-area" class="text-center h-6 transition-opacity duration-300"></div>
+
+    <!-- THE PITCH -->
+    <div class="bg-green-800/40 p-4 rounded-lg border-2 border-green-500/50 relative">
+        <!-- You can add a pitch background image here for better visuals -->
+        <!-- e.g., style="background-image: url('{% static 'images/pitch-background.svg' %}'); background-size: cover;" -->
+        <div class="pitch-grid">
+            <!-- Forwards -->
+            <div class="pitch-row">
+                {% for i in team_context.lineup.formation|get_formation_slots:'FW' %}
+                    <div class="player-slot" data-position-accept="FW"></div>
+                {% endfor %}
+            </div>
+            <!-- Midfielders -->
+            <div class="pitch-row">
+                {% for i in team_context.lineup.formation|get_formation_slots:'MF' %}
+                    <div class="player-slot" data-position-accept="MF"></div>
+                {% endfor %}
+            </div>
+            <!-- Defenders -->
+            <div class="pitch-row">
+                {% for i in team_context.lineup.formation|get_formation_slots:'DF' %}
+                    <div class="player-slot" data-position-accept="DF"></div>
+                {% endfor %}
+            </div>
+            <!-- Goalkeeper -->
+            <div class="pitch-row">
+                <div class="player-slot" data-position-accept="GK"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIDDEN POOL FOR INITIAL STARTERS - JS will move these to the pitch -->
+    <div id="{{ team_prefix }}-starter-pool" class="hidden">
+        {% for player in team_context.starters %}
+            {% include 'partials/player_card.html' with player=player %}
+        {% endfor %}
+    </div>
+
+    <!-- SUBSTITUTES BENCH -->
+    <div>
+        <h3 class="text-lg font-semibold mb-2">Substitutes (<span id="{{ team_prefix }}-bench-count">0</span>/7)</h3>
+        <div id="{{ team_prefix }}-bench" class="player-list bg-gray-900/50 p-3 rounded-md grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
+            {% for player in team_context.substitutes %}
+                {% include 'partials/player_card.html' with player=player %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- AVAILABLE PLAYERS -->
+    <div>
+        <h3 class="text-lg font-semibold mb-2">Available Players</h3>
+        <div id="{{ team_prefix }}-available-players" class="player-list bg-gray-900/50 p-3 rounded-md grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+            {% for player in team_context.available_players %}
+                {% include 'partials/player_card.html' with player=player %}
+            {% endfor %}
+        </div>
+    </div>
+</div>

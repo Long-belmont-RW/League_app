@@ -11,10 +11,10 @@ from freezegun import freeze_time
 
 from league.models import (Team, League, Match, MatchStatus, 
         TeamSeasonParticipation, Coach, Player, 
-        Lineup, CoachSeasonParticipation, PlayerSeasonParticipation, MatchEvent)
+        Lineup, CoachSeasonParticipation, PlayerSeasonParticipation, MatchEvent, LineupPlayer)
 from users.models import UserProfile, Notification
 from league.services import update_league_table
-from .forms import MatchEventForm
+from .forms import MatchEventForm, LineupFormSet
 
 
 #Get the custom User model 
@@ -496,3 +496,133 @@ class MatchDetailsViewTests(TestCase):
         # Check that a player not in the lineup is NOT in the form choices
         self.assertNotIn(self.other_player, form_player_queryset)
         self.assertEqual(len(form_player_queryset), 2)
+
+class ManageLineupViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='coach', password='password', role='coach', email='coach@test.com')
+        self.user.refresh_from_db()
+        self.coach = self.user.userprofile.coach
+
+        self.league = League.objects.create(year=2025, session='S', is_active=True)
+        self.home_team = Team.objects.create(name='Home Team')
+        self.away_team = Team.objects.create(name='Away Team')
+
+        self.home_player1 = Player.objects.create(first_name='Home', last_name='Player1', position='FW')
+        self.home_player2 = Player.objects.create(first_name='Home', last_name='Player2', position='MF')
+        self.away_player1 = Player.objects.create(first_name='Away', last_name='Player1', position='DF')
+        self.away_player2 = Player.objects.create(first_name='Away', last_name='Player2', position='GK')
+
+        PlayerSeasonParticipation.objects.create(player=self.home_player1, team=self.home_team, league=self.league)
+        PlayerSeasonParticipation.objects.create(player=self.home_player2, team=self.home_team, league=self.league)
+        PlayerSeasonParticipation.objects.create(player=self.away_player1, team=self.away_team, league=self.league)
+        PlayerSeasonParticipation.objects.create(player=self.away_player2, team=self.away_team, league=self.league)
+
+        self.match = Match.objects.create(season=self.league, home_team=self.home_team, away_team=self.away_team, date=timezone.now())
+        CoachSeasonParticipation.objects.create(coach=self.coach, team=self.home_team, league=self.league)
+
+        self.client.login(username='coach@test.com', password='password')
+        self.url = reverse('manage_lineup', args=[self.match.id])
+
+    def test_manage_lineup_view_get(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'manage_lineup.html')
+        self.assertIn('home_formset', response.context)
+        self.assertIn('away_formset', response.context)
+        self.assertIsNotNone(response.context['home_formset'])
+        self.assertIsNone(response.context['away_formset']) # Coach is only for home team
+
+    def test_manage_lineup_post_home_team(self):
+        home_lineup, _ = Lineup.objects.get_or_create(match=self.match, team=self.home_team)
+        
+        # Get all eligible players for the formset
+        eligible_players = Player.objects.filter(
+            playerseasonparticipation__team=self.home_team,
+            playerseasonparticipation__league=self.match.season
+        )
+        
+        formset_data = {
+            'home-TOTAL_FORMS': eligible_players.count(),
+            'home-INITIAL_FORMS': '0',
+            'home-MIN_NUM_FORMS': '0',
+            'home-MAX_NUM_FORMS': '1000',
+            'submit_home_lineup': '',
+        }
+
+        for i, player in enumerate(eligible_players):
+            formset_data[f'home-{i}-player'] = player.id
+            if player in [self.home_player1, self.home_player2]:
+                formset_data[f'home-{i}-is_selected'] = 'on'
+                formset_data[f'home-{i}-is_starter'] = 'on'
+            else:
+                formset_data[f'home-{i}-is_selected'] = ''
+                formset_data[f'home-{i}-is_starter'] = ''
+
+
+        response = self.client.post(self.url, data=formset_data)
+        # With exactly 2 starters selected and rule requiring 11 starters, expect validation error
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'You must select exactly 11 starters.', status_code=200)
+        home_lineup.refresh_from_db()
+        self.assertEqual(home_lineup.players.count(), 0)
+
+    def test_manage_lineup_post_away_team_permission_denied(self):
+        post_data = {
+            'away-TOTAL_FORMS': '2',
+            'away-INITIAL_FORMS': '0',
+            'away-MIN_NUM_FORMS': '0',
+            'away-MAX_NUM_FORMS': '1000',
+            'away-0-player': self.away_player1.id,
+            'away-0-is_selected': 'on',
+            'away-1-player': self.away_player2.id,
+            'away-1-is_selected': 'on',
+            'submit_away_lineup': '',
+        }
+        response = self.client.post(self.url, data=post_data)
+        self.assertEqual(response.status_code, 200) # No redirect, should re-render with no away formset
+        self.assertFalse(Lineup.objects.filter(match=self.match, team=self.away_team).exists())
+
+    def test_manage_lineup_requires_exactly_11_starters_then_succeeds(self):
+        CoachSeasonParticipation.objects.create(coach=self.coach, team=self.away_team, league=self.league)
+        away_lineup, _ = Lineup.objects.get_or_create(match=self.match, team=self.away_team)
+        
+        # Create 11 away players for exact starters rule
+        extra_players = []
+        for i in range(9):
+            p = Player.objects.create(first_name='Away', last_name=f'Extra{i}', position='MF')
+            PlayerSeasonParticipation.objects.create(player=p, team=self.away_team, league=self.league)
+            extra_players.append(p)
+        eligible_players = list(Player.objects.filter(
+            playerseasonparticipation__team=self.away_team,
+            playerseasonparticipation__league=self.match.season
+        ))
+
+        # First attempt with 10 starters -> should fail
+        formset_data = {
+            'away-TOTAL_FORMS': len(eligible_players),
+            'away-INITIAL_FORMS': '0',
+            'away-MIN_NUM_FORMS': '0',
+            'away-MAX_NUM_FORMS': '1000',
+            'submit_away_lineup': '',
+        }
+        for i, player in enumerate(eligible_players):
+            formset_data[f'away-{i}-player'] = player.id
+            formset_data[f'away-{i}-is_selected'] = 'on'
+            formset_data[f'away-{i}-is_starter'] = 'on' if i < 10 else ''
+        response = self.client.post(self.url, data=formset_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'You must select exactly 11 starters.', status_code=200)
+        away_lineup.refresh_from_db()
+        self.assertEqual(away_lineup.players.count(), 0)
+
+        # Second attempt with exactly 11 starters -> should succeed
+        formset_data2 = formset_data.copy()
+        for i in range(len(eligible_players)):
+            formset_data2[f'away-{i}-is_starter'] = 'on' if i < 11 else ''
+        response2 = self.client.post(self.url, data=formset_data2)
+        self.assertEqual(response2.status_code, 302)
+        away_lineup.refresh_from_db()
+        self.assertEqual(away_lineup.players.count(), len(eligible_players))
+        # Only 11 will be starters; but all selected become lineup entries
+

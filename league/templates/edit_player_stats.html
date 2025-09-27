@@ -39,10 +39,17 @@
                             <tr>
                                 {% for hidden in form.hidden_fields %} {{ hidden }} {% endfor%}
                                 <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-sm font-medium text-white">{{ form.instance.player.first_name }} {{ form.instance.player.last_name }}</td>
+                                
                                 <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-400">
-                                    {% with p=form.instance.player.participation.first %}
-                                        {% if p %}{{ p.team.name }}{% else %}N/A{% endif %}
-                                    {% endwith%}
+                                    {% comment %}
+                                        The view prefetched the correct season participation for each player.
+                                        It's stored in the 'participation' attribute which is a list.
+                                    {% endcomment %}
+                                    {% if form.instance.player.participation %}
+                                        {{ form.instance.player.participation.0.team.name }}
+                                    {% else %}
+                                        <span class="text-yellow-500">No Team Data</span>
+                                    {% endif %}
                                 </td>
                                 <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ form.goals }}</td>
                                 <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ form.assists }}</td>

@@ -1,0 +1,92 @@
+{% load widget_tweaks %}
+
+<div class="w-full max-w-xl mx-auto text-white place-content-center backdrop-blur py-5">
+    <div class="bg-gray-800 rounded-2xl shadow-xl border-gray-700 overflow-hidden">
+
+        <div class="bg-gray-700 px-8 py-6 text-center">
+            <h1 class="text-2xl font-bold mb-2">
+                {% if is_edit %} Edit Match {% else %} Create Match {% endif %}
+            </h1>
+        </div>
+
+        <div class="p-8">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                    <div class="bg-red-900 border border-red-700 text-red-300 px-4 py-3 rounded relative">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <p class="text-sm">{{ error }}</p>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.season.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                            {{ form.season.label }}
+                        </label>
+                        {% render_field form.season class="w-full bg-gray-900 text-white border-gray-700 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" %}
+                    </div>
+                    <div>
+                        <label for="{{ form.match_day.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                            {{ form.match_day.label }}
+                        </label>
+                        {% render_field form.match_day class="w-full bg-gray-900 text-white border-gray-700 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.home_team.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                            {{ form.home_team.label }}
+                        </label>
+                        {% render_field form.home_team class="w-full bg-gray-900 text-white border-gray-700 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" %}
+                    </div>
+                    <div>
+                        <label for="{{ form.home_score.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                            {{ form.home_score.label }}
+                        </label>
+                        {% render_field form.home_score class="w-full bg-gray-900 text-white border-gray-700 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.away_team.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                            {{ form.away_team.label }}
+                        </label>
+                        {% render_field form.away_team class="w-full bg-gray-900 text-white border-gray-700 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" %}
+                    </div>
+                    <div>
+                        <label for="{{ form.away_score.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                            {{ form.away_score.label }}
+                        </label>
+                        {% render_field form.away_score class="w-full bg-gray-900 text-white border-gray-700 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.date.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                        {{ form.date.label }}
+                    </label>
+                    {% render_field form.date class="w-full bg-gray-900 text-white border-gray-700 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" type="datetime-local" %}
+                </div>
+
+                <div>
+                    <label for="{{ form.status.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                        {{ form.status.label }}
+                    </label>
+                    {% render_field form.status class="w-full bg-gray-900 text-white border-gray-700 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" %}
+                </div>
+
+                <button type="submit"
+                    class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition duration-200 transform hover:scale-105">
+                    {% if is_edit %} Update Match {% else %} Save Match {% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

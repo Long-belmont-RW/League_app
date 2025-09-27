@@ -1,0 +1,180 @@
+League_app Beta Architecture and Rebuild Plan
+
+Last updated: 2025-09-24
+
+1) Executive summary
+- Decision: Refactor-in-place over a full rewrite.
+  Why: You already have solid domain models (league, players, matches, fantasy) and some well-structured services. A rewrite would burn time and risk reintroducing bugs. A structured refactor can stabilize, scale, and ship a beta faster.
+- Goal: Deliver a stable, secure, and observable beta with a clean configuration model, clearer boundaries between domain/services/views, and a basic CI/testing setup.
+
+2) Immediate quick wins (1–2 days)
+- Settings hygiene
+  - Remove duplicates: keep a single LOGIN_REDIRECT_URL (to '/home/'), a single SITE_ID, and remove conflicting lines.
+  - Externalize config: SECRET_KEY, DEBUG, ALLOWED_HOSTS, EMAIL_* must come from environment variables.
+- Channels: In dev keep InMemory; in beta/prod use channels_redis via Redis. Toggle by env.
+- Database: Keep SQLite for dev, switch to Postgres for beta/prod.
+- Static files: Add WhiteNoise for serving static in prod; ensure collectstatic is part of deploy.
+- VCS hygiene: Ensure node_modules/ is ignored and not committed. Add debug.log to .gitignore.
+- Dependencies: Remove heavy packages not used (numpy, pandas) if unnecessary.
+
+3) Target architecture
+- Project layout
+  - config/
+    - settings/
+      - base.py
+      - dev.py
+      - prod.py
+      - test.py
+    - asgi.py (can remain under project package if preferred)
+    - wsgi.py
+  - apps: league, fantasy, users, content, theme (keep, but structure internals)
+- App structure guidelines (per app)
+  - models.py: Domain entities and validations only.
+  - services/ (package): Pure business logic; no request/session/messages.
+  - selectors.py or managers.py: Read/query utilities for common queries.
+  - views/: Thin orchestration and presentation concerns (messages, rendering).
+  - urls.py, templates/, templatetags/ as today.
+  - tasks.py (future: Celery) if needed.
+- Configuration
+  - Use django-environ (or similar) to read environment variables.
+  - Split settings (base/dev/prod/test). Base contains common; dev/test overrides; prod hardens security.
+- Database & caching
+  - Postgres as primary DB (beta/prod). Redis for channels and (optionally) caching.
+- Real-time
+  - Channels with channels_redis in beta/prod. AuthMiddlewareStack is OK; keep simple routing.
+- Background jobs (optional, post-beta)
+  - Introduce Celery + Redis if you need async tasks beyond websockets.
+- API strategy (optional)
+  - If you need a public API, add Django REST Framework with clear serializers/viewsets; otherwise, keep HTML-first for beta.
+- Authentication & authorization
+  - Keep custom EmailRoleAuthBackend for email auth. Keep django-allauth; ensure adapters and redirect logic are correct.
+  - Enforce role-based access in views/services where needed.
+- Static assets
+  - Tailwind build via npm scripts. CI should run npm ci && npm run build for theme/static.
+- Security
+  - ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS, cookie security flags, HSTS in prod.
+- Observability
+  - Structured logging; Sentry for exceptions; simple /health endpoint.
+- Quality gates
+  - black (format), ruff (lint), mypy + django-stubs (type checks), pytest + coverage, pre-commit hooks.
+
+4) Phased migration plan
+- Milestone 1: Config & infra baseline
+  1. Create config/settings/{base,dev,prod,test}.py; move current settings into base.py; add environment-driven values.
+  2. SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASE_URL, CHANNEL_LAYERS backend, EMAIL_* via env.
+  3. DB: Add Postgres config (prod). Keep SQLite in dev/test. Add dj-database-url or django-environ parsing.
+  4. Channels: Use channels_redis when CHANNEL_BACKEND=redis. Configure via REDIS_URL.
+  5. Static: Add WhiteNoise in prod; set STATIC_ROOT; verify collectstatic works.
+  6. Tailwind: Ensure npm run build generates CSS into static/; wire into deploy steps.
+  Deliverable: App runs locally with dev settings; prod settings ready with env.
+
+- Milestone 2: Boundaries & services refactor
+  1. Create services/ packages per app. Move core business logic from views/services.py to pure services.
+  2. Split read logic into selectors.py where useful (table queries, leaderboards, etc.).
+  3. Example: content.services.process_invitation -> domain function create_invitation(email, role, team) returning a result object; view handles messages and email rendering/sending based on result.
+  4. Keep fantasy/services.py pattern (transactional, cohesive) as the model for others.
+  Deliverable: Views are thin; services are testable and independent of request.
+
+- Milestone 3: Testing & quality
+  1. Add pytest config and coverage. Seed high-value tests:
+     - League table recalculation end-to-end (league/services.update_league_table or TeamSeasonParticipation.update_stats path).
+     - Match status transitions: get_current_minute and get_display_minute.
+     - Fantasy scoring: weekly calculation producing player points and leaderboard ranks.
+     - Auth flows: email login and allauth social login (feature flag provider settings in test).
+     - WebSocket connect/notify happy path (Channels testclient).
+  2. Add black, ruff, mypy with django-stubs; configure pre-commit.
+  3. CI (GitHub Actions or similar): run lint, type checks, tests; build Tailwind CSS.
+  Deliverable: Green CI; basic coverage on core flows.
+
+- Milestone 4: Security & observability
+  1. Harden prod settings: ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS, SECURE_SSL_REDIRECT, cookie secure flags, HSTS.
+  2. Add Sentry (DSN via env). Ensure logging to console/file with structured formatter.
+  3. Add /health endpoint and simple readiness checks (DB, Redis ping if desired).
+  Deliverable: Production-ready posture and visibility into failures.
+
+- Milestone 5: Beta ship
+  1. Migrations: Run on Postgres; validate initial data.
+  2. Build: npm ci && npm run build for theme; collectstatic.
+  3. ASGI server: run via daphne or uvicorn workers behind a reverse proxy; configure for websockets.
+  4. Smoke test checklist (auth, core pages, fantasy week calc, websockets notifications).
+  5. Rollout to small cohort; monitor Sentry and logs; iterate.
+  Deliverable: Public beta live.
+
+5) Production env variables (example)
+- DJANGO_SETTINGS_MODULE=league_app.settings.prod
+- SECRET_KEY={{DJANGO_SECRET_KEY}}
+- DEBUG=false
+- ALLOWED_HOSTS=yourdomain.com
+- CSRF_TRUSTED_ORIGINS=https://yourdomain.com
+- DATABASE_URL=postgres://user:password@host:5432/dbname
+- REDIS_URL=redis://host:6379/0
+- CHANNEL_BACKEND=redis
+- EMAIL_HOST=smtp.example.com
+- EMAIL_PORT=587
+- EMAIL_USE_TLS=true
+- EMAIL_HOST_USER={{SMTP_USER}}
+- EMAIL_HOST_PASSWORD={{SMTP_PASSWORD}}
+- SENTRY_DSN={{SENTRY_DSN}}
+Note: Do not commit .env files. Inject via secret manager or deployment environment.
+
+6) Data migration plan (SQLite -> Postgres)
+- Prefer clean migrations run on Postgres (fresh schema), then load initial data via fixtures if needed.
+- If you must move data:
+  - Ensure all migrations are up to date.
+  - Use Django dumpdata (scoped by app) and loaddata into Postgres; watch for FK ordering and JSON fields.
+  - Validate with sanity checks (counts per model, key constraints).
+
+7) Risks & rollback
+- Risk: Env misconfiguration in prod.
+  Mitigation: Add a startup check command; CI validates settings; use health checks.
+- Risk: Channels Redis mismatch.
+  Mitigation: Feature-flag channel backend; integration test websocket in CI when Redis is available.
+- Rollback: Keep current sqlite + in-memory channels path available under dev settings; deploy can switch DJANGO_SETTINGS_MODULE back and reuse old DB if needed (not recommended for prod).
+
+8) Prioritized backlog
+- P0
+  - Split settings into base/dev/prod/test and externalize env.
+  - Switch Channels to Redis in beta/prod.
+  - Postgres config for beta/prod; keep SQLite for dev.
+  - Fix duplicated settings (LOGIN_REDIRECT_URL and SITE_ID), set proper ALLOWED_HOSTS.
+  - Add WhiteNoise in prod; wire Tailwind build to deploy.
+- P1
+  - Refactor services into app/services/ packages; add selectors.py where useful.
+  - Add pytest + 4–6 core tests; wire CI (lint, type, test, build CSS).
+  - Add black, ruff, mypy, pre-commit.
+- P2
+  - Sentry + structured logging + /health.
+  - Optional: DRF scaffolding if API needed.
+  - Optional: Celery for async jobs if you need non-WS tasks.
+
+9) Notes specific to current codebase
+- settings.py
+  - SECRET_KEY is hardcoded; DEBUG=True; ALLOWED_HOSTS='*'. Move to env and restrict for prod.
+  - LOGIN_REDIRECT_URL defined twice (to '/home/' then to '/login/'); keep only the intended one.
+  - SITE_ID defined twice; keep once.
+  - Channels layer is InMemory; add Redis backend for beta/prod.
+- content.services.process_invitation currently couples request/messages/email rendering with domain logic. Split into pure service + view handling messages and email rendering/sending.
+- fantasy/services.py is a good pattern: cohesive, transactional, testable. Reuse approach across services.
+- node_modules exists in repo tree; ensure it’s ignored. Keep only package.json and lockfile.
+- requirements.txt contains heavy deps (numpy, pandas). Unless needed, drop to reduce footprint.
+
+10) Open questions
+- Are we okay standardizing on Postgres + Redis for beta? If yes, do you want Docker for local dev?
+- Do you need a public API for the beta, or is server-rendered HTML sufficient?
+- Hosting target for beta (e.g., Render, Fly.io, Railway, VPS)? This affects deploy scripts.
+- Any data you must migrate from existing SQLite, or can we start with a clean Postgres DB for beta?
+
+11) Suggested next steps
+- Confirm decisions on Postgres/Redis and Docker.
+- I implement Milestone 1 (settings split, env, Postgres/Redis/WhiteNoise wiring, quick settings fixes).
+- Add .gitignore updates and remove node_modules from VCS if present.
+- Then proceed to services refactor and seed tests.
+
+Appendix A: Minimal settings split sketch
+- base.py: INSTALLED_APPS, MIDDLEWARE, TEMPLATES, AUTH_USER_MODEL, ALLAUTH config, STATIC_URL, DEFAULT_AUTO_FIELD, logging base.
+- dev.py: DEBUG=True, SQLite DB, InMemoryChannelLayer, EMAIL_BACKEND=console, INTERNAL_IPS.
+- prod.py: DEBUG from env (default False), Postgres via DATABASE_URL, channels_redis via REDIS_URL, WhiteNoise, security flags, Sentry init.
+- test.py: Derives from base; SQLite in-memory; SOCIALACCOUNT_PROVIDERS={} (already present in test_settings.py).
+
+End of document.
+

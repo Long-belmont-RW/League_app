@@ -119,6 +119,7 @@
                 {% endif %}
 
                 {# Password #}
+                {% if form.fields.password1 %}
                 <div>
                     <label for="{{ form.password1.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
                         Password
@@ -134,6 +135,23 @@
                                placeholder="Enter your password" required>
                     </div>
                 </div>
+                {% else %}
+                <div>
+                    <label for="{{ form.password.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c.5304 0 1.0391.2107 1.4142.5858C13.7893 11.9609 14 12.4696 14 13v3a2 2 0 01-2 2H8a2 2 0 01-2-2v-3c0-.5304.2107-1.0391.5858-1.4142C6.9609 11.2107 7.4696 11 8 11h0V9a4 4 0 118 0v2h-2V9a2 2 0 10-4 0v2h2z" />
+                            </svg>
+                        </div>
+                        <input type="password" id="{{ form.password.id_for_label }}" name="{{ form.password.name }}"
+                               class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-4 py-3 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700"
+                               placeholder="Enter your password" required>
+                    </div>
+                </div>
+                {% endif %}
 
                 {# Confirm Password #}
                 <div>

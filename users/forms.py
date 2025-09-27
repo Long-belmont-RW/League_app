@@ -14,29 +14,19 @@ class EmailAuthenticationForm(AuthenticationForm):
         self.fields['username'].label = 'Email'
 
 
-class UserRegistrationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    role = forms.ChoiceField(choices=User.ROLE_CHOICES)
+class UserRegistrationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Confirm password', widget=forms.PasswordInput)
 
     class Meta:
         model = User
         fields = ('username', 'email', 'birth', 'gender', 'role')
 
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request', None)  # get request context for role filtering
-        super().__init__(*args, **kwargs)
-
-        # Improve UX: use date picker for birth
-        if 'birth' in self.fields:
-            try:
-                self.fields['birth'].widget.input_type = 'date'
-            except Exception:
-                pass
-
-        if self.request and not (self.request.user.is_authenticated and self.request.user.role == 'admin'):
-            # Remove 'admin' from choices for non-admins
-            allowed_choices = [choice for choice in User.ROLE_CHOICES if choice[0] != 'admin']
-            self.fields['role'].choices = allowed_choices
+    def clean_password2(self):
+        cd = self.cleaned_data
+        if cd['password'] != cd['password2']:
+            raise forms.ValidationError('Passwords don\'t match.')
+        return cd['password2']
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -44,20 +34,9 @@ class UserRegistrationForm(UserCreationForm):
             raise forms.ValidationError("Email already exists.")
         return email
 
-    def clean_role(self):
-        role = self.cleaned_data.get('role')
-        if role == 'admin':
-            if not (self.request and self.request.user.is_authenticated and self.request.user.role == 'admin'):
-                raise forms.ValidationError("Only admins can register admin accounts.")
-        return role
-
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.email = self.cleaned_data['email']
-        user.role = self.cleaned_data['role']
-
-        # Set is_staff based on role
-        user.is_staff = (user.role == 'admin')
+        user.set_password(self.cleaned_data['password'])
         if commit:
             user.save()
         return user
@@ -92,3 +71,32 @@ class InvitationRegistrationForm(UserCreationForm):
                 self.fields['birth'].widget.input_type = 'date'
             except Exception:
                 pass
+
+
+class CustomUserCreationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'role', 'password')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password"])
+        if commit:
+            user.save()
+        return user
+
+
+class UserProfileCompletionForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['birth', 'gender']
+        widgets = {
+            'birth': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['birth'].required = True
+        self.fields['gender'].required = True

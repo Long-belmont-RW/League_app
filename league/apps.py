@@ -6,4 +6,5 @@ class LeagueConfig(AppConfig):
     name = 'league'
 
     def ready(self):
+        # This imports the signals so they are registered when Django starts.
         import league.signals

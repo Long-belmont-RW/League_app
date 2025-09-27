@@ -19,7 +19,7 @@ from league.models import (
 from django.utils import timezone
 
 from .utils import get_season_progress
-from .forms import UserRegistrationForm, EmailAuthenticationForm, InvitationRegistrationForm
+from .forms import UserRegistrationForm, EmailAuthenticationForm, InvitationRegistrationForm, CustomUserCreationForm
 from content.models import Invitation
 import logging
 
@@ -76,7 +76,10 @@ def register_view(request):
     form_class = InvitationRegistrationForm if invitation else UserRegistrationForm
 
     if request.method == 'POST':
-        form = form_class(request.POST)
+        if invitation:
+            form = form_class(request.POST)
+        else:
+            form = form_class(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             if invitation:
@@ -113,12 +116,10 @@ def register_view(request):
         initial_data = {}
         if invitation:
             initial_data['email'] = invitation.email
-        
-        if invitation:
             form = InvitationRegistrationForm(initial=initial_data)
             form.fields['email'].widget.attrs['readonly'] = True
         else:
-            form = UserRegistrationForm(request=request)
+            form = UserRegistrationForm()
 
 
     return render(request, 'registration/register.html', {'form': form, 'invitation': invitation})
@@ -137,7 +138,8 @@ def admin_dashboard_view(request):
 
     # Check if the user is an admin
     # Redirect if not an admin
-    if request.user.role != 'admin':
+    if request.user.role != 'admin' or request.user.is_superuser == False:
+        logger.warning(f"Unauthorized access attempt by user: {request.user.username}")
         messages.error(request, "Only admins can access this page.")
         return redirect('login')
     
@@ -498,13 +500,29 @@ def fan_dashboard_view(request):
 # - Implement password reset functionality
 # - Add user profile management
 
-"""# - Create a custom user creation form for admins to create users"""
-# @login_required
-# def create_user_view(request):
-#     form = CustomUserCreationForm(request.POST or None, request=request)
-#     if request.method == 'POST' and form.is_valid():
-#         user = form.save(commit=False)
-#         user.set_password(form.cleaned_data['password'])
-#         user.save()
-#         return redirect('user_list')  # or wherever you want
-#     return render(request, 'accounts/create_user.html', {'form': form})
+@login_required
+@user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
+def create_user_view(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f'User {user.username} created successfully!')
+            return redirect('admin_dashboard')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'create_user.html', {'form': form})
+
+
+@login_required
+def complete_profile_view(request):
+    if request.method == 'POST':
+        form = UserProfileCompletionForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Thank you for completing your profile!')
+            return redirect('home') # Or wherever you want to redirect after completion
+    else:
+        form = UserProfileCompletionForm(instance=request.user)
+
+    return render(request, 'complete_profile.html', {'form': form})

@@ -1,21 +1,8 @@
 from django.test import TestCase,Client
-from django.urls import reverse
-from django.utils import timezone
 from django.contrib.auth import get_user_model
-from league.models import Player, Coach, League, Team, \
-    TeamSeasonParticipation, SessionChoice, PlayerSeasonParticipation, \
-    CoachSeasonParticipation, Match, MatchStatus
-from .models import UserProfile
-import datetime
 
 
 
-#Get the custom User Model
-User = get_user_model()
-
-'-----------------------------------------'
-'                   TESTS                  '
-'-----------------------------------------'
 class UserViewsAndSignalsTest(TestCase):
 
     def setUp(self):
@@ -134,7 +121,7 @@ class UserViewsAndSignalsTest(TestCase):
         response = self.client.post(reverse('register'), {
             'username': 'newfan',
             'email': 'newfan@example.com',
-            'password1': 'newpassword123',
+            'password': 'newpassword123',
             'password2': 'newpassword123',
             'role': 'fan',
             'birth': '1990-01-01',
@@ -270,3 +257,166 @@ class UserViewsAndSignalsTest(TestCase):
         self.client.login(email='player@example.com', password='password123')
         response = self.client.get(reverse('coach_dashboard'))
         self.assertRedirects(response, f"{reverse('login')}?next={reverse('coach_dashboard')}")
+
+    def test_admin_can_create_admin(self):
+        """
+        Tests that an admin user can create another admin user.
+        """
+        # Create an admin user and log them in
+        admin_user = User.objects.create_user(
+            username='testadmin',
+            email='admin@example.com',
+            password='password123',
+            role='admin',
+            is_staff=True,
+            is_superuser=True
+        )
+        self.client.login(email='admin@example.com', password='password123')
+
+        # POST request to create a new admin
+        user_count_before = User.objects.count()
+        response = self.client.post(reverse('register'), {
+            'username': 'newadmin',
+            'email': 'newadmin@example.com',
+            'password': 'newpassword123',
+            'password2': 'newpassword123',
+            'role': 'admin',
+            'birth': '1990-01-01',
+            'gender': 'M',
+        })
+
+        # Check that the user was created and has the correct role
+        self.assertEqual(User.objects.count(), user_count_before + 1)
+        new_user = User.objects.get(username='newadmin')
+        self.assertEqual(new_user.role, 'admin')
+        self.assertTrue(new_user.is_staff)
+
+
+    def test_create_user_view(self):
+        """
+        Tests the create_user_view for admin users.
+        """
+        # Create an admin user and log them in
+        admin_user = User.objects.create_user(
+            username='testadmin',
+            email='admin@example.com',
+            password='password123',
+            role='admin',
+            is_staff=True,
+            is_superuser=True
+        )
+        self.client.login(email='admin@example.com', password='password123')
+
+        # Test GET request
+        response = self.client.get(reverse('create_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'create_user.html')
+
+        # Test POST request
+        user_count_before = User.objects.count()
+        response = self.client.post(reverse('create_user'), {
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'password': 'newpassword123',
+            'role': 'fan',
+        })
+        self.assertRedirects(response, reverse('admin_dashboard'))
+        self.assertEqual(User.objects.count(), user_count_before + 1)
+        new_user = User.objects.get(username='newuser')
+        self.assertEqual(new_user.role, 'fan')
+
+        # Test that non-admin user cannot access the view
+        self.client.logout()
+        self.client.login(email='player@example.com', password='password123')
+        response = self.client.get(reverse('create_user'))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('create_user')}")
+
+
+class SuperuserLoginTest(TestCase):
+
+    def setUp(self):
+        """
+        Set up a superuser for testing.
+        """
+        self.client = Client()
+        self.superuser_email = 'superuser@example.com'
+        self.superuser_password = 'password123'
+        self.superuser = User.objects.create_superuser(
+            username='superuser',
+            email=self.superuser_email,
+            password=self.superuser_password,
+            role='admin',
+            birth=datetime.date(1990, 1, 1),
+            gender='M'
+        )
+
+    def test_superuser_login(self):
+        """
+        Tests that a superuser can log in successfully.
+        """
+        # Attempt to log in with the superuser's credentials
+        response = self.client.post(reverse('login'), {
+            'username': self.superuser_email,
+            'password': self.superuser_password,
+        })
+
+        # Check for a successful redirect to the home page
+        self.assertRedirects(response, reverse('home'))
+
+        # Check that the user is authenticated
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+        self.assertEqual(response.wsgi_request.user, self.superuser)
+
+
+class SuperuserCreationTests(TestCase):
+    """
+    Tests for creating superusers using the configured User model.
+    Focuses on required flags and basic integrity.
+    """
+
+    def setUp(self):
+        self.User = get_user_model()
+
+    def test_create_superuser_with_admin_role_sets_flags(self):
+        su = self.User.objects.create_superuser(
+            username="adminuser",
+            email="adminuser@example.com",
+            password="testpass123",
+            role="admin",
+        )
+        self.assertTrue(su.is_superuser)
+        self.assertTrue(su.is_staff)
+        self.assertEqual(su.role, "admin")
+        self.assertEqual(su.email, "adminuser@example.com")
+
+    def test_create_superuser_requires_is_superuser_true(self):
+        # Django's base manager enforces is_superuser=True
+        with self.assertRaisesMessage(ValueError, "Superuser must have is_superuser=True."):
+            self.User.objects.create_superuser(
+                username="bad_super_flag",
+                email="bad_super_flag@example.com",
+                password="x",
+                role="admin",
+                is_superuser=False,
+            )
+
+    def test_create_superuser_requires_is_staff_true(self):
+        # Django's base manager enforces is_staff=True
+        with self.assertRaisesMessage(ValueError, "Superuser must have is_staff=True."):
+            self.User.objects.create_superuser(
+                username="bad_staff_flag",
+                email="bad_staff_flag@example.com",
+                password="x",
+                role="admin",
+                is_staff=False,
+            )
+
+    def test_create_superuser_requires_email(self):
+        # With USERNAME_FIELD set to 'email', email is required
+        with self.assertRaises(ValueError):
+            self.User.objects.create_superuser(
+                username="noemail",
+                email=None,
+                password="x",
+                role="admin",
+            )

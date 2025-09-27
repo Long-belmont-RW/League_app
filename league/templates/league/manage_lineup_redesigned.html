@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manage Lineup: {{ match.home_team.name }} vs {{ match.away_team.name }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/lineup.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<body class="bg-gray-900 text-gray-200">
+    <div class="container mx-auto px-4 py-8">
+        <div id="toast-container" class="fixed top-5 right-5 z-50"></div>
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white">Manage Lineup</h1>
+            <p class="text-lg text-gray-400">{{ match.home_team.name }} vs {{ match.away_team.name }}</p>
+            <p class="text-md text-gray-500">{{ match.date|date:"F j, Y, P" }}</p>
+        </div>
+
+        <div id="lineup-container" 
+             class="grid grid-cols-1 lg:grid-cols-2 gap-8" 
+             data-save-url="{% url 'manage_lineup' match.id %}">
+            
+            {% csrf_token %}
+
+            <!-- Home Team Panel -->
+            <div class="team-container" data-team-id="{{ home_context.team.id }}" data-team-prefix="home">
+                {% include "league/partials/team_lineup_panel.html" with team_context=home_context team_prefix="home" can_edit=can_edit_home %}
+            </div>
+
+            <!-- Away Team Panel -->
+            <div class="team-container" data-team-id="{{ away_context.team.id }}" data-team-prefix="away">
+                {% include "league/partials/team_lineup_panel.html" with team_context=away_context team_prefix="away" can_edit=can_edit_away %}
+            </div>
+        </div>
+    </div>
+
+    <div id="player-context-menu" class="context-menu hidden"></div>
+</body>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/lineup-manager.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const lineupContainer = document.getElementById('lineup-container');
+        // Ensure the manager is initialized only once
+        if (lineupContainer && !lineupContainer.dataset.managerInitialized) {
+            lineupContainer.dataset.managerInitialized = 'true';
+            new LineupManager(lineupContainer);
+        }
+    });
+</script>
+{% endblock %}

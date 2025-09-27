@@ -281,18 +281,21 @@
         <!-- Notifications -->
         <div class="bg-gray-800 p-6 rounded-xl shadow-md">
           <h2 class="text-xl font-semibold text-white mb-4">Notifications</h2>
-          {% if notifications or request.user.notifications.all %}
           <ul class="list-disc pl-6 space-y-2 text-gray-300">
-            {% for note in notifications %}
-            <li>{{ note }}</li>
-            {% endfor %} {% for n in request.user.notifications.all|slice:':5'
-            %}
-            <li>
-              <span class="font-semibold">{{ n.title }}:</span> {{ n.message }}
-            </li>
-            {% endfor %}
+            {% if notifications %}
+              {% for note in notifications %}
+              <li>{{ note }}</li>
+              {% endfor %}
+            {% endif %}
+            {% if request.user.notifications.all %}
+              {% for n in request.user.notifications.all|slice:":5" %}
+              <li>
+                <span class="font-semibold">{{ n.title }}:</span> {{ n.message }}
+              </li>
+              {% endfor %}
+            {% endif %}
           </ul>
-          {% else %}
+          {% if not notifications and not request.user.notifications.all %}
           <p class="text-gray-400">No notifications.</p>
           {% endif %}
         </div>
