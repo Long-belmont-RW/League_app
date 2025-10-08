@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.db.models import Q, Sum
 from .models import Match, PlayerStats, PlayerSeasonParticipation, Player, Lineup, MatchStatus, TeamSeasonParticipation, MatchEvent, LineupPlayer
 
-
+from django.forms import BaseInlineFormSet
 class MatchForm(forms.ModelForm):
 
     def clean(self):
@@ -259,7 +259,7 @@ class LineupPlayerForm(forms.ModelForm):
             raise ValidationError("Selected player is not eligible for this lineup.")
         return cleaned
 
-from django.forms import BaseInlineFormSet
+
 
 class ValidatingLineupFormSet(BaseInlineFormSet):
     REQUIRED_STARTERS = 11  # enforce exactly 11 starters
@@ -331,3 +331,9 @@ class MatchEventForm(forms.ModelForm):
                 player_ids.extend(away_lineup.players.values_list('id', flat=True))
 
             self.fields['player'].queryset = Player.objects.filter(id__in=player_ids)
+
+
+
+
+class PlayerForm(forms.ModelForm):
+    pass

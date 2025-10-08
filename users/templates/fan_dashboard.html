@@ -5,7 +5,15 @@
     <div id="fan-sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-4 lg:p-6 flex flex-col justify-between z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
         <div>
             <div class="flex items-center mb-8">
-                <img src="https://placehold.co/40x40/00b894/ffffff?text=FN" alt="Fan Profile" class="rounded-full mr-3">
+                {% if fan_profile.image %}
+                    <img src={{fan_profile.image.url}} alt="Fan Profile" class="w-10 h-10 rounded-full ">
+                {% else %}
+                    <img
+          src='https://placehold.co/40x40/00b894/ffffff?text={{ user.username|slice:":1" }}'
+          alt="Player Profile"
+          class="w-10 h-10 rounded-full mr-3"
+        />
+        {% endif %}
                 <div>
                     <h2 class="text-white font-semibold text-lg">{{user.username}}</h2>
                     <p class="text-gray-400 text-sm">{{ user.email }}</p>
@@ -35,6 +43,10 @@
             <a href="{% url 'logout' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 Log out
+            </a>
+            <a href="{% url 'profile_edit' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Edit Profile
             </a>
         </div>
     </div>

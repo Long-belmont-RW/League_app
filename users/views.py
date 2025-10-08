@@ -3,6 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Q, F
+from django.db import transaction
 from .models import UserProfile, User
 from league.models import (
     Coach,
@@ -18,10 +19,13 @@ from league.models import (
 )
 from django.utils import timezone
 
-from .utils import get_season_progress
-from .forms import UserRegistrationForm, EmailAuthenticationForm, InvitationRegistrationForm, CustomUserCreationForm
+from .utils import get_season_progress, get_team_season_progress, get_win_ratio
+from .forms import UserRegistrationForm, EmailAuthenticationForm, InvitationRegistrationForm, CustomUserCreationForm, UserAccountForm, UserProfileForm, PlayerCreationForm
 from content.models import Invitation
 import logging
+import os
+import random
+import string
 
 #set up logging
 logger = logging.getLogger(__name__)
@@ -143,7 +147,7 @@ def admin_dashboard_view(request):
         messages.error(request, "Only admins can access this page.")
         return redirect('login')
     
-    profile = UserProfile.objects.filter(user=request.user)
+    profile = UserProfile.objects.filter(user=request.user).first()
     context = {
         'profile': profile,
         'all_users': all_users,
@@ -238,6 +242,12 @@ def coach_dashboard_view(request):
     logger.info(f"Players coached by {coach_profile.user.username}: {[player.player.last_name for player in players]}")
     
 
+    #Tracking Stats
+    season_progress = get_season_progress()
+    team_progress = get_team_season_progress(team=coach_team.team)
+    win_ratio = get_win_ratio(team=coach_team.team)
+
+
     context = {
         'coach_profile': coach_profile,
         'coach_team': coach_team,
@@ -251,6 +261,9 @@ def coach_dashboard_view(request):
         'wins': wins,
         'losses': losses,
         'draws': draws,
+        'season_progress':season_progress,
+        'team_progress':team_progress,
+        'win_ratio':win_ratio,
      
     }
 
@@ -260,13 +273,13 @@ def coach_dashboard_view(request):
 
 
 
-
+#Work needs to be done here....DON'T FORGET
 @login_required
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'player')
 def player_dashboard_view(request):
-    # if request.user.role != 'player':
-    #     messages.error(request, "Only players can access this page.")
-    #     return redirect('login')
+    if request.user.role != 'player':
+        messages.error(request, "Only players can access this page.")
+        return redirect('login')
 
     #Get the player profile
     player_profile = UserProfile.objects.filter(user=request.user).first()
@@ -285,6 +298,7 @@ def player_dashboard_view(request):
 
     if latest_league:
           # Get the player's recent team
+        
         player_team = (
             PlayerSeasonParticipation.objects.select_related('team', 'player', 'league')
             .filter(player=player_profile.player, league=latest_league)
@@ -294,13 +308,15 @@ def player_dashboard_view(request):
         
         # Check if the player has a team
         # If not, redirect to login or show an error message
+        
         if not player_team:
+            redirect('home')
             logger.error(f"Player team not found for user: {request.user.username}")
             messages.error(request, "Player team not found.")
 
 
     else:
-        player_team = None
+        messages.error(request,'No active leagues yet...contact admin')
         logger.error("No leagues found in the database.")
        
 
@@ -314,6 +330,7 @@ def player_dashboard_view(request):
 
 
     # Upcoming matches and next match
+    
     upcoming_matches = (
         Match.objects.filter(
             Q(home_team=player_team.team) | Q(away_team=player_team.team),
@@ -323,7 +340,7 @@ def player_dashboard_view(request):
         .select_related('home_team', 'away_team')
         .order_by('date')
     )
-
+    
     next_match = upcoming_matches.first()
     logger.info(
         f"Next match for player {player_profile.user.username}: {getattr(next_match, 'id', None)}"
@@ -501,7 +518,7 @@ def fan_dashboard_view(request):
 # - Add user profile management
 
 @login_required
-@user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
+@user_passes_test(lambda u: u.role == 'admin')
 def create_user_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -514,15 +531,108 @@ def create_user_view(request):
     return render(request, 'create_user.html', {'form': form})
 
 
-@login_required
-def complete_profile_view(request):
-    if request.method == 'POST':
-        form = UserProfileCompletionForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Thank you for completing your profile!')
-            return redirect('home') # Or wherever you want to redirect after completion
-    else:
-        form = UserProfileCompletionForm(instance=request.user)
 
-    return render(request, 'complete_profile.html', {'form': form})
+@login_required
+def profile_edit_view(request):
+    user = request.user
+    # get_or_create is good practice here
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+
+    if request.method == 'POST':
+        account_form = UserAccountForm(request.POST, instance=user)
+        # Always pass request.FILES to the form that handles the ImageField
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
+
+        if account_form.is_valid() and profile_form.is_valid():
+            # Use a single transaction to ensure data integrity
+            with transaction.atomic():
+                account_form.save()
+
+                # Save the form but don't commit to the database yet
+                # This gives us the model instance with the form's data
+                profile_instance = profile_form.save(commit=False)
+
+                # Check if the user specifically requested to remove the image
+                # and didn't upload a new one.
+                remove_image_checked = request.POST.get('remove_image')
+                new_image_uploaded = 'image' in request.FILES
+
+                if remove_image_checked and not new_image_uploaded:
+                    # Delete the old image file from storage
+                    if profile_instance.image:
+                        profile_instance.image.delete(save=False)
+                    # Set the image field to None
+                    profile_instance.image = None
+
+                # Now, save the profile instance to the database
+                profile_instance.save()
+
+            messages.success(request, 'Profile updated successfully.')
+            next_url = request.POST.get('next') or request.GET.get('next')
+            return redirect(next_url or 'home')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        account_form = UserAccountForm(instance=user)
+        profile_form = UserProfileForm(instance=profile)
+
+    context = {
+        'account_form': account_form,
+        'profile_form': profile_form,
+        'next': request.GET.get('next', ''),
+    }
+    return render(request, 'profile_edit.html', context)
+
+@login_required
+def add_player_view(request):
+    if request.user.role != 'coach':
+        messages.error(request, "Only coaches can add players.")
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = PlayerCreationForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # Create user object but don't save to DB yet
+                    user = form.save(commit=False)
+                    user.role = 'player'
+                    user.username = form.cleaned_data['email'].split('@')[0]
+                    
+                    # Generate a random password
+                    password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+                    user.set_password(password)
+                    
+                    # Save the user. This will trigger the signal.
+                    user.save()
+                    
+                    # The signal has created a Player object. Now update its position.
+                    player = user.userprofile.player
+                    player.position = form.cleaned_data['position']
+                    player.save()
+                    
+                    # Get coach's current team
+                    coach_profile = request.user.userprofile
+                    latest_league = League.objects.latest('created_at')
+                    coach_participation = CoachSeasonParticipation.objects.get(coach=coach_profile.coach, league=latest_league)
+                    team = coach_participation.team
+                    
+                    # Add player to the team for the current season
+                    PlayerSeasonParticipation.objects.create(
+                        player=player,
+                        team=team,
+                        league=latest_league
+                    )
+                    
+                    # For development, print the password. In production, you'd email it.
+                    print(f"Generated password for {user.email}: {password}")
+                    messages.success(request, f"Player {user.first_name} {user.last_name} has been created and added to your team. Their temporary password is: {password}")
+
+                return redirect('coach_dashboard')
+            except Exception as e:
+                messages.error(request, f"An error occurred: {e}")
+
+    else:
+        form = PlayerCreationForm()
+
+    return render(request, 'add_player.html', {'form': form})

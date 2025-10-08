@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load socialaccount %}
+{% load socialaccount %} 
 
 {% block content%}
 <div class="w-full max-w-md mx-auto text-white place-content-center py-5">
@@ -9,7 +9,8 @@
         </div>
 
         <div class="p-8">
-            {% if messages %}
+            
+            <!-- {% if messages %}
             <div class="mb-4 space-y-2">
                 {% for message in messages %}
                     <div class="rounded-lg px-4 py-3 text-sm {% if message.tags == 'error' %}bg-red-900 text-red-200 border border-red-700{% else %}bg-gray-700 text-gray-200 border border-gray-600{% endif %}">
@@ -17,7 +18,7 @@
                     </div>
                 {% endfor %}
             </div>
-            {% endif %}
+            {% endif %} -->
 
             <form method="post" class="space-y-6">
                 {% csrf_token %}
@@ -60,7 +61,7 @@
                     <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.793,2.237-2.231,4.166-4.081,5.659c0.001-0.001,0.002-0.001,0.003-0.002   l6.103,5.164C36.896,39.058,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
                 </svg>
                 Continue with Google
-            </a>
+            </a> 
 
             <div class="mt-6 text-center">
                 <a href="{% url 'register' %}" class="font-medium text-indigo-400 hover:text-indigo-300 transition-colors duration-200">

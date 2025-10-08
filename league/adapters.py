@@ -68,10 +68,9 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         """
         user = request.user
         # Your User model requires 'birth' and 'gender'.
-        if not getattr(user, 'birth', None) or not getattr(user, 'gender', None):
-            # Assuming you have a URL named 'complete_profile'.
-            # You can change '/complete-profile/' to `reverse('complete_profile')`
-            return '/complete-profile/'
+        # if not getattr(user, 'birth', None) or not getattr(user, 'gender', None):
+        #     # Redirect to the profile edit page to complete required fields
+        #     return reverse('profile_edit')
         
         # Otherwise, use the default redirect URL from settings
         return super().get_login_redirect_url(request)

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content%}
+<div class="w-full max-w-md mx-auto text-white place-content-center py-5">
+    <div class="bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-gray-700 px-8 py-6 text-center">
+            <h1 class="text-2xl font-bold mb-2 text-white">Add New Player</h1>
+        </div>
+
+        <div class="p-8">
+            
+            {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                    <div class="rounded-lg px-4 py-3 text-sm {% if message.tags == 'error' %}bg-red-900 text-red-200 border border-red-700{% else %}bg-green-900 text-green-200 border border-green-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div>
+                    <label for="{{ form.first_name.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-300">{{ form.first_name.label }}</label>
+                    <input type="text" id="{{ form.first_name.id_for_label }}" name="{{ form.first_name.name }}"
+                        class="bg-gray-700 border border-gray-600 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-4 py-3"
+                        placeholder="Enter player's first name" required>
+                </div>
+
+                <div>
+                    <label for="{{ form.last_name.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-300">{{ form.last_name.label }}</label>
+                    <input type="text" id="{{ form.last_name.id_for_label }}" name="{{ form.last_name.name }}"
+                        class="bg-gray-700 border border-gray-600 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-4 py-3"
+                        placeholder="Enter player's last name" required>
+                </div>
+
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-300">{{ form.email.label }}</label>
+                    <input type="email" id="{{ form.email.id_for_label }}" name="{{ form.email.name }}"
+                        class="bg-gray-700 border border-gray-600 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-4 py-3"
+                        placeholder="Enter player's email address" required>
+                </div>
+
+                <div>
+                    <label for="{{ form.birth.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-300">{{ form.birth.label }}</label>
+                    <input type="date" id="{{ form.birth.id_for_label }}" name="{{ form.birth.name }}"
+                        class="bg-gray-700 border border-gray-600 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-4 py-3">
+                </div>
+
+                <div>
+                    <label for="{{ form.gender.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-300">{{ form.gender.label }}</label>
+                    {{ form.gender }}
+                </div>
+
+                <div>
+                    <label for="{{ form.position.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-300">{{ form.position.label }}</label>
+                    {{ form.position }}
+                </div>
+
+                {% if form.errors %}
+                <div class="bg-red-900 border border-red-700 text-red-200 p-4 rounded-lg">
+                    <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                        <li>{{ field|title }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-500 font-semibold rounded-xl text-sm px-5 py-3 text-center">
+                    Add Player
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

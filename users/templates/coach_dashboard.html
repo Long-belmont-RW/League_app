@@ -5,7 +5,12 @@
     <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-4 lg:p-6 flex flex-col justify-between z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
         <div>
             <div class="flex items-center mb-8">
-                <img src="https://placehold.co/40x40/00b894/ffffff?text=JS" alt="Profile" class="rounded-full mr-3">
+                {% if coach_profile.image %}
+                 <img src="{{ coach_profile.image.url}}" alt="Profile" class=" w-10 h-10 rounded-full mr-3">
+                {% else %}
+                     <img src="https://placehold.co/40x40/00b894/ffffff?text=JS" alt="Profile" class=" w-10 h-10 rounded-full mr-3">
+                {% endif %}
+               
                 <div>
                     <h2 class="text-white font-semibold text-lg">{{ coach_profile.coach.first_name }} {{ coach_profile.coach.last_name }}</h2>
                     <p class="text-gray-400 text-sm">{{ coach_profile.user.email}}</p>
@@ -37,11 +42,11 @@
         </div>
 
         <div class="space-y-4">
-            <a href="#" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
+            <a href="{% url 'profile_edit'%}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 Settings
             </a>
-            <a href="#" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
+            <a href="{% url 'logout' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 Log out
             </a>
@@ -81,7 +86,12 @@
             <div class="bg-gray-800 rounded-xl p-6 shadow-md">
                 <h3 class="text-lg font-bold text-white mb-4">Profile</h3>
                 <div class="text-center">
+                    {% if coach_profile.image %}
+                    <img src="{{ coach_profile.image.url }}" alt="Profile" class="w-20 h-20 mx-auto rounded-full mb-3 border-2 border-green-600" />
+                    {% else %}
                     <img src="https://placehold.co/80x80/00b894/ffffff?text=JS" alt="Profile" class="w-20 h-20 mx-auto rounded-full mb-3 border-2 border-green-600" />
+                    {% endif %}
+                    
                     <h4 class="font-bold text-white text-lg">{{ coach_profile.coach.first_name }} {{ coach_profile.coach.last_name }}</h4>
                     <p class="text-sm text-gray-400">{% if coach_profile.coach.role == 'H' %} Head Coach {% else %} Assistant Coach {% endif %}</p>
                     <p class="text-sm text-gray-500 mt-1">{{ coach_profile.user.email}}</p>
@@ -170,94 +180,168 @@
                             <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                             <span class="text-gray-300">Not available</span>
                         </div>
-                        <span class="text-yellow-500 font-semibold bg-yellow-900 px-3 py-1 rounded-full text-xs">Loss</span>
+                        <span class="text-yellow-500 font-semibold bg-yellow-900 px-3 py-1 rounded-full text-xs">Draw</span>
                     </li>
                     {% endfor %}
                 </ul>
             </div>
 
-            <div class="bg-gray-800 rounded-xl p-6 shadow-md">
-                <h5 class="font-semibold text-white text-lg mb-4">Next Game</h5>
-                {% if latest_match %}
-                <div class="flex items-center bg-gray-700 p-4 rounded-lg">
+                    <div class="bg-gray-800 rounded-xl p-6 shadow-md">
+            <h5 class="font-semibold text-white text-lg mb-4">Next Game</h5>
+            {% if latest_match %}
+            <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
+                <div class="flex items-center">
                     <svg class="w-10 h-10 mr-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     <div>
                         <p class="text-white font-semibold">League Match - {{ latest_match.home_team }} vs {{ latest_match.away_team }}</p>
                         <p class="text-sm text-gray-400">{{ latest_match.date|date:"M d, Y" }}</p>
                         <p class="text-sm text-gray-400">{{latest_match.date|time:"P"}}</p>
                     </div>
-                     <div>
-
+                </div>
+                
                 {# This link will take the coach to the lineup page #}
-                <a href="{% url 'manage_lineup' latest_match.id%}" class="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700">
+                <a href="{% url 'manage_lineup' latest_match.id%}" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 whitespace-nowrap">
                     Set Lineup
                 </a>
             </div>
-                </div>
-                {% else %}
-                <div class="bg-gray-700 p-4 rounded-lg text-center">
-                    <p class="text-gray-400">No upcoming matches scheduled.</p>
-                </div>
-                {% endif %}
+            {% else %}
+            <div class="bg-gray-700 p-4 rounded-lg text-center">
+                <p class="text-gray-400">No upcoming matches scheduled.</p>
             </div>
+            {% endif %}
+        </div>
                     
 
             <div class="bg-gray-800 p-6 rounded-xl shadow-md">
                 <h3 class="text-lg font-bold text-white mb-4">Progress Overview</h3>
                 <div class="space-y-4">
                     <div>
-                        <p class="text-sm text-gray-400 mb-1">Upcoming Matches</p>
+                        <p class="text-sm text-gray-400 mb-1">Season Progress</p>
                         <div class="bg-gray-700 w-full h-2 rounded-full overflow-hidden">
-                            <div class="bg-green-600 h-full w-[80%]"></div>
+                            <div class="bg-green-600 h-full w-[{{ season_progress }}%]"></div>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">8/10</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ season_progress }}% Completed</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-400 mb-1">Training Sessions</p>
+                        <p class="text-sm text-gray-400 mb-1">Team Progress</p>
                         <div class="bg-gray-700 w-full h-2 rounded-full overflow-hidden">
-                            <div class="bg-green-600 h-full w-[80%]"></div>
+                            <div class="bg-green-600 h-full w-[{{ team_progress }}%]"></div>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">12/15</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ team_progress }}% Completed</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-400 mb-1">Player Reviews</p>
+                        <p class="text-sm text-gray-400 mb-1">Win Ratio</p>
                         <div class="bg-gray-700 w-full h-2 rounded-full overflow-hidden">
-                            <div class="bg-yellow-400 h-full w-[60%]"></div>
+                            <div class="bg-green-400 h-full w-[{{ win_ratio }}%]"></div>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">3/5</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ win_ratio }}%</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Display all players in the team -->
-            <div class="bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-3">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-white">All Players</h3>
-                    <a href="{% url 'invite_player' %}" class="bg-green-600 text-white text-xs px-3 py-1 rounded-full hover:bg-green-700 transition-colors duration-200">
-                        Invite Player
-                    </a>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                
-                    {% for player in players %}
-                    <div class="bg-gray-700 p-4 rounded-lg text-center">
-                        <img src="https://placehold.co/60x60/00b894/ffffff?text=P1" alt="Player {{player.id}}" class="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-gray-600" />
-                        <p class="text-white font-semibold">{{ player.player.last_name }} {{ player.player.first_name}}</p>
-                        <p class="text-xs text-gray-400">{{ player.player.position }}</p>
-                        <button class="mt-2 bg-green-600 text-white text-xs px-3 py-1 rounded-full hover:bg-green-700 transition-colors duration-200">View Profile</button>
-                    </div>
-                    {% empty %}
-                    <div class="bg-gray-700 p-4 rounded-lg text-center">
-                       <button>Add Players</button>
-                    </div>
-                    {% endfor %}
-                </div>
-                <button class="mt-6 w-full bg-gray-700 text-gray-300 font-bold py-2 px-4 rounded-full hover:bg-gray-600 transition-colors duration-200">
-                    View Full Roster
-                </button>
+           <!-- Display all players in the team -->
+<div class="bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-3">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h3 class="text-lg font-bold text-white">All Players {% if players %}({{ players|length }}){% endif %}</h3>
+        
+        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <!-- Search Box -->
+            <div class="relative">
+                <input type="text" 
+                       id="playerSearch"
+                       placeholder="Search players..." 
+                       class="bg-gray-700 text-gray-300 rounded-lg py-2 px-4 pl-10 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-green-600">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
             </div>
+            
+            <!-- Filter by Position -->
+            <select id="positionFilter" class="bg-gray-700 text-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-green-600">
+                <option value="">All Positions</option>
+                <option value="GK">Goalkeeper</option>
+                <option value="DF">Defender</option>
+                <option value="MF">Midfielder</option>
+                <option value="FW">Forward</option>
+            </select>
+            
+            <!-- Add Player Button -->
+            <a href="{% url 'add_player' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 whitespace-nowrap text-center flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Player
+            </a>
+        </div>
+    </div>
 
+    <!-- Players Grid -->
+    <div id="playersGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        {% for player in players %}
+        <div class="player-card bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600 transition-all duration-200 hover:shadow-lg hover:scale-105" 
+             data-player-name="{{ player.player.first_name|lower }} {{ player.player.last_name|lower }}" 
+             data-player-position="{{ player.player.position }}">
+            {% if player.player.image %}
+            <img src="{{ player.player.image.url }}" 
+                 alt="{{ player.player.first_name }} {{ player.player.last_name }}" 
+                 class="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-green-500 object-cover" />
+            {% else %}
+            <div class="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-green-500 bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center">
+                <span class="text-white text-2xl font-bold">
+                    {{ player.player.first_name.0|upper }}{{ player.player.last_name.0|upper }}
+                </span>
+            </div>
+            {% endif %}
+            
+            <p class="text-white font-semibold text-base truncate" title="{{ player.player.first_name }} {{ player.player.last_name }}">
+                {{ player.player.first_name }} {{ player.player.last_name }}
+            </p>
+            <p class="text-xs text-gray-400 mb-3">{{ player.player.position }}</p>
+            
+            <a href="{% url 'player_profile' player.player.id%}" class="block w-full bg-green-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200">
+                View Profile
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-span-full">
+            <div class="bg-gray-700 p-12 rounded-lg text-center">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <p class="text-gray-400 text-lg mb-4">No players in your roster yet</p>
+                <p class="text-gray-500 text-sm mb-6">Start building your team by adding players</p>
+                <a href="{% url 'add_player' %}" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors duration-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Your First Player
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- No Results Message (hidden by default) -->
+    <div id="noResults" class="hidden py-12 text-center">
+        <svg class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <p class="text-gray-400 text-lg">No players found</p>
+        <p class="text-gray-500 text-sm mt-2">Try adjusting your search or filter</p>
+    </div>
+    
+    <!-- View Full Roster Button (only show if there are many players) -->
+    {% if players|length > 12 %}
+    <div class="mt-8 flex justify-center">
+        <a href="#" class="inline-flex items-center gap-2 bg-gray-700 text-gray-300 font-semibold py-3 px-8 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+            View Full Roster
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </a>
+    </div>
+    {% endif %}
+</div>
         </div>
     </div>
 </div>
@@ -283,6 +367,57 @@
             sidebarToggle.addEventListener('click', toggleSidebar);
         }
     });
+
+
+    // Search and Filter Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('playerSearch');
+    const positionFilter = document.getElementById('positionFilter');
+    const playerCards = document.querySelectorAll('.player-card');
+    const playersGrid = document.getElementById('playersGrid');
+    const noResults = document.getElementById('noResults');
+
+    function filterPlayers() {
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const selectedPosition = positionFilter ? positionFilter.value : '';
+        let visibleCount = 0;
+
+        playerCards.forEach(card => {
+            const playerName = card.getAttribute('data-player-name');
+            const playerPosition = card.getAttribute('data-player-position');
+            
+            const matchesSearch = playerName.includes(searchTerm);
+            const matchesPosition = selectedPosition === '' || playerPosition === selectedPosition;
+            
+            if (matchesSearch && matchesPosition) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Show/hide no results message
+        if (noResults) {
+            if (visibleCount === 0 && playerCards.length > 0) {
+                noResults.classList.remove('hidden');
+                playersGrid.classList.add('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                playersGrid.classList.remove('hidden');
+            }
+        }
+    }
+
+    // Add event listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', filterPlayers);
+    }
+    
+    if (positionFilter) {
+        positionFilter.addEventListener('change', filterPlayers);
+    }
+});
 </script>
 
 

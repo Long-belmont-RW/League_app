@@ -1,11 +1,22 @@
-from django.test import TestCase,Client
+from django.test import TestCase,Client, override_settings
 from django.contrib.auth import get_user_model
+from datetime import datetime, date, timedelta
+from django.utils import timezone
+from league.models import Player, Coach, League, Team, PlayerSeasonParticipation, CoachSeasonParticipation, SessionChoice, Match, MatchStatus, TeamSeasonParticipation
+
+from django.urls import reverse
+from .models import UserProfile
+
+from unittest import mock
+
+User = get_user_model()
 
 
-
+@override_settings(SOCIALACCOUNT_PROVIDERS={})
 class UserViewsAndSignalsTest(TestCase):
 
-    def setUp(self):
+    @mock.patch('allauth.socialaccount.templatetags.socialaccount.provider_login_url', return_value='')
+    def setUp(self, mock_provider_login_url):
         """
         Sets up objects to be used by all the test methods 
         This method runs before each test
@@ -20,7 +31,7 @@ class UserViewsAndSignalsTest(TestCase):
             email='player@example.com',
             password='password123',
             role='player',
-            birth=datetime.date(2000, 1, 1),
+            birth=date(2000, 1, 1),
             gender='M'
         )
 
@@ -29,7 +40,7 @@ class UserViewsAndSignalsTest(TestCase):
             email='coach@example.com',
             password='password123',
             role='coach',
-            birth=datetime.date(1985, 5, 10),
+            birth=date(1985, 5, 10),
             gender='F'
         )
 
@@ -38,7 +49,7 @@ class UserViewsAndSignalsTest(TestCase):
             email='fan@example.com',
             password='password123',
             role='fan',
-            birth=datetime.date(1995, 8, 20),
+            birth=date(1995, 8, 20),
             gender='M'
         )
         
@@ -75,7 +86,7 @@ class UserViewsAndSignalsTest(TestCase):
             season=self.league,
             home_team=self.team,
             away_team=self.team2,
-            date=timezone.now() + datetime.timedelta(days=7),
+            date=timezone.now() + timedelta(days=7),
             status=MatchStatus.SCHEDULED
         )
 
@@ -332,9 +343,11 @@ class UserViewsAndSignalsTest(TestCase):
         self.assertRedirects(response, f"{reverse('login')}?next={reverse('create_user')}")
 
 
+@override_settings(SOCIALACCOUNT_PROVIDERS={})
 class SuperuserLoginTest(TestCase):
 
-    def setUp(self):
+    @mock.patch('allauth.socialaccount.templatetags.socialaccount.provider_login_url', return_value='')
+    def setUp(self, mock_provider_login_url):
         """
         Set up a superuser for testing.
         """
@@ -346,7 +359,7 @@ class SuperuserLoginTest(TestCase):
             email=self.superuser_email,
             password=self.superuser_password,
             role='admin',
-            birth=datetime.date(1990, 1, 1),
+            birth=date(1990, 1, 1),
             gender='M'
         )
 
@@ -420,3 +433,58 @@ class SuperuserCreationTests(TestCase):
                 password="x",
                 role="admin",
             )
+
+
+@override_settings(SOCIALACCOUNT_PROVIDERS={})
+class CreateUserViewTest(TestCase):
+
+    @mock.patch('allauth.socialaccount.templatetags.socialaccount.provider_login_url', return_value='')
+    def setUp(self, mock_provider_login_url):
+        """
+        Set up a super user that can create access the create user view
+        """
+
+        self.client = Client()
+        self.superuser_email = 'superuser@example.com'
+        self.superuser_password = 'password123'
+        self.superuser = User.objects.create_superuser(
+            username='superuser',
+            email=self.superuser_email,
+            password=self.superuser_password,
+            role='admin',
+            gender='M'
+        )
+
+        self.url = reverse('create_user')
+
+        #Login the Admin
+        self.client.login(username=self.superuser_email, password=self.superuser_password)
+    
+
+    def test_admin_can_create_user(self):
+        response = self.client.post(self.url, {
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'role':'player',
+            'password': 'testpassword123',
+        })
+        self.assertRedirects(response, reverse('admin_dashboard'))
+        self.assertTrue(User.objects.filter(username='newuser').exists())
+
+    def test_created_user_can_login(self):
+        self.client.post(self.url, {
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'role':'player',
+            'password': 'testpassword123',
+        })
+
+        self.client.logout()
+
+
+        login_successful = self.client.login(
+            username = 'newuser@example.com',
+            password = 'testpassword123'
+        )
+
+        self.assertTrue(login_successful)

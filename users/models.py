@@ -6,6 +6,19 @@ from league.models import Player, Coach
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
+import time
+import os
+
+
+def user_profile_image_upload_to(instance, filename):
+    """Create a unique filename for a user's profile image.
+
+    Example: user_12_1700000000.jpg
+    """
+    base, ext = os.path.splitext(filename)
+    timestamp = int(time.time())
+    user_id = getattr(instance.user, 'id', 'anon')
+    return f'user_profiles/user_{user_id}_{timestamp}{ext}'
 
 class GenderChoices(models.TextChoices):
     MALE = 'M', 'Male'
@@ -93,7 +106,7 @@ class User(AbstractUser):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,)
     bio = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='user_profiles/', blank=True, null=True)
+    image = models.ImageField(upload_to=user_profile_image_upload_to, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

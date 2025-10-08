@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
-from league.models import Coach
+from league.models import Coach, Player
 from .models import User, UserProfile  # Assuming User extends AbstractUser
 
 class EmailAuthenticationForm(AuthenticationForm):
@@ -93,10 +93,65 @@ class UserProfileCompletionForm(forms.ModelForm):
         model = User
         fields = ['birth', 'gender']
         widgets = {
-            'birth': forms.DateInput(attrs={'type': 'date'}),
+            'birth': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['birth'].required = True
         self.fields['gender'].required = True
+        # Accept common input formats while displaying as YYYY-MM-DD
+        self.fields['birth'].input_formats = ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']
+
+
+class UserAccountForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'birth', 'gender']
+        widgets = {
+            'birth': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Accept common input formats while displaying as YYYY-MM-DD
+        self.fields['birth'].input_formats = ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("A user with this email already exists.")
+        return email
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['bio', 'image']
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4}),
+        }
+
+
+class PlayerCreationForm(forms.ModelForm):
+    position = forms.ChoiceField(choices=Player.POSITION_CHOICES, required=True)
+    
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'birth', 'gender']
+        widgets = {
+            'birth': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['first_name'].required = True
+        self.fields['last_name'].required = True
+        self.fields['email'].required = True
+
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("A user with this email already exists.")
+        return email
