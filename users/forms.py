@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
-from league.models import Coach, Player
+from league.models import Coach, Player, Team
 from .models import User, UserProfile  # Assuming User extends AbstractUser
 
 class EmailAuthenticationForm(AuthenticationForm):
@@ -127,10 +127,17 @@ class UserAccountForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ['bio', 'image']
+        fields = ['bio', 'image', 'favorite_teams']
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4}),
+            'favorite_teams': forms.CheckboxSelectMultiple(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Order teams for nicer UX and make selection optional
+        self.fields['favorite_teams'].queryset = Team.objects.all().order_by('name')
+        self.fields['favorite_teams'].required = False
 
 
 class PlayerCreationForm(forms.ModelForm):

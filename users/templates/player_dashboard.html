@@ -314,11 +314,50 @@
     sidebar.classList.toggle("-translate-x-full");
   }
 
+  function closePlayerSidebar() {
+    const sidebar = document.getElementById("player-sidebar");
+    sidebar.classList.add("-translate-x-full");
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
+    const sidebar = document.getElementById("player-sidebar");
     const sidebarToggle = document.getElementById("player-sidebar-toggle");
+    
+    // Toggle sidebar when button is clicked
     if (sidebarToggle) {
-      sidebarToggle.addEventListener("click", togglePlayerSidebar);
+      sidebarToggle.addEventListener("click", (e) => {
+        e.stopPropagation(); // Prevent event from bubbling
+        togglePlayerSidebar();
+      });
     }
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener("click", (e) => {
+      // Only handle this on mobile (when sidebar is position: fixed and hidden by default)
+      if (window.innerWidth < 1024) { // lg breakpoint
+        const isClickInsideSidebar = sidebar.contains(e.target);
+        const isClickOnToggle = sidebarToggle && sidebarToggle.contains(e.target);
+        const isSidebarOpen = !sidebar.classList.contains("-translate-x-full");
+        
+        if (!isClickInsideSidebar && !isClickOnToggle && isSidebarOpen) {
+          closePlayerSidebar();
+        }
+      }
+    });
+
+    // Prevent clicks inside sidebar from closing it
+    if (sidebar) {
+      sidebar.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+    }
+
+    // Close sidebar when window is resized to desktop
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 1024) {
+        sidebar.classList.remove("-translate-x-full");
+      }
+    });
   });
 </script>
 {% endblock content %}

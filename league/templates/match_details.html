@@ -53,7 +53,9 @@
     </div>
 
     <!-- Highlights Content -->
+    
     <div id="highlights-content" class="hidden">
+        {% if user.is_staff%}
         <div class="bg-gray-800 p-6 rounded-xl shadow-md mb-8">
             <h2 class="text-2xl font-semibold text-white mb-4">Add Match Event</h2>
             <form method="post" class="space-y-6">
@@ -78,6 +80,7 @@
                 </button>
             </form>
         </div>
+        {% endif %}
 
         <div class="bg-gray-800 p-6 rounded-xl shadow-md">
             <h2 class="text-2xl font-semibold text-white mb-4">Match Highlights</h2>
@@ -99,6 +102,7 @@
             </div>
         </div>
     </div>
+    
 
 </div>
 

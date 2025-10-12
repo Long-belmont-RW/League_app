@@ -51,6 +51,15 @@
 	
 	<!-- Flowbite JS -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+
+    {% block extra_js %}
+	
+<!-- DIAGNOSTIC: extra_js block is rendering. -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<!-- DIAGNOSTIC: Static URL for lineup-manager.js should be: /static/js/lineup-manager.js -->
+<!-- ACTUAL RENDERED URL: {% static 'js/lineup-manager.js' %} -->
+<script src="/static/js/lineup-manager.js"></script> 
+{% endblock %}
 </body>
 
 </html>

@@ -431,79 +431,45 @@ def fan_dashboard_view(request):
     if request.user.role != 'fan':
         messages.error(request, "Only fans can access this page.")
         return redirect('login')
-    logger.info(f"User {request.user.username} is accessing the fan dashboard.")
-    # Get the fan profile
-    fan_profile = UserProfile.objects.filter(user=request.user).first()
-    logger.info(f"Fan profile: {fan_profile.user if fan_profile else 'None'}")
 
-    if not fan_profile: 
+    logger.info(f"User {request.user.username} is accessing the fan dashboard.")
+
+    # Ensure fan has a profile
+    fan_profile = UserProfile.objects.filter(user=request.user).first()
+    if not fan_profile:
         logger.error(f"Fan profile not found for user: {request.user.username}")
         messages.error(request, "Fan profile not found.")
         return redirect('login')
-    
-    # Get the latest league
-    latest_league = League.objects.order_by('-created_at').first()
 
-    
-
-    #Get all matches in the latest league
-    matches = Match.objects.filter(season=latest_league).order_by('-date')
-    logger.info(f"Matches in the latest league: {matches.count()} matches found")   
-
-    #Get live match in the latest league
-    live_match = matches.filter(status=MatchStatus.LIVE).first()
-    logger.info(f"Live match in the latest league: {live_match.home_team} vs {live_match.away_team}" if live_match else "No live match currently")
-
-    #get match events for the live match
-    if live_match:
-        match_events = live_match.get_match_events()
-        logger.info(f"Match events for live match {live_match.id}: {match_events.count()} events found")
-    
-    #Get all teams in the latest league
-    teams = TeamSeasonParticipation.objects.filter(league=latest_league)
-    logger.info(f"Teams in the latest league: {[team.team.name for team in teams]}")
-
-    #Get top goal scorer in the lates league
-    top_goal_scorer = PlayerSeasonParticipation.objects.filter(
-        league=latest_league
-    ).order_by('-goals').first()
-
-    #Get top assist provider in the latest league
-    top_assist_provider = PlayerSeasonParticipation.objects.filter(
-        league=latest_league
-    ).order_by('-assists').first()
-
-    #Get top team in the latest league
-    top_team = TeamSeasonParticipation.objects.filter(
-        league=latest_league
-    ).order_by('-points').first()
-
-   
-    
-    # Get most clean sheet
-    top_clean_sheet = PlayerSeasonParticipation.objects.filter(
-        player__position='GK',  # Assuming 'GK' is the position for Goalkeeper
-        league=latest_league).order_by('-clean_sheets').first()
-    logger.info(f"Top clean sheet player: {top_clean_sheet.player.last_name if top_clean_sheet else 'None'}")   
-
-    #Get top player in the lates league
-    top_player = PlayerSeasonParticipation.objects.filter(
-        league=latest_league
-    ).order_by('-goals', '-assists').first()
-
-
-    context = {
-        'fan_profile': fan_profile,
-        'latest_league': latest_league,
-        'matches': matches,
-        'teams': teams,
-        'top_goal_scorer': top_goal_scorer,
-        'top_assist_provider': top_assist_provider,
-        'top_team': top_team,
-        'top_clean_sheet': top_clean_sheet,
-        'top_player': top_player,
-        'live_match': live_match,
-    }
+    # Build dashboard context via service layer
+    try:
+        from users.services.fan_dashboard import build_fan_dashboard_context
+        context = build_fan_dashboard_context(request.user)
+    except Exception as e:
+        logger.exception("Error building fan dashboard context: %s", e)
+        messages.error(request, "There was an error loading your dashboard. Please try again.")
+        context = {
+            'fan_profile': fan_profile,
+            'latest_league': None,
+            'matches': [],
+            'teams': [],
+            'top_goal_scorer': None,
+            'top_assist_provider': None,
+            'top_team': None,
+            'top_clean_sheet': None,
+            'top_player': None,
+            'live_match': None,
+            'live_match_events': [],
+            'upcoming_matches': [],
+            'recent_results': [],
+            'standings_top': [],
+            'top_scorers': [],
+            'top_assists': [],
+            'top_clean_sheets': [],
+            'favorite_teams': [],
+            'favorite_team_cards': [],
+            'notifications': [],
+        }
 
     return render(request, 'fan_dashboard.html', context)
 
@@ -566,6 +532,9 @@ def profile_edit_view(request):
 
                 # Now, save the profile instance to the database
                 profile_instance.save()
+
+                # Save ManyToMany relations (e.g., favorite_teams)
+                profile_form.save_m2m()
 
             messages.success(request, 'Profile updated successfully.')
             next_url = request.POST.get('next') or request.GET.get('next')

@@ -69,6 +69,14 @@
             {% include 'partials/match_list.html' with matches=finished_matches %}
         </div>
     </div>
+
+    <!-- Live Matches Section -->
+    <div>
+        <h2 class="text-2xl font-bold text-white mb-4">Live Matches</h2>
+        <div class="bg-gray-800 shadow rounded-lg overflow-hidden">
+            {% include 'partials/match_list.html' with matches=live_matches %}
+        </div>
+    </div>
   </div>
 </div>
 {% endblock %}

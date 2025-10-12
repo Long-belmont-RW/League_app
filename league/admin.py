@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Player, PlayerStats, Coach, Team, League, TeamSeasonParticipation, Match, PlayerSeasonParticipation,\
-      CoachSeasonParticipation, Lineup
+      CoachSeasonParticipation, Lineup, LineupPlayer
 
 @admin.register(TeamSeasonParticipation)
 class TeamSeasonParticipaationAdmin(admin.ModelAdmin):
@@ -30,4 +30,5 @@ admin.site.index_title = "Welcome to the League Management Admin"
 
 admin.site.register(CoachSeasonParticipation)
 admin.site.register(Lineup)
+admin.site.register(LineupPlayer)
 

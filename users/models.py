@@ -112,7 +112,9 @@ class UserProfile(models.Model):
     
     coach = models.OneToOneField(Coach, on_delete=models.SET_NULL, null=True, blank=True)
     player = models.OneToOneField(Player, on_delete=models.SET_NULL, null=True, blank=True)
-
+    
+    # Fans can follow multiple teams
+    favorite_teams = models.ManyToManyField('league.Team', blank=True, related_name='followers')
 
     def __str__(self):
         return f"{self.user.username} - Profile"

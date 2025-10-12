@@ -114,6 +114,14 @@
                 </div>
 
                 <div>
+                    <label for="{{ profile_form.favorite_teams.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">Favorite teams</label>
+                    <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                        {{ profile_form.favorite_teams }}
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">Select one or more teams to follow.</p>
+                </div>
+
+                <div>
                     <label class="block mb-2 text-sm font-semibold text-gray-400">Profile Image</label>
                     <div class="border border-gray-600 rounded-xl p-4 bg-gray-700/40">
                         {% if request.user.userprofile and request.user.userprofile.image %}

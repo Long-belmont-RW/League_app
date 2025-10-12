@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load lineup_extras %}
+{% block title %}Manage Lineup - {{ match.home_team.name }} vs {{ match.away_team.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8">
+    <div class="container mx-auto px-4">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">Manage Lineup</h1>
+            <div class="flex items-center justify-center gap-4 text-gray-300">
+                <span class="text-xl font-semibold">{{ match.home_team.name }}</span>
+                <span class="text-2xl font-bold text-blue-400">VS</span>
+                <span class="text-xl font-semibold">{{ match.away_team.name }}</span>
+            </div>
+            <p class="text-gray-400 mt-2">
+                {{ match.date|date:"F d, Y" }} {% if match.time %}at {{ match.time|time:"g:i A" }}{% endif %}
+            </p>
+        </div>
+
+        <!-- Two-Column Layout -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            
+            <!-- Home Team Panel -->
+            <div class="lineup-panel" id="home-team-panel">
+                {% include 'partials/lineup_team_panel.html' with team_context=home_team_context team_type='home' can_edit=can_edit_home formations=formations %}
+            </div>
+
+            <!-- Away Team Panel -->
+            <div class="lineup-panel" id="away-team-panel">
+                {% include 'partials/lineup_team_panel.html' with team_context=away_team_context team_type='away' can_edit=can_edit_away formations=formations %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+    <div class="bg-gray-800 text-white px-6 py-4 rounded-lg shadow-lg border border-gray-700 flex items-center gap-3 min-w-[300px]">
+        <div id="toast-icon" class="flex-shrink-0"></div>
+        <div id="toast-message" class="flex-1"></div>
+    </div>
+</div>
+
+<!-- Hidden Data for JavaScript -->
+<script type="application/json" id="match-data">
+{
+    "match_id": {{ match.id }},
+    "save_url": "{{ save_lineup_url }}"
+}
+</script>
+
+<!-- Direct JSON data injection from the view -->
+{{ home_team_context.js_data|json_script:"home-team-data" }}
+{{ away_team_context.js_data|json_script:"away-team-data" }}
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="{% static 'js/lineup-manager.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        try {
+            const matchData = JSON.parse(document.getElementById('match-data').textContent);
+            
+            const homeDataContext = document.getElementById('home-team-data').textContent;
+            if (!homeDataContext || homeDataContext.trim() === 'null') {
+                console.error('Error: Home team data is missing or null. Cannot initialize lineup manager.');
+            } else {
+                const homeData = JSON.parse(homeDataContext);
+                homeData.saveUrl = matchData.save_url; // Add saveUrl from match-data
+                new LineupManager(homeData);
+            }
+
+            const awayDataContext = document.getElementById('away-team-data').textContent;
+            if (!awayDataContext || awayDataContext.trim() === 'null') {
+                console.error('Error: Away team data is missing or null. Cannot initialize lineup manager.');
+            } else {
+                const awayData = JSON.parse(awayDataContext);
+                awayData.saveUrl = matchData.save_url; // Add saveUrl from match-data
+                new LineupManager(awayData);
+            }
+            console.log('Lineup managers initialized successfully from template script.');
+        } catch (e) {
+            console.error('A critical error occurred while initializing lineup managers:', e);
+        }
+    });
+</script>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/lineup-styles.css' %}">
+{% endblock %}
+{% endblock %}

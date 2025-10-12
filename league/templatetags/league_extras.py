@@ -18,3 +18,4 @@ def parse_formation(formation_str):
         return [range(count) for count in rows]
     except (ValueError, TypeError):
         return [] # Return empty on parsing error
+

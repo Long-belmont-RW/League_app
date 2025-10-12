@@ -1,0 +1,117 @@
+{% load static %}
+
+<div class="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700" 
+     data-team-type="{{ team_type }}"
+     data-team-id="{{ team_context.team.id }}">
+    
+    <!-- Team Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                {% if team_context.team.logo %}
+                <img src="{{ team_context.team.logo.url }}" alt="{{ team_context.team.name }}" class="w-10 h-10 object-contain">
+                {% endif %}
+                <h2 class="text-2xl font-bold text-white">{{ team_context.team.name }}</h2>
+            </div>
+            
+            {% if not can_edit %}
+            <span class="bg-yellow-500 text-gray-900 px-3 py-1 rounded-full text-sm font-semibold">
+                View Only
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Formation Selector -->
+    <div class="px-6 py-4 bg-gray-750 border-b border-gray-700">
+        <label for="formation-{{ team_type }}" class="block text-sm font-medium text-gray-300 mb-2">
+            Formation
+        </label>
+        <select id="formation-{{ team_type }}" 
+                class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                data-formation-select="{{ team_type }}"
+                {% if not can_edit %}disabled{% endif %}>
+            {% for formation in formations %}
+            <option value="{{ formation }}" {% if formation == team_context.formation %}selected{% endif %}>
+                {{ formation }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Football Pitch -->
+    <div class="px-6 py-6">
+        <div class="relative bg-gradient-to-b from-green-600 to-green-700 rounded-lg border-4 border-white shadow-inner" 
+             style="aspect-ratio: 7 / 10;">
+            
+            <!-- Pitch Lines -->
+            <div class="absolute inset-0 opacity-30">
+                <!-- Center Circle -->
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-white rounded-full"></div>
+                <!-- Center Line -->
+                <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-white"></div>
+                <!-- Penalty Areas -->
+                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-3/5 h-1/6 border-2 border-white border-t-0"></div>
+                <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-3/5 h-1/6 border-2 border-white border-b-0"></div>
+            </div>
+
+            <!-- Formation Grid -->
+            <div id="pitch-grid-{{ team_type }}" 
+                 class="relative h-full flex flex-col justify-around py-4 px-2"
+                 data-pitch-grid="{{ team_type }}">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Player Count -->
+        <div class="mt-3 flex items-center justify-between text-sm">
+            <span class="text-gray-400">Starters: <span class="font-bold text-white" id="starters-count-{{ team_type }}">0</span>/11</span>
+            <span class="text-gray-400">Substitutes: <span class="font-bold text-white" id="substitutes-count-{{ team_type }}">0</span></span>
+        </div>
+    </div>
+
+    <!-- Substitutes Bench -->
+    <div class="px-6 py-4 bg-gray-750 border-t border-gray-700">
+        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            Substitutes Bench
+        </h3>
+        <div id="substitutes-{{ team_type }}" 
+             class="min-h-[100px] flex flex-wrap gap-2 p-3 bg-gray-800 rounded-lg border-2 border-dashed border-gray-600"
+             data-substitutes-zone="{{ team_type }}">
+            <!-- Players will be added here -->
+        </div>
+    </div>
+
+    <!-- Available Players Pool -->
+    <div class="px-6 py-4 bg-gray-800">
+        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+            Available Players
+        </h3>
+        <div id="available-{{ team_type }}" 
+             class="min-h-[120px] max-h-[300px] overflow-y-auto flex flex-wrap gap-2 p-3 bg-gray-700 rounded-lg border-2 border-dashed border-gray-500"
+             data-available-zone="{{ team_type }}">
+            <!-- Players will be added here -->
+        </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="px-6 py-4 bg-gray-750 border-t border-gray-700">
+        <button type="button"
+                id="save-btn-{{ team_type }}"
+                data-save-btn="{{ team_type }}"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                {% if not can_edit %}disabled{% endif %}>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+            </svg>
+            <span data-save-text>Save Lineup</span>
+        </button>
+    </div>
+
+</div>
