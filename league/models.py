@@ -489,10 +489,11 @@ class LineupPlayer(models.Model):
     lineup = models.ForeignKey('Lineup', on_delete=models.CASCADE)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     is_starter = models.BooleanField(default=True, help_text="Is this player in the starting lineup?")
+    position = models.PositiveIntegerField(default=0, help_text="The order of the player in the lineup (0-10 for starters)")
     
     class Meta:
         unique_together = ('lineup', 'player') # A player can only be in a lineup once
-        ordering = ['-is_starter', 'player__last_name'] # Starters first
+        ordering = ['-is_starter', 'position'] # Starters first, then by position
 
     def __str__(self):
         status = "Starter" if self.is_starter else "Substitute"

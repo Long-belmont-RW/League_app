@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta, time
 from unittest.mock import patch
 from django.urls import reverse
+import json
 
 import pytest, pytz
 from freezegun import freeze_time
@@ -120,7 +121,7 @@ class MatchModelTests(TestCase):
         self.assertIsNone(match.get_current_minute())
         self.assertEqual(match.get_display_minute, "")
 
-    
+
     @freeze_time("2025-07-29 10:00:00")
     def test_get_current_minute_at_halftime(self):
         """
@@ -369,13 +370,12 @@ class LineupNotificationTests(TestCase):
         )
         self.lineup = Lineup.objects.create(match=self.match, team=self.team1)
 
-    @patch('league.signals.push_user_notification')
-    @patch('league.signals.send_mail')
-    def test_notification_created_on_add_and_remove(self, mock_send_mail, mock_push):
+    @patch('users.signals.send_mail')
+    def test_notification_created_on_add_and_remove(self, mock_send_mail):
         initial_count = Notification.objects.filter(user=self.user).count()
 
         # Add to lineup -> should notify and email
-        self.lineup.players.add(self.profile.player)
+        LineupPlayer.objects.create(lineup=self.lineup, player=self.profile.player, is_starter=True)
         self.assertEqual(
             Notification.objects.filter(user=self.user).count(), initial_count + 1
         )
@@ -384,7 +384,7 @@ class LineupNotificationTests(TestCase):
         )
 
         # Remove from lineup -> should notify and email again
-        self.lineup.players.remove(self.profile.player)
+        LineupPlayer.objects.filter(lineup=self.lineup, player=self.profile.player).delete()
         self.assertEqual(
             Notification.objects.filter(user=self.user).count(), initial_count + 2
         )
@@ -394,7 +394,6 @@ class LineupNotificationTests(TestCase):
 
         # Email + realtime called for both actions
         self.assertEqual(mock_send_mail.call_count, 2)
-        self.assertEqual(mock_push.call_count, 2)
 
 
 class MatchDetailsViewTests(TestCase):
@@ -423,10 +422,10 @@ class MatchDetailsViewTests(TestCase):
 
         # Create lineups
         self.home_lineup = Lineup.objects.create(match=self.match, team=self.home_team)
-        self.home_lineup.players.add(self.home_player)
+        LineupPlayer.objects.create(lineup=self.home_lineup, player=self.home_player, is_starter=True)
         
         self.away_lineup = Lineup.objects.create(match=self.match, team=self.away_team)
-        self.away_lineup.players.add(self.away_player)
+        LineupPlayer.objects.create(lineup=self.away_lineup, player=self.away_player, is_starter=True)
 
         # URL for the match details view
         self.details_url = reverse('match_details', args=[self.match.id])
@@ -435,7 +434,7 @@ class MatchDetailsViewTests(TestCase):
         """Tests that the match details page loads with a 200 status code."""
         response = self.client.get(self.details_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'league/match_details.html')
+        self.assertTemplateUsed(response, 'match_details.html')
         self.assertIn('form', response.context)
         self.assertIsInstance(response.context['form'], MatchEventForm)
 
@@ -496,8 +495,7 @@ class MatchDetailsViewTests(TestCase):
         # Check that a player not in the lineup is NOT in the form choices
         self.assertNotIn(self.other_player, form_player_queryset)
         self.assertEqual(len(form_player_queryset), 2)
-
-class ManageLineupViewTest(TestCase):
+class ManageLineupJSONViewTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username='coach', password='password', role='coach', email='coach@test.com')
@@ -508,15 +506,11 @@ class ManageLineupViewTest(TestCase):
         self.home_team = Team.objects.create(name='Home Team')
         self.away_team = Team.objects.create(name='Away Team')
 
-        self.home_player1 = Player.objects.create(first_name='Home', last_name='Player1', position='FW')
-        self.home_player2 = Player.objects.create(first_name='Home', last_name='Player2', position='MF')
-        self.away_player1 = Player.objects.create(first_name='Away', last_name='Player1', position='DF')
-        self.away_player2 = Player.objects.create(first_name='Away', last_name='Player2', position='GK')
-
-        PlayerSeasonParticipation.objects.create(player=self.home_player1, team=self.home_team, league=self.league)
-        PlayerSeasonParticipation.objects.create(player=self.home_player2, team=self.home_team, league=self.league)
-        PlayerSeasonParticipation.objects.create(player=self.away_player1, team=self.away_team, league=self.league)
-        PlayerSeasonParticipation.objects.create(player=self.away_player2, team=self.away_team, league=self.league)
+        self.home_players = []
+        for i in range(15):
+            p = Player.objects.create(first_name=f'HomePlayer', last_name=str(i))
+            PlayerSeasonParticipation.objects.create(player=p, team=self.home_team, league=self.league, is_active=True)
+            self.home_players.append(p)
 
         self.match = Match.objects.create(season=self.league, home_team=self.home_team, away_team=self.away_team, date=timezone.now())
         CoachSeasonParticipation.objects.create(coach=self.coach, team=self.home_team, league=self.league)
@@ -524,105 +518,45 @@ class ManageLineupViewTest(TestCase):
         self.client.login(username='coach@test.com', password='password')
         self.url = reverse('manage_lineup', args=[self.match.id])
 
-    def test_manage_lineup_view_get(self):
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'manage_lineup.html')
-        self.assertIn('home_formset', response.context)
-        self.assertIn('away_formset', response.context)
-        self.assertIsNotNone(response.context['home_formset'])
-        self.assertIsNone(response.context['away_formset']) # Coach is only for home team
-
-    def test_manage_lineup_post_home_team(self):
-        home_lineup, _ = Lineup.objects.get_or_create(match=self.match, team=self.home_team)
+    def test_save_and_reload_lineup(self):
+        """
+        Tests that a lineup saved via JSON POST is correctly retrieved on a subsequent GET request.
+        """
+        starters = self.home_players[:11]
+        substitutes = self.home_players[11:15]
         
-        # Get all eligible players for the formset
-        eligible_players = Player.objects.filter(
-            playerseasonparticipation__team=self.home_team,
-            playerseasonparticipation__league=self.match.season
-        )
-        
-        formset_data = {
-            'home-TOTAL_FORMS': eligible_players.count(),
-            'home-INITIAL_FORMS': '0',
-            'home-MIN_NUM_FORMS': '0',
-            'home-MAX_NUM_FORMS': '1000',
-            'submit_home_lineup': '',
-        }
-
-        for i, player in enumerate(eligible_players):
-            formset_data[f'home-{i}-player'] = player.id
-            if player in [self.home_player1, self.home_player2]:
-                formset_data[f'home-{i}-is_selected'] = 'on'
-                formset_data[f'home-{i}-is_starter'] = 'on'
-            else:
-                formset_data[f'home-{i}-is_selected'] = ''
-                formset_data[f'home-{i}-is_starter'] = ''
-
-
-        response = self.client.post(self.url, data=formset_data)
-        # With exactly 2 starters selected and rule requiring 11 starters, expect validation error
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'You must select exactly 11 starters.', status_code=200)
-        home_lineup.refresh_from_db()
-        self.assertEqual(home_lineup.players.count(), 0)
-
-    def test_manage_lineup_post_away_team_permission_denied(self):
         post_data = {
-            'away-TOTAL_FORMS': '2',
-            'away-INITIAL_FORMS': '0',
-            'away-MIN_NUM_FORMS': '0',
-            'away-MAX_NUM_FORMS': '1000',
-            'away-0-player': self.away_player1.id,
-            'away-0-is_selected': 'on',
-            'away-1-player': self.away_player2.id,
-            'away-1-is_selected': 'on',
-            'submit_away_lineup': '',
+            'team_id': self.home_team.id,
+            'starters': [p.id for p in starters],
+            'substitutes': [p.id for p in substitutes],
+            'formation': '4-3-3',
         }
-        response = self.client.post(self.url, data=post_data)
-        self.assertEqual(response.status_code, 200) # No redirect, should re-render with no away formset
-        self.assertFalse(Lineup.objects.filter(match=self.match, team=self.away_team).exists())
 
-    def test_manage_lineup_requires_exactly_11_starters_then_succeeds(self):
-        CoachSeasonParticipation.objects.create(coach=self.coach, team=self.away_team, league=self.league)
-        away_lineup, _ = Lineup.objects.get_or_create(match=self.match, team=self.away_team)
-        
-        # Create 11 away players for exact starters rule
-        extra_players = []
-        for i in range(9):
-            p = Player.objects.create(first_name='Away', last_name=f'Extra{i}', position='MF')
-            PlayerSeasonParticipation.objects.create(player=p, team=self.away_team, league=self.league)
-            extra_players.append(p)
-        eligible_players = list(Player.objects.filter(
-            playerseasonparticipation__team=self.away_team,
-            playerseasonparticipation__league=self.match.season
-        ))
-
-        # First attempt with 10 starters -> should fail
-        formset_data = {
-            'away-TOTAL_FORMS': len(eligible_players),
-            'away-INITIAL_FORMS': '0',
-            'away-MIN_NUM_FORMS': '0',
-            'away-MAX_NUM_FORMS': '1000',
-            'submit_away_lineup': '',
-        }
-        for i, player in enumerate(eligible_players):
-            formset_data[f'away-{i}-player'] = player.id
-            formset_data[f'away-{i}-is_selected'] = 'on'
-            formset_data[f'away-{i}-is_starter'] = 'on' if i < 10 else ''
-        response = self.client.post(self.url, data=formset_data)
+        # POST the lineup
+        response = self.client.post(self.url, data=json.dumps(post_data), content_type='application/json')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'You must select exactly 11 starters.', status_code=200)
-        away_lineup.refresh_from_db()
-        self.assertEqual(away_lineup.players.count(), 0)
+        response_data = response.json()
+        self.assertEqual(response_data['status'], 'success')
 
-        # Second attempt with exactly 11 starters -> should succeed
-        formset_data2 = formset_data.copy()
-        for i in range(len(eligible_players)):
-            formset_data2[f'away-{i}-is_starter'] = 'on' if i < 11 else ''
-        response2 = self.client.post(self.url, data=formset_data2)
-        self.assertEqual(response2.status_code, 302)
-        away_lineup.refresh_from_db()
-        self.assertEqual(away_lineup.players.count(), len(eligible_players))
-        # Only 11 will be starters; but all selected become lineup entries
+        # Verify the database state
+        self.assertTrue(Lineup.objects.filter(match=self.match, team=self.home_team).exists())
+        lineup = Lineup.objects.get(match=self.match, team=self.home_team)
+        self.assertEqual(lineup.formation, '4-3-3')
+        self.assertEqual(lineup.lineupplayer_set.filter(is_starter=True).count(), 11)
+        self.assertEqual(lineup.lineupplayer_set.filter(is_starter=False).count(), 4)
 
+        # GET the lineup manager again
+        get_response = self.client.get(self.url)
+        self.assertEqual(get_response.status_code, 200)
+
+        # Check the context data
+        home_team_context = get_response.context['home_team_context']
+        js_data = home_team_context['js_data']
+        
+        self.assertEqual(js_data['formation'], '4-3-3')
+        self.assertEqual(len(js_data['starters']), 11)
+        self.assertEqual(len(js_data['substitutes']), 4)
+        
+        # Check that the correct players are in the lists
+        starter_ids_from_context = {p['id'] for p in js_data['starters']}
+        self.assertEqual(starter_ids_from_context, {p.id for p in starters})

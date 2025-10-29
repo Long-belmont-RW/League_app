@@ -1,5 +1,7 @@
 # league/views.py
 import json
+import logging
+from django.conf import settings
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import user_passes_test
@@ -18,6 +20,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django.views.decorators.cache import never_cache
 from django import forms as django_forms
 
 # Home View (Displays recent matches and top scorers)
@@ -632,6 +635,7 @@ from django.db import transaction
 from django.urls import reverse
 import json
 
+@never_cache
 def manage_lineup_view(request, match_id):
     """
     View to create or edit lineups for a specific match.
@@ -650,13 +654,33 @@ def manage_lineup_view(request, match_id):
     if not any(permissions.values()):
         raise PermissionDenied("You do not have permission to manage this lineup.")
 
+    # Support JSON fetch of canonical lineup data for a single team.
+    # Frontend may call this with ?format=json&team_id=<id> to get authoritative js_data.
+    if request.method == 'GET' and request.GET.get('format') == 'json' and request.GET.get('team_id'):
+        try:
+            team_id = int(request.GET.get('team_id'))
+        except (TypeError, ValueError):
+            return JsonResponse({'status': 'error', 'message': 'Invalid team_id'}, status=400)
+
+        if team_id == match.home_team.id:
+            ctx = get_team_lineup_context(match.home_team, match, permissions['can_edit_home'])
+        elif team_id == match.away_team.id:
+            ctx = get_team_lineup_context(match.away_team, match, permissions['can_edit_away'])
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Team not part of this match'}, status=400)
+
+        # Return the js_data payload directly so client can apply it
+        return JsonResponse({'status': 'success', 'data': ctx['js_data']})
+
     # --- POST Request Logic (Save Lineup) ---
     if request.method == 'POST':
         return handle_lineup_save(request, match, permissions)
 
-    # --- GET Request Logic (Display Lineup Manager) ---
+    # --
+    # - GET Request Logic (Display Lineup Manager) ---
     context = build_lineup_context(match, permissions)
-    return render(request, 'lineup_manager.html', context)
+    response = render(request, 'lineup_manager.html', context)
+    return response
 
 
 def check_user_permissions(user, match):
@@ -697,61 +721,40 @@ def handle_lineup_save(request, match, permissions):
     """
     Handle POST request to save lineup data.
     """
+    logger = logging.getLogger(__name__)
     try:
         data = json.loads(request.body)
         team_id = int(data.get('team_id'))
-        
-        # Validate team_id belongs to this match
+
+        # Validate team_id and permissions
         if team_id not in [match.home_team.id, match.away_team.id]:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Invalid team for this match.'
-            }, status=400)
-        
-        # Check authorization for this specific team
+            return JsonResponse({'status': 'error', 'message': 'Invalid team for this match.'}, status=400)
+
         is_home_team = team_id == match.home_team.id
         can_edit = permissions['can_edit_home'] if is_home_team else permissions['can_edit_away']
-        
-        if not can_edit:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'You are not authorized to modify this team\'s lineup.'
-            }, status=403)
 
-        # Extract lineup data
+        if not can_edit:
+            return JsonResponse({'status': 'error', 'message': 'You are not authorized to modify this team\'s lineup.'}, status=403)
+
+        # Extract and validate lineup data
         starter_ids = data.get('starters', [])
         substitute_ids = data.get('substitutes', [])
         formation = data.get('formation', '4-4-2')
 
-        # Validate formation
         if not validate_formation(formation):
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Invalid formation format.'
-            }, status=400)
+            return JsonResponse({'status': 'error', 'message': 'Invalid formation format.'}, status=400)
 
-        # Validate player counts
         if len(starter_ids) != 11:
-            return JsonResponse({
-                'status': 'error',
-                'message': f'Starting lineup must have exactly 11 players (you have {len(starter_ids)}).'
-            }, status=400)
-        
-        if len(substitute_ids) > 12:
-            return JsonResponse({
-                'status': 'error',
-                'message': f'Maximum 12 substitutes allowed (you have {len(substitute_ids)}).'
-            }, status=400)
+            return JsonResponse({'status': 'error', 'message': f'Starting lineup must have exactly 11 players (you have {len(starter_ids)}).'}, status=400)
 
-        # Check for duplicate players
+        if len(substitute_ids) > 12:
+            return JsonResponse({'status': 'error', 'message': f'Maximum 12 substitutes allowed (you have {len(substitute_ids)}).'}, status=400)
+
         all_player_ids = starter_ids + substitute_ids
         if len(all_player_ids) != len(set(all_player_ids)):
-            return JsonResponse({
-                'status': 'error',
-                'message': 'A player cannot appear multiple times in the lineup.'
-            }, status=400)
+            return JsonResponse({'status': 'error', 'message': 'A player cannot appear multiple times in the lineup.'}, status=400)
 
-        # Verify all players belong to the team and are eligible
+        # Verify player eligibility
         team = match.home_team if is_home_team else match.away_team
         eligible_player_ids = set(
             PlayerSeasonParticipation.objects.filter(
@@ -763,73 +766,49 @@ def handle_lineup_save(request, match, permissions):
 
         invalid_players = set(all_player_ids) - eligible_player_ids
         if invalid_players:
-            return JsonResponse({
-                'status': 'error',
-                'message': f'Some players are not eligible for this team: {invalid_players}'
-            }, status=400)
+            return JsonResponse({'status': 'error', 'message': f'Some players are not eligible for this team: {invalid_players}'}, status=400)
 
-        # Save the lineup
-        lineup, created = Lineup.objects.get_or_create(team=team, match=match)
-
+        # Save the lineup within a transaction
         with transaction.atomic():
-            # Clear existing lineup players
+            lineup, _ = Lineup.objects.get_or_create(team=team, match=match)
             lineup.lineupplayer_set.all().delete()
 
-            # Bulk create new lineup players
             lineup_players = []
-            
-            for player_id in starter_ids:
-                lineup_players.append(
-                    LineupPlayer(
-                        lineup=lineup,
-                        player_id=player_id,
-                        is_starter=True
-                    )
-                )
-            
-            for player_id in substitute_ids:
-                lineup_players.append(
-                    LineupPlayer(
-                        lineup=lineup,
-                        player_id=player_id,
-                        is_starter=False
-                    )
-                )
+            for i, player_id in enumerate(starter_ids):
+                lineup_players.append(LineupPlayer(lineup=lineup, player_id=player_id, is_starter=True, position=i))
+            for i, player_id in enumerate(substitute_ids):
+                lineup_players.append(LineupPlayer(lineup=lineup, player_id=player_id, is_starter=False, position=i))
             
             LineupPlayer.objects.bulk_create(lineup_players)
 
-            # Update formation
             lineup.formation = formation
             lineup.save()
+
+        # Return success response with the saved data
+        saved_starters = LineupPlayer.objects.filter(lineup=lineup, is_starter=True).select_related('player').order_by('id')
+        saved_subs = LineupPlayer.objects.filter(lineup=lineup, is_starter=False).select_related('player').order_by('id')
+
+        starters_serialized = [serialize_player(lp.player) for lp in saved_starters]
+        substitutes_serialized = [serialize_player(lp.player) for lp in saved_subs]
+
+        logger.info("Lineup saved: lineup_id=%s match=%s team=%s by user=%s", lineup.id, match.id, team.id, str(request.user))
 
         return JsonResponse({
             'status': 'success',
             'message': 'Lineup saved successfully!',
             'data': {
                 'lineup_id': lineup.id,
-                'starters_count': len(starter_ids),
-                'substitutes_count': len(substitute_ids),
-                'formation': formation
+                'starters': starters_serialized,
+                'substitutes': substitutes_serialized,
             }
         })
 
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid JSON data.'
-        }, status=400)
-    except ValueError as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Invalid data format: {str(e)}'
-        }, status=400)
+    except (json.JSONDecodeError, ValueError) as e:
+        logger.warning("Lineup save failed due to invalid data: %s by user=%s", str(e), str(request.user))
+        return JsonResponse({'status': 'error', 'message': f'Invalid data format: {str(e)}'}, status=400)
     except Exception as e:
-        # Log the exception in production
-        print(f"Unexpected error in lineup save: {e}")
-        return JsonResponse({
-            'status': 'error',
-            'message': 'An unexpected error occurred. Please try again.'
-        }, status=500)
+        logger.exception("Unexpected error in lineup save for match=%s user=%s", match.id, str(request.user))
+        return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred. Please try again.'}, status=500)
 
 
 def validate_formation(formation):
@@ -864,24 +843,28 @@ def get_team_lineup_context(team, match, can_edit=False):
     """
     Get lineup data for a specific team.
     """
-    lineup, _ = Lineup.objects.get_or_create(team=team, match=match)
-    
-    lineup_players = (
-        LineupPlayer.objects
-        .filter(lineup=lineup)
-        .select_related('player')
-        .order_by('-is_starter', 'player__last_name')
-    )
-    
+    # Use filter().first() to make this a read-only operation.
+    # Using get_or_create() in a GET request is an anti-pattern that can cause side effects.
+    lineup = Lineup.objects.filter(team=team, match=match).first()
+
     starters, substitutes, lineup_player_ids = [], [], set()
-    for lp in lineup_players:
-        player_data = serialize_player(lp.player)
-        lineup_player_ids.add(lp.player.id)
-        if lp.is_starter:
-            starters.append(player_data)
-        else:
-            substitutes.append(player_data)
-            
+    
+    if lineup:
+        # If a lineup exists, load its players.
+        lineup_players = (
+            LineupPlayer.objects
+            .filter(lineup=lineup)
+            .select_related('player')
+        )
+        for lp in lineup_players:
+            player_data = serialize_player(lp.player)
+            lineup_player_ids.add(lp.player.id)
+            if lp.is_starter:
+                starters.append(player_data)
+            else:
+                substitutes.append(player_data)
+
+    # Fetch all players eligible for the team.
     eligible_players = (
         PlayerSeasonParticipation.objects
         .filter(team=team, league=match.season, is_active=True)
@@ -889,28 +872,45 @@ def get_team_lineup_context(team, match, can_edit=False):
         .order_by('player__last_name')
     )
     
+    # Determine which players are available (not already in the lineup).
     available_players = [
         serialize_player(psp.player)
         for psp in eligible_players
         if psp.player.id not in lineup_player_ids
     ]
 
-    # Return Python dict, NOT JSON string
+    # Debug logging to trace persistence issues.
+    try:
+        logger = logging.getLogger(__name__)
+        if lineup:
+            lp_rows = list(lineup.lineupplayer_set.values_list('player_id', 'is_starter'))
+            logger.info("Rendering lineup context for match=%s team=%s lineup=%s; raw_lineup_rows=%s", match.id, team.id, lineup.id, lp_rows)
+            logger.info("Serialized starters ids: %s ; substitutes ids: %s", [p['id'] for p in starters], [p['id'] for p in substitutes])
+        else:
+            logger.info("Rendering lineup context for match=%s team=%s lineup=None", match.id, team.id)
+    except Exception:
+        pass
+
+    # Create the payload for JavaScript.
     js_payload = {
         'teamId': team.id,
         'teamName': team.name,
         'teamType': 'home' if team == match.home_team else 'away',
         'canEdit': can_edit,
-        'formation': lineup.formation or '4-4-2',
+        'formation': lineup.formation if lineup else '4-4-2',
         'starters': starters,
         'substitutes': substitutes,
-        'availablePlayers': available_players,  # camelCase
+        'availablePlayers': available_players,
     }
+
+    # If no lineup exists, create an in-memory one for the template context.
+    if not lineup:
+        lineup = Lineup(team=team, match=match)
 
     return {
         'team': team,
         'lineup': lineup,
-        'js_data': js_payload  # ← Python dict, not JSON string
+        'js_data': js_payload
     }
 
 

@@ -4,6 +4,16 @@ import json
 
 register = template.Library()
 
+@register.filter(name='yojson')
+def yojson(value):
+    """
+    Converts Python boolean to JavaScript boolean string.
+    """
+    if value is True:
+        return 'true'
+    elif value is False:
+        return 'false'
+    return 'null'
 
 
 
