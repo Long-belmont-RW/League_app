@@ -6,6 +6,14 @@
         <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Edit Player Stats</h1>
         <h2 class="text-base sm:text-xl text-gray-400 mb-2 sm:mb-4">{{ match }}</h2>
 
+        {% if formset.non_form_errors %}
+            <div class="p-4 rounded-md text-sm mb-4 bg-red-900 border border-red-700 text-red-200" role="alert">
+                {% for error in formset.non_form_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         {% if messages %}
             {% for message in messages %}
                 <div class="p-4 rounded-md text-sm mb-4
@@ -18,54 +26,349 @@
             {% endfor %}
         {% endif %}
 
-        <form method="post">
+        <!-- Score Validation Alert (hidden by default) -->
+        <div id="score-warning" class="hidden p-4 rounded-md text-sm mb-4 bg-yellow-900 border border-yellow-700 text-yellow-200" role="alert">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <span id="score-warning-text"></span>
+            </div>
+        </div>
+
+        <form method="post" data-home-score="{{ match.home_score }}" data-away-score="{{ match.away_score }}">
             {% csrf_token %}
             {{ formset.management_form }}
 
-            <div class="overflow-x-auto">
+            <!-- Home Team Section -->
+            <div class="flex items-center gap-3 mt-6 mb-3">
+                <div class="h-2 w-2 bg-indigo-500 rounded-full"></div>
+                <h3 class="text-lg font-semibold text-white">Home Team: {{ match.home_team.name }}</h3>
+            </div>
+            
+            <div class="overflow-x-auto mb-6">
                 <table class="min-w-full bg-gray-800 border border-gray-700 text-xs sm:text-sm">
-                    <thead class="bg-gray-700">
+                    <thead class="bg-gray-700 sticky top-0 z-10">
                         <tr>
                             <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Player</th>
-                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Team</th>
-                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Goals</th>
-                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Assists</th>
-                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Yellow Cards</th>
-                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Red Cards</th>
+                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <div>Goals</div>
+                                <div class="text-xs text-gray-500 font-normal normal-case">(0-20)</div>
+                            </th>
+                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <div>Assists</div>
+                                <div class="text-xs text-gray-500 font-normal normal-case">(0-20)</div>
+                            </th>
+                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <div>Yellow</div>
+                                <div class="text-xs text-gray-500 font-normal normal-case">(0-2)</div>
+                            </th>
+                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <div>Red</div>
+                                <div class="text-xs text-gray-500 font-normal normal-case">(0-1)</div>
+                            </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-gray-800 divide-y divide-gray-700">
-                        {% for form in formset %}
-                            <tr>
-                                {% for hidden in form.hidden_fields %} {{ hidden }} {% endfor%}
-                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-sm font-medium text-white">{{ form.instance.player.first_name }} {{ form.instance.player.last_name }}</td>
-                                
-                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-400">
-                                    {% comment %}
-                                        The view prefetched the correct season participation for each player.
-                                        It's stored in the 'participation' attribute which is a list.
-                                    {% endcomment %}
-                                    {% if form.instance.player.participation %}
-                                        {{ form.instance.player.participation.0.team.name }}
-                                    {% else %}
-                                        <span class="text-yellow-500">No Team Data</span>
-                                    {% endif %}
+                    <tbody class="bg-gray-800 divide-y divide-gray-700" id="home-team-body">
+                        {% for form in home_forms %}
+                            <tr class="hover:bg-gray-750 transition-colors duration-150">
+                                {{ form.id }}
+                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-sm font-medium text-white">
+                                    {{ form.instance.player.first_name }} {{ form.instance.player.last_name }}
                                 </td>
-                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ form.goals }}</td>
-                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ form.assists }}</td>
-                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ form.yellow_cards }}</td>
-                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ form.red_cards }}</td>
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                    {{ form.goals }}
+                                </td>
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                    {{ form.assists }}
+                                </td>
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                    {{ form.yellow_cards }}
+                                </td>
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                    {{ form.red_cards }}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
+                    <tfoot class="bg-gray-900 border-t-2 border-indigo-600">
+                        <tr>
+                            <td class="px-4 py-3 text-sm font-semibold text-gray-400">Team Total</td>
+                            <td class="px-4 py-3 text-sm font-bold text-white">
+                                <span id="home-goals-total" class="transition-all duration-200">0</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm font-bold text-white">
+                                <span id="home-assists-total">0</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm font-bold text-yellow-400">
+                                <span id="home-yellows-total">0</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm font-bold text-red-400">
+                                <span id="home-reds-total">0</span>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
 
-            <div class="mt-6 flex justify-between">
-                <a href="{% url 'match_list' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Cancel</a>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg">Save Player Stats</button>
+            <!-- Away Team Section -->
+            <div class="flex items-center gap-3 mt-6 mb-3">
+                <div class="h-2 w-2 bg-indigo-500 rounded-full"></div>
+                <h3 class="text-lg font-semibold text-white">Away Team: {{ match.away_team.name }}</h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-800 border border-gray-700 text-xs sm:text-sm">
+                    <thead class="bg-gray-700 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Player</th>
+                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <div>Goals</div>
+                                <div class="text-xs text-gray-500 font-normal normal-case">(0-20)</div>
+                            </th>
+                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <div>Assists</div>
+                                <div class="text-xs text-gray-500 font-normal normal-case">(0-20)</div>
+                            </th>
+                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <div>Yellow</div>
+                                <div class="text-xs text-gray-500 font-normal normal-case">(0-2)</div>
+                            </th>
+                            <th class="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <div>Red</div>
+                                <div class="text-xs text-gray-500 font-normal normal-case">(0-1)</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-gray-800 divide-y divide-gray-700" id="away-team-body">
+                        {% for form in away_forms %}
+                            <tr class="hover:bg-gray-750 transition-colors duration-150">
+                                {{ form.id }}
+                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-sm font-medium text-white">
+                                    {{ form.instance.player.first_name }} {{ form.instance.player.last_name }}
+                                </td>
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                    {{ form.goals }}
+                                </td>
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                    {{ form.assists }}
+                                </td>
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                    {{ form.yellow_cards }}
+                                </td>
+                                <td class="px-4 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                    {{ form.red_cards }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-gray-900 border-t-2 border-indigo-600">
+                        <tr>
+                            <td class="px-4 py-3 text-sm font-semibold text-gray-400">Team Total</td>
+                            <td class="px-4 py-3 text-sm font-bold text-white">
+                                <span id="away-goals-total" class="transition-all duration-200">0</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm font-bold text-white">
+                                <span id="away-assists-total">0</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm font-bold text-yellow-400">
+                                <span id="away-yellows-total">0</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm font-bold text-red-400">
+                                <span id="away-reds-total">0</span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="mt-8 flex flex-col sm:flex-row gap-3 sm:justify-between">
+                <a href="{% url 'match_list' %}" 
+                   class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-6 rounded-lg 
+                          transition-colors duration-200 text-center border border-gray-600">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-6 rounded-lg 
+                               transition-colors duration-200 shadow-lg shadow-indigo-900/50">
+                    Save Player Stats
+                </button>
             </div>
         </form>
     </div>
 </div>
+
+<style>
+/* Enhanced input styling */
+input[type="number"] {
+    width: 5rem;
+    padding: 0.5rem 0.75rem;
+    background-color: #374151;
+    border: 1px solid #4b5563;
+    border-radius: 0.375rem;
+    color: white;
+    transition: all 0.2s;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+input[type="number"]:hover {
+    border-color: #6b7280;
+}
+
+/* Remove spinner arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Hover effect for table rows */
+.hover\:bg-gray-750:hover {
+    background-color: #2d3748;
+}
+
+/* Animation for totals */
+@keyframes pulse-subtle {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.total-updated {
+    animation: pulse-subtle 0.3s ease-in-out;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const homeScore = parseInt(form.dataset.homeScore) || 0;
+    const awayScore = parseInt(form.dataset.awayScore) || 0;
+    
+    // Get all input fields
+    const homeGoalsInputs = document.querySelectorAll('#home-team-body input[name*="goals"]');
+    const homeAssistsInputs = document.querySelectorAll('#home-team-body input[name*="assists"]');
+    const homeYellowInputs = document.querySelectorAll('#home-team-body input[name*="yellow_cards"]');
+    const homeRedInputs = document.querySelectorAll('#home-team-body input[name*="red_cards"]');
+    
+    const awayGoalsInputs = document.querySelectorAll('#away-team-body input[name*="goals"]');
+    const awayAssistsInputs = document.querySelectorAll('#away-team-body input[name*="assists"]');
+    const awayYellowInputs = document.querySelectorAll('#away-team-body input[name*="yellow_cards"]');
+    const awayRedInputs = document.querySelectorAll('#away-team-body input[name*="red_cards"]');
+    
+    // Total display elements
+    const homeGoalsTotal = document.getElementById('home-goals-total');
+    const homeAssistsTotal = document.getElementById('home-assists-total');
+    const homeYellowsTotal = document.getElementById('home-yellows-total');
+    const homeRedsTotal = document.getElementById('home-reds-total');
+    
+    const awayGoalsTotal = document.getElementById('away-goals-total');
+    const awayAssistsTotal = document.getElementById('away-assists-total');
+    const awayYellowsTotal = document.getElementById('away-yellows-total');
+    const awayRedsTotal = document.getElementById('away-reds-total');
+    
+    const scoreWarning = document.getElementById('score-warning');
+    const scoreWarningText = document.getElementById('score-warning-text');
+    
+    // Calculate sum of inputs
+    function calculateSum(inputs) {
+        return Array.from(inputs).reduce((sum, input) => {
+            const value = parseInt(input.value) || 0;
+            return sum + value;
+        }, 0);
+    }
+    
+    // Update totals with animation
+    function updateTotal(element, value) {
+        element.textContent = value;
+        element.classList.add('total-updated');
+        setTimeout(() => element.classList.remove('total-updated'), 300);
+    }
+    
+    // Validate score
+    function validateScore() {
+        const homeGoalsSum = calculateSum(homeGoalsInputs);
+        const awayGoalsSum = calculateSum(awayGoalsInputs);
+        
+        if (homeGoalsSum !== homeScore || awayGoalsSum !== awayScore) {
+            scoreWarningText.textContent = `⚠️ Goal totals (${homeGoalsSum}-${awayGoalsSum}) don't match the final score (${homeScore}-${awayScore})`;
+            scoreWarning.classList.remove('hidden');
+        } else {
+            scoreWarning.classList.add('hidden');
+        }
+    }
+    
+    // Update all totals
+    function updateAllTotals() {
+        updateTotal(homeGoalsTotal, calculateSum(homeGoalsInputs));
+        updateTotal(homeAssistsTotal, calculateSum(homeAssistsInputs));
+        updateTotal(homeYellowsTotal, calculateSum(homeYellowInputs));
+        updateTotal(homeRedsTotal, calculateSum(homeRedInputs));
+        
+        updateTotal(awayGoalsTotal, calculateSum(awayGoalsInputs));
+        updateTotal(awayAssistsTotal, calculateSum(awayAssistsInputs));
+        updateTotal(awayYellowsTotal, calculateSum(awayYellowInputs));
+        updateTotal(awayRedsTotal, calculateSum(awayRedInputs));
+        
+        validateScore();
+    }
+    
+    // Input validation
+    function validateInput(input, max) {
+        let value = parseInt(input.value) || 0;
+        
+        // Prevent negative values
+        if (value < 0) value = 0;
+        
+        // Warn on unrealistic values
+        if (value > max) {
+            input.style.borderColor = '#f59e0b';
+        } else {
+            input.style.borderColor = '#4b5563';
+        }
+        
+        input.value = value;
+    }
+    
+    // Add event listeners to all inputs
+    const allInputs = [
+        ...homeGoalsInputs, ...homeAssistsInputs, ...homeYellowInputs, ...homeRedInputs,
+        ...awayGoalsInputs, ...awayAssistsInputs, ...awayYellowInputs, ...awayRedInputs
+    ];
+    
+    allInputs.forEach(input => {
+        // Determine max value based on input type
+        let maxValue = 20; // default for goals/assists
+        if (input.name.includes('yellow_cards')) maxValue = 2;
+        if (input.name.includes('red_cards')) maxValue = 1;
+        
+        input.addEventListener('input', function() {
+            validateInput(this, maxValue);
+            updateAllTotals();
+        });
+        
+        // Keyboard navigation
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const nextInput = allInputs[allInputs.indexOf(this) + 1];
+                if (nextInput) nextInput.focus();
+            }
+        });
+    });
+    
+    // Initial calculation
+    updateAllTotals();
+});
+</script>
 {% endblock %}

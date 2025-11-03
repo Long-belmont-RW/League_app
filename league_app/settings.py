@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_stmcv%3h^o3(37==ly6@a2&z9x=oc5^&kk+che)ja46hc91c4'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']  # Change this in production to your domain or IP
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
 # Application definition
 
@@ -79,7 +80,7 @@ ROOT_URLCONF = 'league_app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],
+        'DIRS': [BASE_DIR / "templates", BASE_DIR / "users" / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -154,7 +155,7 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #SITE ID for allauth
-SITE_ID = 1
+SITE_ID = 2
 
 #configuration for static files
 STATIC_URL = '/static/'
@@ -180,7 +181,7 @@ AUTH_USER_MODEL = "users.User"
 # ==============================================================================
 # ALLAUTH SETTINGS
 # ==============================================================================
-SITE_ID = 1
+SITE_ID = 2
 
 # This setting is used by allauth to redirect after a successful login.
 LOGIN_REDIRECT_URL = '/' 
@@ -234,13 +235,16 @@ TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = ['127.0.0.1']
 NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
 
-#Email configuration for console display
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = ''
+#===================================
+# EMAIL SETTINGS
+#===================================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+#==================================
 
 
 LOGGING = {
@@ -273,7 +277,7 @@ LOGGING = {
         
         'league': {  # Replace with your app name
             'handlers': ['file', 'console'],
-            'level': 'DEBUG',
+            'level': 'DEBUG', 
             'propagate': False,
         },
 

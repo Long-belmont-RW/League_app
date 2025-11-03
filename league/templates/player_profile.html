@@ -1,87 +1,337 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mx-auto p-4 sm:p-6 lg:p-8 bg-gray-900 text-gray-100">
+<div class="min-h-screen bg-gray-900">
+    
+    <!-- Hero Section with Player Header -->
+    <div class="relative bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 left-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+        </div>
 
-    <!-- Player Header -->
-    <div class="flex flex-col sm:flex-row items-center bg-gray-800 p-6 rounded-xl shadow-md mb-8">
-        {% if player.picture %}
-            <img src="{{ player.picture.url }}" alt="{{ player.first_name }} {{ player.last_name }}" class="w-32 h-32 rounded-full object-cover mr-8 border-4 border-gray-700">
-        {% else %}
-            <img src="https://placehold.co/128x128/00b894/ffffff?text={{ player.first_name|slice:':1' }}{{ player.last_name|slice:':1' }}" alt="Player" class="w-32 h-32 rounded-full mr-8 border-4 border-gray-700">
-        {% endif %}
+        <!-- Back Button -->
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+            <a href="javascript:history.back()" class="group inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-gray-800/80 backdrop-blur-sm rounded-xl hover:bg-gray-700 transition-all duration-300 border border-gray-700 hover:border-indigo-500">
+                <svg class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back
+            </a>
+        </div>
+
+        <!-- Player Header -->
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-12">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
+                
+                <!-- Player Avatar -->
+                <div class="flex-shrink-0 relative">
+                    <div class="absolute inset-0 bg-indigo-500 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+                    {% if player.picture %}
+                    <div class="relative w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 border-gray-700 overflow-hidden shadow-2xl">
+                        <img src="{{ player.picture.url }}" alt="{{ player.first_name }} {{ player.last_name }}" class="w-full h-full object-cover">
+                    </div>
+                    {% else %}
+                    <div class="relative w-40 h-40 sm:w-48 sm:h-48 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-4 border-gray-700 shadow-2xl flex items-center justify-center">
+                        <span class="text-6xl font-bold text-white">{{ player.first_name|slice:":1"|upper }}{{ player.last_name|slice:":1"|upper }}</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Status Badge -->
+                    <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+                        {% if player.is_active %}
+                        <span class="px-4 py-1.5 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg border-2 border-gray-800">
+                            Active
+                        </span>
+                        {% else %}
+                        <span class="px-4 py-1.5 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg border-2 border-gray-800">
+                            Inactive
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Player Info -->
+                <div class="flex-1 text-center md:text-left">
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4">
+                        {{ player.first_name }} {{ player.last_name }}
+                    </h1>
+                    
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6">
+                        <!-- Position Badge -->
+                        <span class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold rounded-full shadow-lg">
+                            {{ player.get_position_display }}
+                        </span>
+                        
+                        <!-- Age Badge -->
+                        {% if player.age %}
+                        <span class="px-4 py-2 bg-gray-700 text-gray-200 text-sm font-semibold rounded-full">
+                            Age: {{ player.age }}
+                        </span>
+                        {% endif %}
+
+                        <!-- Jersey Number Badge -->
+                        {% if player.jersey_number %}
+                        <span class="px-4 py-2 bg-gray-700 text-gray-200 text-sm font-semibold rounded-full">
+                            #{{ player.jersey_number }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto md:mx-0">
+                        <div class="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                            <div class="text-2xl font-bold text-white">{{ total_matches|default:"0" }}</div>
+                            <div class="text-xs text-gray-400">Matches</div>
+                        </div>
+                        <div class="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                            <div class="text-2xl font-bold text-green-400">{{ total_goals|default:"0" }}</div>
+                            <div class="text-xs text-gray-400">Goals</div>
+                        </div>
+                        <div class="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                            <div class="text-2xl font-bold text-blue-400">{{ total_assists|default:"0" }}</div>
+                            <div class="text-xs text-gray-400">Assists</div>
+                        </div>
+                        <div class="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                            <div class="text-2xl font-bold text-purple-400">${{ player.price|floatformat:2 }}</div>
+                            <div class="text-xs text-gray-400">Value</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        
+        <!-- Biography & Details Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            
+            <!-- Biography -->
+            <div class="lg:col-span-2">
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700 shadow-lg">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <svg class="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <h2 class="text-2xl font-bold text-white">Biography</h2>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed">
+                        {{ player.bio|default:"No biography available for this player yet. Check back later for more information about their journey and achievements." }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Player Details Card -->
+            <div class="lg:col-span-1">
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700 shadow-lg sticky top-8">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <svg class="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h2 class="text-2xl font-bold text-white">Details</h2>
+                    </div>
+                    
+                    <dl class="space-y-4">
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <dt class="text-sm font-medium text-gray-400">Position</dt>
+                            <dd class="text-sm font-semibold text-white">{{ player.get_position_display }}</dd>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <dt class="text-sm font-medium text-gray-400">Jersey Number</dt>
+                            <dd class="text-sm font-semibold text-white">{{ player.jersey_number|default:"N/A" }}</dd>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <dt class="text-sm font-medium text-gray-400">Fantasy Price</dt>
+                            <dd class="text-sm font-semibold text-indigo-400">${{ player.price|floatformat:2 }}</dd>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <dt class="text-sm font-medium text-gray-400">Current Team</dt>
+                            <dd class="text-sm font-semibold text-white">{{ player.current_team.name|default:"Free Agent" }}</dd>
+                        </div>
+                        <div class="flex justify-between items-center py-3">
+                            <dt class="text-sm font-medium text-gray-400">Status</dt>
+                            <dd>
+                                {% if player.is_active %}
+                                <span class="px-3 py-1 bg-green-500/20 border border-green-500 text-green-400 text-xs font-semibold rounded-full">
+                                    Active
+                                </span>
+                                {% else %}
+                                <span class="px-3 py-1 bg-red-500/20 border border-red-500 text-red-400 text-xs font-semibold rounded-full">
+                                    Inactive
+                                </span>
+                                {% endif %}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Career Statistics Section -->
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <h2 class="text-3xl font-bold text-white">Career Statistics</h2>
+                </div>
+            </div>
+
+            <!-- Stats Cards Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30 rounded-2xl p-6 text-center">
+                    <div class="text-3xl font-bold text-green-400 mb-2">{{ total_goals|default:"0" }}</div>
+                    <div class="text-sm text-gray-300 font-medium">Total Goals</div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-2xl p-6 text-center">
+                    <div class="text-3xl font-bold text-blue-400 mb-2">{{ total_assists|default:"0" }}</div>
+                    <div class="text-sm text-gray-300 font-medium">Total Assists</div>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 rounded-2xl p-6 text-center">
+                    <div class="text-3xl font-bold text-yellow-400 mb-2">{{ total_yellow_cards|default:"0" }}</div>
+                    <div class="text-sm text-gray-300 font-medium">Yellow Cards</div>
+                </div>
+                <div class="bg-gradient-to-br from-red-500/20 to-red-600/20 border border-red-500/30 rounded-2xl p-6 text-center">
+                    <div class="text-3xl font-bold text-red-400 mb-2">{{ total_red_cards|default:"0" }}</div>
+                    <div class="text-sm text-gray-300 font-medium">Red Cards</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Playing History Section -->
         <div>
-            <h1 class="text-4xl font-bold text-white">{{ player.first_name }} {{ player.last_name }}</h1>
-            <p class="text-gray-400 text-lg">{{ player.get_position_display }}</p>
-            {% if player.age %}
-            <p class="text-gray-400">Age: {{ player.age }}</p>
+            <div class="flex items-center space-x-3 mb-8">
+                <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h2 class="text-3xl font-bold text-white">Playing History</h2>
+            </div>
+
+            {% if season_participations %}
+            <!-- Desktop View - Table -->
+            <div class="hidden lg:block bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 shadow-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-700/50">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Season</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Team</th>
+                                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-300 uppercase tracking-wider">Matches</th>
+                                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-300 uppercase tracking-wider">Goals</th>
+                                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-300 uppercase tracking-wider">Assists</th>
+                                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-300 uppercase tracking-wider">
+                                    <span class="inline-flex items-center">
+                                        <span class="w-4 h-4 bg-yellow-400 rounded mr-1"></span>
+                                        Yellow
+                                    </span>
+                                </th>
+                                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-300 uppercase tracking-wider">
+                                    <span class="inline-flex items-center">
+                                        <span class="w-4 h-4 bg-red-500 rounded mr-1"></span>
+                                        Red
+                                    </span>
+                                </th>
+                                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-300 uppercase tracking-wider">Clean Sheets</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for participation in season_participations %}
+                            <tr class="hover:bg-gray-700/30 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-semibold text-white">{{ participation.league }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-indigo-400">{{ participation.team.name }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="text-sm text-gray-300 font-medium">{{ participation.matches_played }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="px-3 py-1 bg-green-500/20 text-green-400 text-sm font-bold rounded-full">{{ participation.goals }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-bold rounded-full">{{ participation.assists }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="text-sm text-yellow-400 font-semibold">{{ participation.yellow_cards }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="text-sm text-red-400 font-semibold">{{ participation.red_cards }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="text-sm text-gray-300 font-medium">{{ participation.clean_sheets }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mobile View - Cards -->
+            <div class="lg:hidden space-y-4">
+                {% for participation in season_participations %}
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 shadow-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-1">{{ participation.league }}</h3>
+                            <p class="text-sm text-indigo-400 font-medium">{{ participation.team.name }}</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-white">{{ participation.matches_played }}</div>
+                            <div class="text-xs text-gray-400">Matches</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 pt-4 border-t border-gray-700">
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-green-400">{{ participation.goals }}</div>
+                            <div class="text-xs text-gray-400">Goals</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-blue-400">{{ participation.assists }}</div>
+                            <div class="text-xs text-gray-400">Assists</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-gray-300">{{ participation.clean_sheets }}</div>
+                            <div class="text-xs text-gray-400">Clean Sheets</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-center space-x-4 mt-4 pt-4 border-t border-gray-700">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 bg-yellow-400 rounded"></span>
+                            <span class="text-sm text-gray-300">{{ participation.yellow_cards }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 bg-red-500 rounded"></span>
+                            <span class="text-sm text-gray-300">{{ participation.red_cards }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-16 text-center">
+                <div class="flex justify-center mb-6">
+                    <div class="w-24 h-24 bg-gray-700/50 rounded-full flex items-center justify-center">
+                        <svg class="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-3">No Playing History</h3>
+                <p class="text-gray-400 max-w-md mx-auto">
+                    This player doesn't have any recorded playing history yet. Statistics will appear here once they participate in matches.
+                </p>
+            </div>
             {% endif %}
         </div>
     </div>
-
-    <!-- Player Bio and Details -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <div class="md:col-span-2 bg-gray-800 p-6 rounded-xl shadow-md">
-            <h2 class="text-2xl font-semibold text-white mb-4">Biography</h2>
-            <p class="text-gray-300">{{ player.bio|default:"No biography available." }}</p>
-        </div>
-        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-            <h2 class="text-2xl font-semibold text-white mb-4">Details</h2>
-            <dl class="text-gray-300">
-                <div class="flex justify-between py-2 border-b border-gray-700">
-                    <dt class="font-semibold">Position</dt>
-                    <dd>{{ player.get_position_display }}</dd>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-700">
-                    <dt class="font-semibold">Fantasy Price</dt>
-                    <dd>${{ player.price|floatformat:2 }}</dd>
-                </div>
-                 <div class="flex justify-between py-2">
-                    <dt class="font-semibold">Status</dt>
-                    <dd>{% if player.is_active %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>{% else %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>{% endif %}</dd>
-                </div>
-            </dl>
-        </div>
-    </div>
-
-    <!-- Playing History -->
-    <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-        <h2 class="text-2xl font-semibold text-white mb-4">Playing History</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-700">
-                <thead class="bg-gray-700">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Season</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Team</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Matches</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Goals</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Assists</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Yellow Cards</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Red Cards</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Clean Sheets</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-gray-800 divide-y divide-gray-700">
-                    {% for participation in season_participations %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{{ participation.league }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.team.name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.matches_played }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.goals }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.assists }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.yellow_cards }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.red_cards }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ participation.clean_sheets }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-400">No playing history found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
 </div>
 {% endblock %}

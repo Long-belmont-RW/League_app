@@ -7,15 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Lineup | {{ match.home_team.name }} vs {{ match.away_team.name }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/lineup-responsive.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <style>
-        .pitch-grid { display: grid; grid-template-rows: repeat(4, 1fr); gap: 1rem; }
-        .pitch-row { display: flex; justify-content: space-around; align-items: center; }
-        .player-slot { height: 100px; width: 80px; border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 8px; transition: background-color 0.2s; }
-        .player-slot.sortable-ghost { background-color: rgba(0, 255, 0, 0.3); }
-        .player-list { min-height: 100px; }
-        .player-card { user-select: none; }
-    </style>
+
 </head>
 <body class="bg-gray-900 text-gray-200 p-4 lg:p-8">
     <h1 class="text-3xl font-bold text-center mb-8">Lineup Management: {{ match.home_team.name }} vs {{ match.away_team.name }}</h1>
@@ -38,6 +32,14 @@
     
     {{ home_json|json_script:"home-data" }}
     {{ away_json|json_script:"away-data" }}
+    
+    
+    {{ home_json|json_script:"home-data" }}
+    {{ away_json|json_script:"away-data" }}
+    
+    
+    {{ home_json|json_script:"home-data" }}
+    {{ away_json|json_script:"away-data" }}
     <script>
         // This is a simplified way to pass Django context to JS.
         // A more robust solution might use a dedicated API endpoint or a library.
@@ -46,6 +48,7 @@
             away: JSON.parse(document.getElementById('away-data').textContent)
         }
     </script>
+    <script src="{% static 'js/lineup-manager.js' %}"></script>
     <script src="{% static 'js/lineup-manager.js' %}"></script>
 </body>
 </html>

@@ -10,18 +10,28 @@ from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
+from django.template.loader import render_to_string
 from django.db import transaction
-from django.db.models import Sum, Q, F, Prefetch
+from django.db.models.functions import Coalesce
+from django.db.models import Sum, Q, F, Prefetch, Count, Subquery, OuterRef
 
 from .models import League, Lineup, Team, Match, Player, PlayerSeasonParticipation, PlayerStats, MatchStatus,     TeamSeasonParticipation, CoachSeasonParticipation, LineupPlayer
 from .forms import LineupPlayerForm, MatchForm, PlayerStatsForm, PlayerStatsFormSet, LineupFormSet, MatchEventForm, ValidatingLineupFormSet
 from .utils import get_league_standings
+from .services import update_league_table
+
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.cache import never_cache
 from django import forms as django_forms
+from django.db import transaction
+from django.urls import reverse
+
+
+#Set up logging
+logger = logging.getLogger(__name__)
 
 # Home View (Displays recent matches and top scorers)
 def home(request):
@@ -29,14 +39,19 @@ def home(request):
     matches = Match.objects.none()
     top_scorers = PlayerSeasonParticipation.objects.none()
     if active_league:
-        matches = Match.objects.filter(season=active_league).select_related('home_team', 'away_team').order_by('-date')[:5]
+        matches = Match.objects.filter(season=active_league, status=MatchStatus.FINISHED).select_related('home_team', 'away_team').order_by('-date')[:5]
         top_scorers = PlayerSeasonParticipation.objects.filter(
             league=active_league, is_active=True
         ).select_related('player').order_by('-goals')[:5]
+
+        upcoming_matches = Match.objects.filter(season=active_league, status=MatchStatus.SCHEDULED).select_related('home_team', 'away_team').order_by('-date')[:5]
+        league_table = TeamSeasonParticipation.objects.filter(league=active_league)[:3]
     rendered = render_to_string('home.html', {
         'matches': matches,
         'top_scorers': top_scorers,
         'active_league': active_league,
+        'upcoming_matches':upcoming_matches,
+        'league_table':league_table,
     }, request=request)
     return HttpResponse(rendered)
 
@@ -47,6 +62,16 @@ class LeaguesView(ListView):
     template_name = 'leagues.html'
     context_object_name = 'leagues'
     paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        teams_count = TeamSeasonParticipation.objects.filter(league=OuterRef('pk')).values('league').annotate(c=Count('id')).values('c')
+        queryset = queryset.annotate(
+            num_matches=Count('match', distinct=True),
+            total_goals=Sum(F('match__home_score') + F('match__away_score')),
+            num_teams=Subquery(teams_count)
+        )
+        return queryset
 
 # League Table View
 def league_table_view(request, league_id):
@@ -74,7 +99,20 @@ class TopStatsView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['league'] = League.objects.get(id=self.kwargs['league_id'])
+        league_id = self.kwargs['league_id']
+        context['league'] = League.objects.get(id=league_id)
+        
+        # Top Scorers (already ordered by total_goals in get_queryset)
+        context['top_scorers'] = self.get_queryset()
+
+        # Top Assisters
+        context['top_assisters'] = PlayerSeasonParticipation.objects.filter(
+            league_id=league_id, is_active=True
+        ).select_related('player', 'team').annotate(
+            total_goals=F('goals'),
+            total_assists=F('assists')
+        ).order_by('-total_assists')[:10]
+        
         return context
 
 # Teams List View
@@ -84,17 +122,35 @@ class TeamView(ListView):
     context_object_name = 'teams'
     paginate_by = 10
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        home_wins = Match.objects.filter(home_team=OuterRef('pk'), home_score__gt=F('away_score')).values('home_team').annotate(c=Count('id')).values('c')
+        away_wins = Match.objects.filter(away_team=OuterRef('pk'), away_score__gt=F('home_score')).values('away_team').annotate(c=Count('id')).values('c')
+        home_goals = Match.objects.filter(home_team=OuterRef('pk')).values('home_team').annotate(s=Sum('home_score')).values('s')
+        away_goals = Match.objects.filter(away_team=OuterRef('pk')).values('away_team').annotate(s=Sum('away_score')).values('s')
+
+        queryset = queryset.annotate(
+            players_count=Count('playerseasonparticipation', distinct=True),
+            wins=Coalesce(Subquery(home_wins), 0) + Coalesce(Subquery(away_wins), 0),
+            goals=Coalesce(Subquery(home_goals), 0) + Coalesce(Subquery(away_goals), 0)
+        )
+        return queryset
+
 # Team Detail View
 def team(request, team_id):
     team = get_object_or_404(Team, id=team_id)
     active_league = League.objects.filter(is_active=True).first()
     current_players = team.get_current_players(active_league)
     matches = team.all_matches().filter(season=active_league).select_related('home_team', 'away_team')
+    team_season_participation = TeamSeasonParticipation.objects.filter(team=team, league=active_league).first()
+
     rendered = render_to_string('team_details.html', {
         'team': team,
         'current_players': current_players,
         'matches': matches,
         'active_league': active_league,
+        'team_season_participation': team_season_participation,
     }, request=request)
 
     return HttpResponse(rendered)
@@ -538,64 +594,90 @@ class DeleteMatchView(UserPassesTestMixin, DeleteView):
 # Edit Player Stats View 
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
 def edit_player_stats_view(request, match_id):
-    match = get_object_or_404(Match.objects.select_related('home_team', 'away_team', 'season'), 
-                              id=match_id) #Get match object with related teams
+    match = get_object_or_404(Match.objects.select_related('home_team', 'away_team', 'season'), id=match_id)
 
-    # We query player stats based on the match. The previous view ensures they exist.
-    queryset = PlayerStats.objects.filter(match=match).select_related('player').prefetch_related(
+    # Get all players from the lineup for this match
+    home_lineup = Lineup.objects.filter(match=match, team=match.home_team).first()
+    away_lineup = Lineup.objects.filter(match=match, team=match.away_team).first()
+
+    lineup_players = []
+    if home_lineup:
+        lineup_players.extend(home_lineup.players.all())
+    if away_lineup:
+        lineup_players.extend(away_lineup.players.all())
+
+    # Ensure PlayerStats exist for every player in the lineup
+    for player in lineup_players:
+        PlayerStats.objects.get_or_create(match=match, player=player)
+
+    # Now, create the queryset based on the players who are confirmed to be in the lineup
+    queryset = PlayerStats.objects.filter(match=match, player__in=lineup_players).select_related('player').prefetch_related(
         Prefetch(
             'player__playerseasonparticipation_set',
-            queryset=PlayerSeasonParticipation.objects.filter(
-                league=match.season, is_active=True
-            ).select_related('team'), # Also prefetch the team from the participation!
-            to_attr='participation' 
+            queryset=PlayerSeasonParticipation.objects.filter(league=match.season, is_active=True).select_related('team'),
+            to_attr='participation'
         )
     )
 
     if request.method == 'POST':
-        formset = PlayerStatsFormSet(request.POST, queryset=queryset, form_kwargs={'match': match})
-
+        formset = PlayerStatsFormSet(request.POST, queryset=queryset, match=match, form_kwargs={'match': match})
         if formset.is_valid():
-            total_goals_from_stats = 0
-            for form in formset.cleaned_data:
-                # formset.cleaned_data is a list of dicts
-                if form: # The form could be empty if not changed
-                    total_goals_from_stats += form.get('goals', 0)
-            
-            total_score_from_match = match.home_score + match.away_score
-            if total_goals_from_stats != total_score_from_match:
-                # Add a global error to the formset
-                messages.error(request, f"Validation Error: The total goals from players ({total_goals_from_stats}) does not match the final score ({total_score_from_match}).")
-            else:
-                # All checks passed, save the stats and trigger updates
-                with transaction.atomic():
-                    formset.save() # This will trigger your PlayerStats post_save signal automatically
-                
-                messages.success(request, "Player stats have been updated successfully!")
-                return redirect('match_list')
-    else: #Get Request
+            with transaction.atomic():
+                formset.save()
+            messages.success(request, "Player stats have been updated successfully!")
+            return redirect('match_list')
+    else:
+        formset = PlayerStatsFormSet(queryset=queryset, match=match, form_kwargs={'match': match})
 
-        formset = PlayerStatsFormSet(queryset=queryset, form_kwargs={'match': match})
+    # Group forms by team for the template
+    home_forms = []
+    away_forms = []
+    for form in formset:
+        # The participation attribute is a list, get the first one.
+        if form.instance.player and hasattr(form.instance.player, 'participation') and form.instance.player.participation:
+            team_for_season = form.instance.player.participation[0].team
+            if team_for_season == match.home_team:
+                home_forms.append(form)
+            elif team_for_season == match.away_team:
+                away_forms.append(form)
 
     context = {
         'formset': formset,
         'match': match,
+        'home_forms': home_forms,
+        'away_forms': away_forms,
     }
     return render(request, 'edit_player_stats.html', context)
 
 
 def player_profile(request, player_id):
+    print("Executing player_profile view")
     player = get_object_or_404(Player, id=player_id)
     season_participations = PlayerSeasonParticipation.objects.filter(player=player).select_related('team', 'league').order_by('-league__year', '-league__session')
     
+    total_stats = season_participations.aggregate(
+        total_matches=Sum('matches_played'),
+        total_goals=Sum('goals'),
+        total_assists=Sum('assists'),
+        total_yellow_cards=Sum('yellow_cards'),
+        total_red_cards=Sum('red_cards'),
+    )
+
     context = {
         'player': player,
         'season_participations': season_participations,
+        'total_matches': total_stats['total_matches'],
+        'total_goals': total_stats['total_goals'],
+        'total_assists': total_stats['total_assists'],
+        'total_yellow_cards': total_stats['total_yellow_cards'],
+        'total_red_cards': total_stats['total_red_cards'],
     }
-    return render(request, 'league/player_profile.html', context)
+    rendered = render_to_string('league/player_profile.html', context, request=request)
+    return HttpResponse(rendered)
 
 
 
+@never_cache
 def match_details(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     home_lineup = Lineup.objects.filter(match=match, team=match.home_team).first()
@@ -607,7 +689,7 @@ def match_details(request, match_id):
         if form.is_valid():
             event = form.save(commit=False)
             event.match = match
-            if match.status == 'LIV':
+            if match.status == MatchStatus.LIVE:
                 event.minute = match.get_current_minute()
             else:
                 # Handle cases where match is not live, maybe default to 0 or prompt for it
@@ -617,6 +699,7 @@ def match_details(request, match_id):
     else:
         form = MatchEventForm(match=match)
 
+    
     context = {
         'match': match,
         'home_lineup': home_lineup,
@@ -628,12 +711,6 @@ def match_details(request, match_id):
     return render(request, 'match_details.html', context)
 
 ############# Lineup Manager Begins ###############
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
-from django.core.exceptions import PermissionDenied
-from django.db import transaction
-from django.urls import reverse
-import json
 
 @never_cache
 def manage_lineup_view(request, match_id):

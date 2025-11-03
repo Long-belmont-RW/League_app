@@ -40,3 +40,8 @@ tqdm==4.67.1
 types-python-dateutil==2.9.0.20250516
 tzdata==2025.2
 urllib3==2.4.0
+pytest-django==4.8.0
+python-decouple
+django-widget-tweaks
+PyJWT
+cryptography

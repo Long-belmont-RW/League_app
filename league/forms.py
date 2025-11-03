@@ -119,10 +119,12 @@ class PlayerStatsForm(forms.ModelForm):
 
         # Make player field read-only but visible
         if self.instance and self.instance.pk:
-            self.fields['player'].disabled = True
-            self.fields['player'].widget.attrs.update({
-                'class': 'block w-full bg-gray-50 border-gray-300 rounded-md shadow-sm sm:text-sm cursor-not-allowed'
-            })
+            # self.fields['player'].disabled = True
+            self.fields['player'].widget = forms.HiddenInput()
+            # self.fields['player'].required = False # Prevent validation error on disabled field
+            # self.fields['player'].widget.attrs.update({
+            #     'class': 'block w-full bg-gray-50 border-gray-300 rounded-md shadow-sm sm:text-sm cursor-not-allowed'
+            # })
     
     class Meta:
         model = PlayerStats
@@ -155,7 +157,9 @@ class PlayerStatsForm(forms.ModelForm):
     
     def clean_yellow_cards(self):
         """Validate yellow cards count"""
-        yellow_cards = self.cleaned_data.get('yellow_cards', 0)
+        yellow_cards = self.cleaned_data.get('yellow_cards')
+        if yellow_cards is None:
+            yellow_cards = 0
         if yellow_cards > 2:
             raise ValidationError("A player cannot receive more than 2 yellow cards in a match")
         return yellow_cards
@@ -190,15 +194,39 @@ class PlayerStatsForm(forms.ModelForm):
 
 
    
+class BasePlayerStatsFormSet(forms.BaseModelFormSet):
+    def __init__(self, *args, **kwargs):
+        self.match = kwargs.pop('match', None)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        print(f"FORMSET ERRORS: {self.errors}")
+        for form in self.forms:
+            print(f"FORM {form.prefix} CLEANED_DATA: {form.cleaned_data}")
+            print(f"FORM {form.prefix} ERRORS: {form.errors}")
+
+        total_goals_from_stats = 0
+        for form in self.forms:
+            if form.cleaned_data:
+                total_goals_from_stats += form.cleaned_data.get('goals', 0) or 0
+
+        if self.match:
+            total_score_from_match = self.match.home_score + self.match.away_score
+            print(f"Goals: {total_goals_from_stats}, Score: {total_score_from_match}") # DEBUG
+            if total_goals_from_stats != total_score_from_match:
+                raise forms.ValidationError(
+                    f"Validation Error: The total goals from players ({total_goals_from_stats}) "
+                    f"does not match the final score ({total_score_from_match})."
+                )
+
 # Enhanced formset with better configuration
 PlayerStatsFormSet = forms.modelformset_factory(
     PlayerStats,
     form=PlayerStatsForm,
+    formset=BasePlayerStatsFormSet,
     fields=['player', 'goals', 'assists', 'yellow_cards', 'red_cards'],
     extra=0,
     can_delete=False,
-    # validate_min=False,
-    # validate_max=False
 )
 
 

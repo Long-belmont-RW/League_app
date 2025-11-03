@@ -15,8 +15,7 @@ class Command(BaseCommand):
         try:
             league = League.objects.get(year=league_year)
         except League.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f'League with year: "{league_year}" does not exist'))
-            return
+            league = League.objects.all().first()
         
         self.stdout.write(f'Recalculating stats for league: {league}....')
         

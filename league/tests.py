@@ -10,12 +10,15 @@ import json
 import pytest, pytz
 from freezegun import freeze_time
 
+from django.test.client import RequestFactory
+from league.views import TopStatsView
+
 from league.models import (Team, League, Match, MatchStatus, 
         TeamSeasonParticipation, Coach, Player, 
-        Lineup, CoachSeasonParticipation, PlayerSeasonParticipation, MatchEvent, LineupPlayer)
+        Lineup, CoachSeasonParticipation, PlayerSeasonParticipation, MatchEvent, LineupPlayer, PlayerStats)
 from users.models import UserProfile, Notification
 from league.services import update_league_table
-from .forms import MatchEventForm, LineupFormSet
+from .forms import MatchEventForm, LineupFormSet, PlayerStatsFormSet
 
 
 #Get the custom User model 
@@ -45,6 +48,8 @@ class MatchModelTests(TestCase):
             season=self.league,
             home_team=self.home_team,
             away_team=self.away_team,
+            home_score=0,
+            away_score=0,
             date=timezone.now(),
             status=MatchStatus.SCHEDULED
         )
@@ -62,6 +67,8 @@ class MatchModelTests(TestCase):
             season=self.league,
             home_team=self.home_team,
             away_team=self.away_team,
+            home_score=0,
+            away_score=0,
             date=timezone.now(),
             status=MatchStatus.SCHEDULED
         )
@@ -87,6 +94,8 @@ class MatchModelTests(TestCase):
             season=self.league,
             home_team=self.home_team,
             away_team=self.away_team,
+            home_score=0,
+            away_score=0,
             date=timezone.now(),
             status=MatchStatus.LIVE
         )
@@ -114,6 +123,8 @@ class MatchModelTests(TestCase):
             season=self.league,
             home_team=self.home_team,
             away_team=self.away_team,
+            home_score=0,
+            away_score=0,
             date=timezone.now(),
             status=MatchStatus.SCHEDULED
         )
@@ -133,6 +144,8 @@ class MatchModelTests(TestCase):
             season=self.league,
             home_team=self.home_team,
             away_team=self.away_team,
+            home_score=0,
+            away_score=0,
             date=kickoff,
             status=MatchStatus.LIVE,
             actual_kickoff_time=kickoff,
@@ -152,9 +165,11 @@ class MatchModelTests(TestCase):
             season=self.league,
             home_team=self.home_team,
             away_team=self.away_team,
+            home_score=0,
+            away_score=0,
             date=kickoff,
             status=MatchStatus.LIVE,
-            actual_kickoff_time=kickoff
+            actual_kickoff_time=kickoff,
         )
         self.assertEqual(match.get_current_minute(), 92)
         self.assertEqual(match.get_display_minute, "90 + 2'")
@@ -170,6 +185,8 @@ class MatchModelTests(TestCase):
             season=self.league,
             home_team=self.home_team,
             away_team=self.away_team,
+            home_score=0,
+            away_score=0,
             date=kickoff,
             status=MatchStatus.LIVE,
             actual_kickoff_time=kickoff
@@ -189,6 +206,8 @@ class MatchModelTests(TestCase):
             season=self.league,
             home_team=self.home_team,
             away_team=self.away_team,
+            home_score=0,
+            away_score=0,
             date=scheduled_date,
             status=MatchStatus.LIVE,
             
@@ -213,6 +232,8 @@ class MatchModelTests(TestCase):
             season=self.league,
             home_team=self.home_team,
             away_team=self.away_team,
+            home_score=0,
+            away_score=0,
             date=future_kickoff,
             status=MatchStatus.LIVE,
             actual_kickoff_time=future_kickoff
@@ -370,6 +391,11 @@ class LineupNotificationTests(TestCase):
         )
         self.lineup = Lineup.objects.create(match=self.match, team=self.team1)
 
+        # Set a default from email for testing purposes
+        from django.conf import settings
+        if not hasattr(settings, 'DEFAULT_FROM_EMAIL'):
+            settings.DEFAULT_FROM_EMAIL = 'test@example.com'
+
     @patch('users.signals.send_mail')
     def test_notification_created_on_add_and_remove(self, mock_send_mail):
         initial_count = Notification.objects.filter(user=self.user).count()
@@ -389,174 +415,331 @@ class LineupNotificationTests(TestCase):
             Notification.objects.filter(user=self.user).count(), initial_count + 2
         )
         self.assertTrue(
-            Notification.objects.filter(user=self.user, title__icontains='removed').exists()
+            Notification.objects.filter(user=self.user, title__icontains='removed').exists()                          
+        )
+                                                                                                                      
+        # Email + realtime called for both actions                                                                    
+        self.assertEqual(mock_send_mail.call_count, 2)
+
+class TestComprehensiveLeagueUpdate(TestCase):
+    def setUp(self):
+        self.league = League.objects.create(year=2025, session="S", is_active=True)
+        self.team_a = Team.objects.create(name="Team A")
+        self.team_b = Team.objects.create(name="Team B")
+        self.team_c = Team.objects.create(name="Team C") # For a match not affecting A or B
+
+        self.team_a_stats = TeamSeasonParticipation.objects.create(team=self.team_a, league=self.league)
+        self.team_b_stats = TeamSeasonParticipation.objects.create(team=self.team_b, league=self.league)
+
+        # Initial match (scheduled, should not affect stats)
+        self.match1 = Match.objects.create(
+            season=self.league,
+            home_team=self.team_a,
+            away_team=self.team_b,
+            home_score=0,
+            away_score=0,
+            date=timezone.now(),
+            status=MatchStatus.SCHEDULED
         )
 
-        # Email + realtime called for both actions
-        self.assertEqual(mock_send_mail.call_count, 2)
+    def _refresh_stats(self):
+        self.team_a_stats.refresh_from_db()
+        self.team_b_stats.refresh_from_db()
+
+    def _assert_initial_stats(self):
+        self._refresh_stats()
+        self.assertEqual(self.team_a_stats.points, 0)
+        self.assertEqual(self.team_a_stats.wins, 0)
+        self.assertEqual(self.team_a_stats.draws, 0)
+        self.assertEqual(self.team_a_stats.losses, 0)
+        self.assertEqual(self.team_a_stats.goals_scored, 0)
+        self.assertEqual(self.team_a_stats.goals_conceded, 0)
+        self.assertEqual(self.team_a_stats.matches_played, 0)
+
+        self.assertEqual(self.team_b_stats.points, 0)
+        self.assertEqual(self.team_b_stats.wins, 0)
+        self.assertEqual(self.team_b_stats.draws, 0)
+        self.assertEqual(self.team_b_stats.losses, 0)
+        self.assertEqual(self.team_b_stats.goals_scored, 0)
+        self.assertEqual(self.team_b_stats.goals_conceded, 0)
+        self.assertEqual(self.team_b_stats.matches_played, 0)
+
+    def test_full_match_lifecycle_updates_league_correctly(self):
+        self._assert_initial_stats()
+
+        # 1. Change match to FINISHED (Team A wins 2-1)
+        self.match1.home_score = 2
+        self.match1.away_score = 1
+        self.match1.status = MatchStatus.FINISHED
+        self.match1.save()
+
+        self._refresh_stats()
+        self.assertEqual(self.team_a_stats.points, 3)
+        self.assertEqual(self.team_a_stats.wins, 1)
+        self.assertEqual(self.team_a_stats.goals_scored, 2)
+        self.assertEqual(self.team_a_stats.goals_conceded, 1)
+        self.assertEqual(self.team_a_stats.matches_played, 1)
+
+        self.assertEqual(self.team_b_stats.points, 0)
+        self.assertEqual(self.team_b_stats.losses, 1)
+        self.assertEqual(self.team_b_stats.goals_scored, 1)
+        self.assertEqual(self.team_b_stats.goals_conceded, 2)
+        self.assertEqual(self.team_b_stats.matches_played, 1)
+
+        # 2. Update score of FINISHED match (Team A wins 3-0)
+        self.match1.home_score = 3
+        self.match1.away_score = 0
+        self.match1.save()
+
+        self._refresh_stats()
+        self.assertEqual(self.team_a_stats.points, 3) # Still 3 points for a win
+        self.assertEqual(self.team_a_stats.wins, 1)
+        self.assertEqual(self.team_a_stats.goals_scored, 3) # Goals updated
+        self.assertEqual(self.team_a_stats.goals_conceded, 0) # Goals updated
+        self.assertEqual(self.team_a_stats.matches_played, 1)
+
+        self.assertEqual(self.team_b_stats.points, 0)
+        self.assertEqual(self.team_b_stats.losses, 1)
+        self.assertEqual(self.team_b_stats.goals_scored, 0)
+        self.assertEqual(self.team_b_stats.goals_conceded, 3)
+        self.assertEqual(self.team_b_stats.matches_played, 1)
+
+        # 3. Change match status back to SCHEDULED
+        self.match1.status = MatchStatus.SCHEDULED
+        self.match1.save()
+
+        self._assert_initial_stats() # All stats should revert to 0
+
+        # 4. Change match to FINISHED (Draw 1-1)
+        self.match1.home_score = 1
+        self.match1.away_score = 1
+        self.match1.status = MatchStatus.FINISHED
+        self.match1.save()
+
+        self._refresh_stats()
+        self.assertEqual(self.team_a_stats.points, 1)
+        self.assertEqual(self.team_a_stats.draws, 1)
+        self.assertEqual(self.team_a_stats.goals_scored, 1)
+        self.assertEqual(self.team_a_stats.goals_conceded, 1)
+        self.assertEqual(self.team_a_stats.matches_played, 1)
+
+        self.assertEqual(self.team_b_stats.points, 1)
+        self.assertEqual(self.team_b_stats.draws, 1)
+        self.assertEqual(self.team_b_stats.goals_scored, 1)
+        self.assertEqual(self.team_b_stats.goals_conceded, 1)
+        self.assertEqual(self.team_b_stats.matches_played, 1)
+
+        # 5. Delete the FINISHED match
+        self.match1.delete()
+
+        self._assert_initial_stats() # All stats should revert to 0
+
+    def test_match_not_affecting_stats_when_not_finished(self):
+        # Create a match that is not finished
+        match2 = Match.objects.create(
+            season=self.league,
+            home_team=self.team_a,
+            away_team=self.team_c,
+            home_score=5,
+            away_score=0,
+            date=timezone.now(),
+            status=MatchStatus.LIVE # Live match
+        )
+        self._assert_initial_stats() # Stats should still be 0
+
+        match2.status = MatchStatus.SCHEDULED # Change status, still no effect
+        match2.save()
+        self._assert_initial_stats() # Stats should still be 0
+
+        match2.delete() # Delete, still no effect
+        self._assert_initial_stats() # Stats should still be 0
+
+
+class PlayerStatsAggregationTests(TestCase):
+    """Tests the automated aggregation of player stats into PlayerSeasonParticipation."""
+
+    def setUp(self):
+        self.league = League.objects.create(year=2025, session='S', is_active=True)
+        self.team1 = Team.objects.create(name="Team Alpha")
+        self.player1 = Player.objects.create(first_name="Player", last_name="One", position="GK")
+        self.player2 = Player.objects.create(first_name="Player", last_name="Two", position="FW")
+
+        self.player1_psp = PlayerSeasonParticipation.objects.create(
+            player=self.player1, team=self.team1, league=self.league, is_active=True,
+            goals=0, assists=0, yellow_cards=0, red_cards=0
+        )
+        self.player2_psp = PlayerSeasonParticipation.objects.create(
+            player=self.player2, team=self.team1, league=self.league, is_active=True,
+            goals=0, assists=0, yellow_cards=0, red_cards=0
+        )
+
+        self.match1 = Match.objects.create(
+            season=self.league,
+            home_team=self.team1,
+            away_team=Team.objects.create(name="Opponent Team"),
+            home_score=0, away_score=0,
+            date=timezone.now(),
+            status=MatchStatus.FINISHED
+        )
+        self.match2 = Match.objects.create(
+            season=self.league,
+            home_team=self.team1,
+            away_team=Team.objects.create(name="Another Opponent"),
+            home_score=0, away_score=0,
+            date=timezone.now() + timedelta(days=7),
+            status=MatchStatus.FINISHED
+        )
+
+    def _refresh_psp_stats(self):
+        self.player1_psp.refresh_from_db()
+        self.player2_psp.refresh_from_db()
+
+    def test_player_stats_update_aggregates_on_save(self):
+        # Initial stats should be zero
+        self._refresh_psp_stats()
+        self.assertEqual(self.player1_psp.goals, 0)
+        self.assertEqual(self.player1_psp.assists, 0)
+
+        # 1. Create a PlayerStats object (Match 1)
+        player_stats1 = PlayerStats.objects.create(
+            match=self.match1, player=self.player1, goals=2, assists=1, yellow_cards=0, red_cards=0
+        )
+
+        self._refresh_psp_stats()
+        self.assertEqual(self.player1_psp.goals, 2)
+        self.assertEqual(self.player1_psp.assists, 1)
+
+        # 2. Create another PlayerStats object for the same player in a different match (Match 2)
+        player_stats2 = PlayerStats.objects.create(
+            match=self.match2, player=self.player1, goals=1, assists=1, yellow_cards=1, red_cards=0
+        )
+
+        self._refresh_psp_stats()
+        self.assertEqual(self.player1_psp.goals, 3)
+        self.assertEqual(self.player1_psp.assists, 2)
+        self.assertEqual(self.player1_psp.yellow_cards, 1)
+        self.assertEqual(self.player1_psp.red_cards, 0)
+
+        # 3. Update an existing PlayerStats object
+        player_stats1.goals = 3
+        player_stats1.save()
+
+        self._refresh_psp_stats()
+        self.assertEqual(self.player1_psp.goals, 4) # 3 from match1 + 1 from match2
+        self.assertEqual(self.player1_psp.assists, 2) # 1 from match1 + 1 from match2
+
+    def test_player_stats_update_aggregates_on_delete(self):
+        # Create PlayerStats first
+        player_stats1 = PlayerStats.objects.create(
+            match=self.match1, player=self.player1, goals=2, assists=1, yellow_cards=0, red_cards=0
+        )
+        player_stats2 = PlayerStats.objects.create(
+            match=self.match2, player=self.player1, goals=1, assists=1, yellow_cards=1, red_cards=0
+        )
+        self._refresh_psp_stats()
+        self.assertEqual(self.player1_psp.goals, 3)
+        self.assertEqual(self.player1_psp.assists, 2)
+
+        # 1. Delete one PlayerStats object
+        player_stats1.delete()
+
+        self._refresh_psp_stats()
+        self.assertEqual(self.player1_psp.goals, 1) # Only stats from player_stats2 remain
+        self.assertEqual(self.player1_psp.assists, 1)
+        self.assertEqual(self.player1_psp.yellow_cards, 1)
+
+        # 2. Delete the second PlayerStats object
+        player_stats2.delete()
+
+        self._refresh_psp_stats()
+        self.assertEqual(self.player1_psp.goals, 0)
+        self.assertEqual(self.player1_psp.assists, 0)
+        self.assertEqual(self.player1_psp.yellow_cards, 0)
+
+    def test_top_stats_view_reflects_updated_player_season_stats(self):
+        # Create multiple PlayerStats for different players
+        PlayerStats.objects.create(match=self.match1, player=self.player1, goals=3, assists=1)
+        PlayerStats.objects.create(match=self.match1, player=self.player2, goals=1, assists=2)
+        PlayerStats.objects.create(match=self.match2, player=self.player1, goals=1, assists=1)
+
+        self._refresh_psp_stats() # Trigger aggregation via signals
+
+        # Player1: 4 goals, 2 assists
+        # Player2: 1 goal, 2 assists
+
+        # Mock the request for TopStatsView
+        factory = RequestFactory()
+        request = factory.get(reverse('top_stats', kwargs={'league_id': self.league.id}))
+        
+        # Create an instance of the view and call as_view()
+        view = TopStatsView()
+        view.setup(request, league_id=self.league.id)
+        response = view.dispatch(request, league_id=self.league.id)
+
+        self.assertEqual(response.status_code, 200)
+        
+        # Check context data
+        players_in_context = response.context_data['players']
+        self.assertEqual(len(players_in_context), 2) # Only player1 and player2
+
+        # Ensure ordering and correct stats
+        # Should be ordered by total_goals descending
+        self.assertEqual(players_in_context[0].player, self.player1)
+        self.assertEqual(players_in_context[0].goals, 4)
+        self.assertEqual(players_in_context[0].assists, 2)
+
+        self.assertEqual(players_in_context[1].player, self.player2)
+        self.assertEqual(players_in_context[1].goals, 1)
+        self.assertEqual(players_in_context[1].assists, 2)
 
 
 class MatchDetailsViewTests(TestCase):
     def setUp(self):
-        # Set up a client
         self.client = Client()
-        
-        # Create a league and teams
-        self.league = League.objects.create(year=2025, session="S", is_active=True)
-        self.home_team = Team.objects.create(name="Home Lions")
-        self.away_team = Team.objects.create(name="Away Tigers")
-
-        # Create players
-        self.home_player = Player.objects.create(first_name="Home", last_name="Player")
-        self.away_player = Player.objects.create(first_name="Away", last_name="Player")
-        self.other_player = Player.objects.create(first_name="Other", last_name="Player")
-
-        # Create a match
+        self.admin_user = User.objects.create_superuser(email='admin@test.com', password='password', username='admin')
+        self.user = User.objects.create_user(email='user@test.com', password='password', username='user')
+        self.league = League.objects.create(year=2025, session='S', is_active=True)
+        self.team1 = Team.objects.create(name='Team 1')
+        self.team2 = Team.objects.create(name='Team 2')
         self.match = Match.objects.create(
             season=self.league,
-            home_team=self.home_team,
-            away_team=self.away_team,
-            date=timezone.now() + timedelta(hours=1),
-            status=MatchStatus.SCHEDULED
+            home_team=self.team1,
+            away_team=self.team2,
+            date=timezone.now(),
+            status=MatchStatus.SCHEDULED,
         )
+        self.player = Player.objects.create(first_name='Test', last_name='Player', position='FW')
+        self.lineup = Lineup.objects.create(match=self.match, team=self.team1)
+        LineupPlayer.objects.create(lineup=self.lineup, player=self.player, is_starter=True)
 
-        # Create lineups
-        self.home_lineup = Lineup.objects.create(match=self.match, team=self.home_team)
-        LineupPlayer.objects.create(lineup=self.home_lineup, player=self.home_player, is_starter=True)
-        
-        self.away_lineup = Lineup.objects.create(match=self.match, team=self.away_team)
-        LineupPlayer.objects.create(lineup=self.away_lineup, player=self.away_player, is_starter=True)
-
-        # URL for the match details view
-        self.details_url = reverse('match_details', args=[self.match.id])
-
-    def test_match_details_view_loads_successfully(self):
-        """Tests that the match details page loads with a 200 status code."""
-        response = self.client.get(self.details_url)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'match_details.html')
-        self.assertIn('form', response.context)
-        self.assertIsInstance(response.context['form'], MatchEventForm)
-
-    def test_add_event_when_match_not_live(self):
-        """Tests adding an event to a match that is not live sets the minute to 0."""
-        self.assertEqual(self.match.status, MatchStatus.SCHEDULED)
-        
-        post_data = {
-            'player': self.home_player.id,
+    def test_match_events_visible_to_all_users(self):
+        # Admin adds an event
+        self.client.login(username='admin', password='password')
+        self.client.post(reverse('match_details', args=[self.match.id]), {
             'event_type': 'GOAL',
-            'commentary': 'Early goal!'
-        }
-        response = self.client.post(self.details_url, data=post_data)
+            'player': self.player.id,
+            'commentary': 'First goal!'
+        })
+        self.client.logout()
 
-        # Check redirect and event creation
-        self.assertEqual(response.status_code, 302) # Should redirect after successful post
-        self.assertTrue(MatchEvent.objects.filter(match=self.match, player=self.home_player).exists())
-        
-        # Check that the minute is 0
-        event = MatchEvent.objects.get(match=self.match, player=self.home_player)
-        self.assertEqual(event.minute, 0)
+        # Regular user views the page
+        self.client.login(username='user', password='password')
+        response = self.client.get(reverse('match_details', args=[self.match.id]))
+        self.assertContains(response, 'First goal!')
+        self.assertEqual(len(response.context['events']), 1)
 
-    @freeze_time("2025-08-15 15:30:00")
-    def test_add_event_when_match_is_live(self):
-        """Tests adding an event to a live match captures the correct minute."""
-        # Set the match to live, starting 15 minutes ago
-        self.match.status = MatchStatus.LIVE
-        self.match.actual_kickoff_time = timezone.now() - timedelta(minutes=15)
-        self.match.save()
-
-        post_data = {
-            'player': self.away_player.id,
+        # Admin adds another event
+        self.client.login(username='admin', password='password')
+        self.client.post(reverse('match_details', args=[self.match.id]), {
             'event_type': 'YELLOW_CARD',
-            'commentary': 'A tactical foul.'
-        }
-        response = self.client.post(self.details_url, data=post_data)
+            'player': self.player.id,
+            'commentary': 'Yellow card for diving.'
+        })
+        self.client.logout()
 
-        # Check redirect and event creation
-        self.assertEqual(response.status_code, 302)
-        self.assertTrue(MatchEvent.objects.filter(match=self.match, player=self.away_player).exists())
-
-        # Check that the minute is correctly captured
-        event = MatchEvent.objects.get(match=self.match, player=self.away_player)
-        self.assertEqual(event.minute, 15)
-
-    def test_event_form_only_shows_lineup_players(self):
-        """Tests that the player dropdown in the form is correctly filtered."""
-        response = self.client.get(self.details_url)
-        form = response.context['form']
-        
-        # Get the queryset of the player field
-        form_player_queryset = form.fields['player'].queryset
-        
-        # Check that the players in the form are the ones in the lineup
-        self.assertIn(self.home_player, form_player_queryset)
-        self.assertIn(self.away_player, form_player_queryset)
-        
-        # Check that a player not in the lineup is NOT in the form choices
-        self.assertNotIn(self.other_player, form_player_queryset)
-        self.assertEqual(len(form_player_queryset), 2)
-class ManageLineupJSONViewTest(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='coach', password='password', role='coach', email='coach@test.com')
-        self.user.refresh_from_db()
-        self.coach = self.user.userprofile.coach
-
-        self.league = League.objects.create(year=2025, session='S', is_active=True)
-        self.home_team = Team.objects.create(name='Home Team')
-        self.away_team = Team.objects.create(name='Away Team')
-
-        self.home_players = []
-        for i in range(15):
-            p = Player.objects.create(first_name=f'HomePlayer', last_name=str(i))
-            PlayerSeasonParticipation.objects.create(player=p, team=self.home_team, league=self.league, is_active=True)
-            self.home_players.append(p)
-
-        self.match = Match.objects.create(season=self.league, home_team=self.home_team, away_team=self.away_team, date=timezone.now())
-        CoachSeasonParticipation.objects.create(coach=self.coach, team=self.home_team, league=self.league)
-
-        self.client.login(username='coach@test.com', password='password')
-        self.url = reverse('manage_lineup', args=[self.match.id])
-
-    def test_save_and_reload_lineup(self):
-        """
-        Tests that a lineup saved via JSON POST is correctly retrieved on a subsequent GET request.
-        """
-        starters = self.home_players[:11]
-        substitutes = self.home_players[11:15]
-        
-        post_data = {
-            'team_id': self.home_team.id,
-            'starters': [p.id for p in starters],
-            'substitutes': [p.id for p in substitutes],
-            'formation': '4-3-3',
-        }
-
-        # POST the lineup
-        response = self.client.post(self.url, data=json.dumps(post_data), content_type='application/json')
-        self.assertEqual(response.status_code, 200)
-        response_data = response.json()
-        self.assertEqual(response_data['status'], 'success')
-
-        # Verify the database state
-        self.assertTrue(Lineup.objects.filter(match=self.match, team=self.home_team).exists())
-        lineup = Lineup.objects.get(match=self.match, team=self.home_team)
-        self.assertEqual(lineup.formation, '4-3-3')
-        self.assertEqual(lineup.lineupplayer_set.filter(is_starter=True).count(), 11)
-        self.assertEqual(lineup.lineupplayer_set.filter(is_starter=False).count(), 4)
-
-        # GET the lineup manager again
-        get_response = self.client.get(self.url)
-        self.assertEqual(get_response.status_code, 200)
-
-        # Check the context data
-        home_team_context = get_response.context['home_team_context']
-        js_data = home_team_context['js_data']
-        
-        self.assertEqual(js_data['formation'], '4-3-3')
-        self.assertEqual(len(js_data['starters']), 11)
-        self.assertEqual(len(js_data['substitutes']), 4)
-        
-        # Check that the correct players are in the lists
-        starter_ids_from_context = {p['id'] for p in js_data['starters']}
-        self.assertEqual(starter_ids_from_context, {p.id for p in starters})
+        # Regular user views the page again
+        self.client.login(username='user', password='password')
+        response = self.client.get(reverse('match_details', args=[self.match.id]))
+        self.assertContains(response, 'First goal!')
+        self.assertContains(response, 'Yellow card for diving.')
+        self.assertEqual(len(response.context['events']), 2)

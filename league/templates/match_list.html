@@ -1,82 +1,284 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-900 py-8 px-4">
-  <div class="max-w-6xl mx-auto">
-    <!-- Header Section -->
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-white">Match List</h1>
+<div class="min-h-screen bg-gray-900">
+    
+    <!-- Hero Header -->
+    <div class="relative bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 overflow-hidden border-b border-gray-700">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 left-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+        </div>
 
-        {% if user.is_authenticated and user.is_staff %}
-        <a href="{% url 'create_match' %}" 
-           class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-            Create New Match
-        </a>
-        {% endif %}
-    </div>
+        <!-- Content -->
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-12">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <h1 class="text-4xl sm:text-5xl font-black text-white">Fixtures</h1>
+                    </div>
+                    <p class="text-gray-300 text-lg">View all matches, results, and upcoming fixtures</p>
+                </div>
 
-    <!-- Filter Section -->
-    <div class="bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-        <h3 class="text-lg font-semibold mb-4 text-white">Filter Matches</h3>
-        <form method="GET" class="space-y-4 md:grid md:grid-cols-5 md:gap-4 md:items-end">
-            <div class="md:col-span-2">
-                <label for="team_search" class="block text-sm font-medium text-gray-300 mb-1">Search Team</label>
-                <input type="text" id="team_search" name="team_search" value="{{ current_team_search }}" placeholder="Enter team name..."
-                    class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm px-3 py-2 text-white">
+                {% if user.is_authenticated and user.is_staff %}
+                <a href="{% url 'create_match' %}" 
+                   class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Create Match
+                </a>
+                {% endif %}
             </div>
-            <div>
-                <label for="match_day" class="block text-sm font-medium text-gray-300 mb-1">Match Day</label>
-                <select id="match_day" name="match_day"
-                    class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm px-3 py-2 text-white">
-                    <option value="">All Match Days</option>
-                    {% for day in match_days %}
-                        <option value="{{ day }}" {% if current_match_day == day|stringformat:"s" %}selected{% endif %}>Match Day {{ day }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label for="league" class="block text-sm font-medium text-gray-300 mb-1">League/Season</label>
-                <select id="league" name="league"
-                    class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm px-3 py-2 text-white">
-                    <option value="">All Leagues</option>
-                    {% for league in leagues %}
-                        <option value="{{ league.id }}" {% if current_league == league.id|stringformat:"s" %}selected{% endif %}>{{ league.get_session_display }} {{ league.year }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors text-sm">Filter</button>
-                <a href="{% url 'match_list' %}" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors text-center text-sm">Clear</a>
-            </div>
-        </form>
-    </div>
 
-    <!-- Upcoming Matches Section -->
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-white mb-4">Upcoming Matches</h2>
-        <div class="bg-gray-800 shadow rounded-lg overflow-hidden">
-            {% include 'partials/match_list.html' with matches=upcoming_matches %}
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                <div class="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                    <div class="text-2xl font-bold text-white">{{ live_matches|length }}</div>
+                    <div class="text-xs text-gray-400">Live Now</div>
+                </div>
+                <div class="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                    <div class="text-2xl font-bold text-green-400">{{ upcoming_matches|length }}</div>
+                    <div class="text-xs text-gray-400">Upcoming</div>
+                </div>
+                <div class="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                    <div class="text-2xl font-bold text-blue-400">{{ finished_matches|length }}</div>
+                    <div class="text-xs text-gray-400">Finished</div>
+                </div>
+                <div class="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                    <div class="text-2xl font-bold text-purple-400">{{ total_matches|default:"0" }}</div>
+                    <div class="text-xs text-gray-400">Total</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Finished Matches Section -->
-    <div>
-        <h2 class="text-2xl font-bold text-white mb-4">Finished Matches</h2>
-        <div class="bg-gray-800 shadow rounded-lg overflow-hidden">
-            {% include 'partials/match_list.html' with matches=finished_matches %}
-        </div>
-    </div>
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        
+        <!-- Filter Section -->
+        <div class="mb-8">
+            <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 shadow-lg">
+                <div class="flex items-center space-x-3 mb-6">
+                    <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                    </svg>
+                    <h3 class="text-xl font-bold text-white">Filter Matches</h3>
+                </div>
+                
+                <form method="GET" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <!-- Team Search -->
+                        <div class="md:col-span-2">
+                            <label for="team_search" class="block text-sm font-medium text-gray-300 mb-2">
+                                Search Team
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <input type="text" 
+                                       id="team_search" 
+                                       name="team_search" 
+                                       value="{{ current_team_search }}" 
+                                       placeholder="Enter team name..."
+                                       class="w-full pl-10 bg-gray-700 border border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm px-4 py-2.5 text-white placeholder-gray-400 transition-all">
+                            </div>
+                        </div>
 
-    <!-- Live Matches Section -->
-    <div>
-        <h2 class="text-2xl font-bold text-white mb-4">Live Matches</h2>
-        <div class="bg-gray-800 shadow rounded-lg overflow-hidden">
-            {% include 'partials/match_list.html' with matches=live_matches %}
+                        <!-- Match Day -->
+                        <div>
+                            <label for="match_day" class="block text-sm font-medium text-gray-300 mb-2">
+                                Match Day
+                            </label>
+                            <select id="match_day" 
+                                    name="match_day"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm px-4 py-2.5 text-white transition-all">
+                                <option value="">All Days</option>
+                                {% for day in match_days %}
+                                    <option value="{{ day }}" {% if current_match_day == day|stringformat:"s" %}selected{% endif %}>
+                                        Day {{ day }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- League/Season -->
+                        <div>
+                            <label for="league" class="block text-sm font-medium text-gray-300 mb-2">
+                                Season
+                            </label>
+                            <select id="league" 
+                                    name="league"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm px-4 py-2.5 text-white transition-all">
+                                <option value="">All Seasons</option>
+                                {% for league in leagues %}
+                                    <option value="{{ league.id }}" {% if current_league == league.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ league.get_session_display }} {{ league.year }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-end space-x-2">
+                            <button type="submit" 
+                                    class="flex-1 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors text-sm font-medium">
+                                Apply
+                            </button>
+                            <a href="{% url 'match_list' %}" 
+                               class="flex-1 bg-gray-700 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors text-center text-sm font-medium">
+                                Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="mb-8">
+            <div class="flex flex-wrap gap-2 bg-gray-800/50 backdrop-blur-sm rounded-xl p-2 border border-gray-700">
+                <button onclick="showSection('live')" 
+                        id="tab-live"
+                        class="tab-button flex-1 min-w-[120px] px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center space-x-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span>Live</span>
+                    <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">{{ live_matches|length }}</span>
+                </button>
+                <button onclick="showSection('upcoming')" 
+                        id="tab-upcoming"
+                        class="tab-button flex-1 min-w-[120px] px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Upcoming</span>
+                    <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">{{ upcoming_matches|length }}</span>
+                </button>
+                <button onclick="showSection('finished')" 
+                        id="tab-finished"
+                        class="tab-button flex-1 min-w-[120px] px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Results</span>
+                    <span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-bold rounded-full">{{ finished_matches|length }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Live Matches Section -->
+        <div id="section-live" class="match-section">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="flex items-center space-x-2">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                    <h2 class="text-2xl font-bold text-white">Live Matches</h2>
+                </div>
+            </div>
+            {% if live_matches %}
+                <div class="space-y-4">
+                    {% include 'partials/match_list.html' with matches=live_matches status='live' %}
+                </div>
+            {% else %}
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-16 text-center">
+                    <div class="w-20 h-20 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">No Live Matches</h3>
+                    <p class="text-gray-400">There are currently no matches being played</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Upcoming Matches Section -->
+        <div id="section-upcoming" class="match-section hidden">
+            <div class="flex items-center space-x-3 mb-6">
+                <svg class="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-white">Upcoming Matches</h2>
+            </div>
+            {% if upcoming_matches %}
+                <div class="space-y-4">
+                    {% include 'partials/match_list.html' with matches=upcoming_matches status='upcoming' %}
+                </div>
+            {% else %}
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-16 text-center">
+                    <div class="w-20 h-20 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">No Upcoming Matches</h3>
+                    <p class="text-gray-400">There are no scheduled matches at this time</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Finished Matches Section -->
+        <div id="section-finished" class="match-section hidden">
+            <div class="flex items-center space-x-3 mb-6">
+                <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-white">Match Results</h2>
+            </div>
+            {% if finished_matches %}
+                <div class="space-y-4">
+                    {% include 'partials/match_list.html' with matches=finished_matches status='finished' %}
+                </div>
+            {% else %}
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-16 text-center">
+                    <div class="w-20 h-20 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">No Results</h3>
+                    <p class="text-gray-400">No finished matches to display</p>
+                </div>
+            {% endif %}
         </div>
     </div>
-  </div>
 </div>
+
+<!-- Tab Navigation Script -->
+<script>
+function showSection(section) {
+    // Hide all sections
+    document.querySelectorAll('.match-section').forEach(el => {
+        el.classList.add('hidden');
+    });
+    
+    // Remove active state from all tabs
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('text-gray-400', 'hover:text-white', 'hover:bg-gray-700');
+    });
+    
+    // Show selected section
+    document.getElementById('section-' + section).classList.remove('hidden');
+    
+    // Add active state to selected tab
+    const activeTab = document.getElementById('tab-' + section);
+    activeTab.classList.add('bg-indigo-600', 'text-white');
+    activeTab.classList.remove('text-gray-400', 'hover:text-white', 'hover:bg-gray-700');
+}
+
+// Initialize with live matches tab
+document.addEventListener('DOMContentLoaded', function() {
+    showSection('live');
+});
+</script>
 {% endblock %}

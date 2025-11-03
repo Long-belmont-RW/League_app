@@ -22,22 +22,24 @@
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 2 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                     Dashboard
                 </a>
-                <a href="#" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
+                <a href="{% url 'teams'%}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h-4a2 2 0 01-2-2V8a2 2 0 012-2h4a2 2 0 012 2v10a2 2 0 01-2 2z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20h4a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                     Teams
                 </a>
-                <a href="#" class="flex items-center text-white bg-gray-700 p-3 rounded-lg transition-colors duration-200">
+                <a href="{% url 'league_table' latest_league.id%}" class="flex items-center text-white bg-gray-700 p-3 rounded-lg transition-colors duration-200">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6m0 6a2 2 0 100-4 2 2 0 000 4zm0 0c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6"></path></svg>
                     Standings
                 </a>
                 <a href="#" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h-4a2 2 0 01-2-2V8a2 2 0 012-2h4a2 2 0 012 2v10a2 2 0 01-2 2z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20h4a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <svg class="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
                     Transfers
                 </a>
-                <a href="#" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
+                <!-- <a href="{% url 'team' coach_team.team.id%}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-5m0 0V9m0 3h6m0-3v5m0 0V9m0 3h6m0-3v5"></path></svg>
                     Players
-                </a>
+                </a> -->
             </nav>
         </div>
 

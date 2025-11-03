@@ -1,105 +1,321 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-900 py-8 px-4">
-    <div class="max-w-6xl mx-auto">
-        <div class="mb-8">
-            <a href="{% url 'teams' %}" class="group inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-gray-800 rounded-xl hover:bg-gray-700 transition-all duration-300">
-                <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div class="min-h-screen bg-gray-900">
+    <!-- Hero Section with Team Banner -->
+    <div class="relative bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+            <a href="{% url 'teams' %}" class="group inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-gray-800/80 backdrop-blur-sm rounded-xl hover:bg-gray-700 transition-all duration-300 border border-gray-700 hover:border-indigo-500">
+                <svg class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
-                Back to all teams
+                Back to Teams
             </a>
         </div>
 
-        <div class="bg-gray-800 rounded-3xl shadow-2xl overflow-hidden">
-            <div class="bg-gray-700 px-8 py-16 text-center">
-                {% if team.logo %}
-                <div class="mb-8">
-                    <div class="w-40 h-40 mx-auto rounded-full bg-white shadow-2xl p-4">
-                        <img src="{{ team.logo.url }}" alt="{{ team.name }} logo" class="w-full h-full object-contain rounded-full">
+        <!-- Team Header -->
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 text-center">
+            {% if team.logo %}
+            <div class="mb-8 relative inline-block">
+                <div class="absolute inset-0 bg-indigo-500 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+                <div class="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto rounded-full bg-gradient-to-br from-gray-700 to-gray-800 shadow-2xl p-1 border-4 border-gray-600">
+                    <div class="w-full h-full bg-white rounded-full p-4">
+                        <img src="{{ team.logo.url }}" alt="{{ team.name }} logo" class="w-full h-full object-contain">
                     </div>
                 </div>
-                {% endif %}
+            </div>
+            {% else %}
+            <div class="mb-8 relative inline-block">
+                <div class="w-32 h-32 sm:w-40 sm:h-40 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 shadow-2xl flex items-center justify-center">
+                    <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            {% endif %}
 
-                <h1 class="text-5xl md:text-6xl font-black text-white mb-6">
-                    {{ team.name }}
-                </h1>
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4">
+                {{ team.name }}
+            </h1>
 
-                {% if team.bio %}
-                <p class="text-white text-xl max-w-3xl mx-auto leading-relaxed opacity-90">
-                    {{ team.bio }}
-                </p>
-                {% endif %}
+            {% if team.bio %}
+            <p class="text-gray-300 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed">
+                {{ team.bio }}
+            </p>
+            {% endif %}
+
+<!-- Season Stats -->
+<div class="mb-12 bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-8">
+    <h2 class="text-2xl font-bold text-white mb-6">Season Statistics</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="text-center">
+            <div class="text-3xl font-bold text-green-400 mb-2">{{ team_season_participation.wins }}</div>
+            <div class="text-sm text-gray-400">Wins</div>
+        </div>
+        <div class="text-center">
+            <div class="text-3xl font-bold text-yellow-400 mb-2">{{ team_season_participation.draws }}</div>
+            <div class="text-sm text-gray-400">Draws</div>
+        </div>
+        <div class="text-center">
+            <div class="text-3xl font-bold text-red-400 mb-2">{{ team_season_participation.losses }}</div>
+            <div class="text-sm text-gray-400">Losses</div>
+        </div>
+        <div class="text-center">
+            <div class="text-3xl font-bold text-indigo-400 mb-2">{{ team_season_participation.goals_scored }}</div>
+            <div class="text-sm text-gray-400">Goals</div>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        
+        <!-- Current Players Section -->
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <h2 class="text-3xl font-bold text-white">Squad</h2>
+                </div>
+                <span class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold rounded-full shadow-lg">
+                    {{ current_players|length }} player{{ current_players|length|pluralize }}
+                </span>
             </div>
 
-            <div class="px-8 py-12 bg-gray-800">
-                <div class="flex items-center justify-between mb-10">
-                    <h2 class="text-4xl font-bold text-white">Current Players</h2>
-                    <span class="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-full">
-                        {{ current_players|length }} player{{ current_players|length|pluralize }}
-                    </span>
-                </div>
+            {% if current_players %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {% for player in current_players %}
+                <a href="{% url 'player_profile' player.id %}" class="group block">
+                    <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-5 border border-gray-700 hover:border-indigo-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/20 overflow-hidden">
+                        
+                        <!-- Background Effect -->
+                        <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10"></div>
+                        </div>
 
-                {% if current_players %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {% for player in current_players %}
-                    <a href="{% url 'player_profile' player.id %}" class="block bg-gray-700 rounded-2xl p-6 text-white hover:bg-gray-600 transition-colors duration-200">
-                        <div class="flex items-center space-x-4 mb-4">
-                            <div class="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center shadow-lg">
+                        <!-- Content -->
+                        <div class="relative flex items-center space-x-4">
+                            <!-- Player Avatar -->
+                            <div class="flex-shrink-0 relative">
                                 {% if player.picture %}
-                                    <img src="{{ player.picture.url }}" alt="{{ player.first_name }}" class="w-16 h-16 rounded-full object-cover">
+                                <div class="w-16 h-16 rounded-full border-2 border-gray-600 group-hover:border-indigo-500 transition-colors overflow-hidden">
+                                    <img src="{{ player.picture.url }}" alt="{{ player.first_name }}" class="w-full h-full object-cover">
+                                </div>
                                 {% else %}
-                                    <span class="text-white font-bold text-xl">{{ player.first_name|first|default:player.last_name|first }}</span>
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center border-2 border-gray-600 group-hover:border-indigo-500 transition-colors">
+                                    <span class="text-white font-bold text-xl">{{ player.first_name|first|upper }}{{ player.last_name|first|upper }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if player.jersey_number %}
+                                <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-indigo-600 rounded-full border-2 border-gray-800 flex items-center justify-center">
+                                    <span class="text-white font-bold text-xs">#{{ player.jersey_number }}</span>
+                                </div>
                                 {% endif %}
                             </div>
-                            <div class="flex-1">
-                                <h3 class="font-bold text-lg mb-1">{{ player.first_name }} {{ player.last_name }}</h3>
+
+                            <!-- Player Info -->
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-bold text-white mb-1 truncate group-hover:text-indigo-300 transition-colors">
+                                    {{ player.first_name }} {{ player.last_name }}
+                                </h3>
                                 {% if player.position %}
-                                <p class="text-sm text-gray-400 mb-1">{{ player.get_position_display }}</p>
+                                <p class="text-sm text-gray-400 truncate">{{ player.get_position_display }}</p>
+                                {% else %}
+                                <p class="text-sm text-gray-500 italic">No position</p>
                                 {% endif %}
-                                {% if player.jersey_number %}
-                                <p class="text-sm font-bold text-indigo-400">#{{ player.jersey_number }}</p>
-                                {% endif %}
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="flex-shrink-0">
+                                <svg class="w-5 h-5 text-gray-600 group-hover:text-indigo-400 transform group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
                             </div>
                         </div>
-                    </a>
-                    {% endfor %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-16 text-center">
+                <div class="flex justify-center mb-6">
+                    <div class="w-24 h-24 bg-gray-700/50 rounded-full flex items-center justify-center">
+                        <svg class="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </div>
                 </div>
-                {% else %}
-                <div class="bg-gray-700 rounded-2xl p-16 text-center text-white">
-                    <h3 class="text-2xl font-bold mb-4">No Players Yet</h3>
-                    <p class="text-lg text-gray-400">Players will appear here once they're added to the team.</p>
+                <h3 class="text-2xl font-bold text-white mb-3">No Players Yet</h3>
+                <p class="text-gray-400 max-w-md mx-auto">
+                    This team doesn't have any players assigned yet. Players will appear here once they're added to the roster.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Matches Section -->
+        <div>
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h2 class="text-3xl font-bold text-white">Matches</h2>
                 </div>
-                {% endif %}
+                <div class="flex items-center space-x-2">
+                    <button data-match-filter="all" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors">
+                        All
+                    </button>
+                    <button data-match-filter="upcoming" class="px-4 py-2 bg-gray-700 text-gray-300 text-sm rounded-lg hover:bg-gray-600 transition-colors">
+                        Upcoming
+                    </button>
+                    <button data-match-filter="past" class="px-4 py-2 bg-gray-700 text-gray-300 text-sm rounded-lg hover:bg-gray-600 transition-colors">
+                        Past
+                    </button>
+                </div>
             </div>
 
-            <!-- Matches Section -->
-            <div class="px-8 py-12 bg-gray-800 border-t border-gray-700">
-                <h2 class="text-4xl font-bold text-white mb-10">Matches</h2>
-                <div class="space-y-4">
-                    {% for match in matches %}
-                        <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between">
-                            <div>
-                                <p class="text-lg font-semibold text-white">{{ match.home_team.name }} vs {{ match.away_team.name }}</p>
-                                <p class="text-sm text-gray-400">{{ match.date|date:"F d, Y" }}</p>
+            <div class="space-y-4">
+                {% for match in matches %}
+                <div class="group bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 hover:border-indigo-500 transition-all duration-300 hover:shadow-lg" data-match-date="{{ match.date|date:'Y-m-d' }}">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <!-- Match Info -->
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <!-- Date Badge -->
+                                <span class="px-3 py-1 bg-gray-700 text-gray-300 text-xs font-semibold rounded-full">
+                                    {{ match.date|date:"M d, Y" }}
+                                </span>
+                                <span class="text-sm text-gray-400">{{ match.date|date:"H:i" }}</span>
                             </div>
-                            <div class="text-lg font-bold text-white">
-                                {{ match.home_score }} - {{ match.away_score }}
+                            
+                            <!-- Teams -->
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-1 text-right">
+                                    <h3 class="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                                        {{ match.home_team.name }}
+                                    </h3>
+                                </div>
+                                
+                                <!-- Score -->
+                                <div class="flex items-center space-x-3 px-6 py-3 bg-gray-700/50 backdrop-blur-sm rounded-xl border border-gray-600">
+                                    <span class="text-2xl font-bold text-white">{{ match.home_score }}</span>
+                                    <span class="text-gray-500">-</span>
+                                    <span class="text-2xl font-bold text-white">{{ match.away_score }}</span>
+                                </div>
+                                
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                                        {{ match.away_team.name }}
+                                    </h3>
+                                </div>
                             </div>
-                            {% if user.is_authenticated and user.role == 'admin' %}
-                            <div class="flex space-x-2">
-                                <a href="{% url 'manage_lineup' match.id %}" class="px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700">Set Lineup</a>
-                                <a href="{% url 'match_details' match.id %}" class="px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">Update Events</a>
-                            </div>
-                            {% endif %}
                         </div>
-                    {% empty %}
-                        <p class="text-gray-400">No matches scheduled for this team in the active season.</p>
-                    {% endfor %}
+
+                        <!-- Admin Actions -->
+                        {% if user.is_authenticated and user.role == 'admin' %}
+                        <div class="flex flex-wrap gap-2 lg:flex-col lg:w-auto">
+                            <a href="{% url 'manage_lineup' match.id %}" 
+                               class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                Set Lineup
+                            </a>
+                            <a href="{% url 'match_details' match.id %}" 
+                               class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Update Events
+                            </a>
+                        </div>
+                        {% else %}
+                        <a href="{% url 'match_details' match.id %}" 
+                           class="inline-flex items-center text-indigo-400 hover:text-indigo-300 transition-colors text-sm font-medium">
+                            View Details
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
+                {% empty %}
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-16 text-center">
+                    <div class="flex justify-center mb-6">
+                        <div class="w-24 h-24 bg-gray-700/50 rounded-full flex items-center justify-center">
+                            <svg class="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">No Matches Yet</h3>
+                    <p class="text-gray-400 max-w-md mx-auto">
+                        This team doesn't have any scheduled matches in the active season. Check back later for upcoming fixtures!
+                    </p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('[data-match-filter]');
+    const matches = document.querySelectorAll('[data-match-date]');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.dataset.matchFilter;
+
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => {
+                btn.classList.remove('bg-indigo-600');
+                btn.classList.add('bg-gray-700');
+            });
+
+            // Add active class to the clicked button
+            this.classList.add('bg-indigo-600');
+            this.classList.remove('bg-gray-700');
+
+            matches.forEach(match => {
+                const matchDate = new Date(match.dataset.matchDate);
+                matchDate.setHours(0, 0, 0, 0);
+
+                if (filter === 'all') {
+                    match.style.display = 'block';
+                } else if (filter === 'upcoming') {
+                    if (matchDate >= today) {
+                        match.style.display = 'block';
+                    } else {
+                        match.style.display = 'none';
+                    }
+                } else if (filter === 'past') {
+                    if (matchDate < today) {
+                        match.style.display = 'block';
+                    } else {
+                        match.style.display = 'none';
+                    }
+                }
+            });
+        });
+    });
+});
+</script>
 {% endblock content %}

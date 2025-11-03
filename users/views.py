@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Q, F
@@ -21,11 +21,15 @@ from django.utils import timezone
 
 from .utils import get_season_progress, get_team_season_progress, get_win_ratio
 from .forms import UserRegistrationForm, EmailAuthenticationForm, InvitationRegistrationForm, CustomUserCreationForm, UserAccountForm, UserProfileForm, PlayerCreationForm
+from django.contrib.auth.forms import PasswordChangeForm
 from content.models import Invitation
 import logging
 import os
 import random
 import string
+
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy
 
 #set up logging
 logger = logging.getLogger(__name__)
@@ -501,56 +505,62 @@ def create_user_view(request):
 @login_required
 def profile_edit_view(request):
     user = request.user
-    # get_or_create is good practice here
     profile, _ = UserProfile.objects.get_or_create(user=user)
-
+    password_form = PasswordChangeForm(user, request.POST if 'change_password' in request.POST else None)
+    
     if request.method == 'POST':
+        if 'change_password' in request.POST:
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)  # Important!
+                messages.success(request, 'Your password was successfully updated!')
+                return redirect('profile_edit')
+            else:
+                messages.error(request, 'Please correct the password change errors below.')
+        
         account_form = UserAccountForm(request.POST, instance=user)
-        # Always pass request.FILES to the form that handles the ImageField
         profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
 
         if account_form.is_valid() and profile_form.is_valid():
-            # Use a single transaction to ensure data integrity
             with transaction.atomic():
                 account_form.save()
-
-                # Save the form but don't commit to the database yet
-                # This gives us the model instance with the form's data
                 profile_instance = profile_form.save(commit=False)
-
-                # Check if the user specifically requested to remove the image
-                # and didn't upload a new one.
+                
                 remove_image_checked = request.POST.get('remove_image')
                 new_image_uploaded = 'image' in request.FILES
 
                 if remove_image_checked and not new_image_uploaded:
-                    # Delete the old image file from storage
                     if profile_instance.image:
                         profile_instance.image.delete(save=False)
-                    # Set the image field to None
                     profile_instance.image = None
-
-                # Now, save the profile instance to the database
+                
                 profile_instance.save()
-
-                # Save ManyToMany relations (e.g., favorite_teams)
                 profile_form.save_m2m()
 
             messages.success(request, 'Profile updated successfully.')
             next_url = request.POST.get('next') or request.GET.get('next')
-            return redirect(next_url or 'home')
+            return redirect(next_url or 'profile_edit')
         else:
-            messages.error(request, 'Please correct the errors below.')
+            # Only show profile form errors if it's not a password change attempt
+            if 'change_password' not in request.POST:
+                messages.error(request, 'Please correct the profile errors below.')
+
     else:
         account_form = UserAccountForm(instance=user)
         profile_form = UserProfileForm(instance=profile)
 
     context = {
-        'account_form': account_form,
-        'profile_form': profile_form,
+        'account_form': account_form if 'account_form' in locals() else UserAccountForm(instance=user),
+        'profile_form': profile_form if 'profile_form' in locals() else UserProfileForm(instance=profile),
+        'password_form': password_form,
         'next': request.GET.get('next', ''),
     }
     return render(request, 'profile_edit.html', context)
+
+
+
+class CustomPasswordChangeView(PasswordChangeView):
+    success_url = reverse_lazy('profile_edit')
 
 @login_required
 def add_player_view(request):

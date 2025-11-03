@@ -13,6 +13,11 @@
                     Spring {{ league.year }}
                 {% endif %}
             </p>
+            <div class="mt-4">
+                <a href="{% url 'top_stats' league.id %}" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-indigo-700 transition-colors duration-300">
+                    View Top Stats
+                </a>
+            </div>
         </div>
 
         <!-- Desktop Table -->
@@ -89,6 +94,9 @@
             </div>
             {% endfor %}
         </div>
+
+        
+        
     </div>
 </div>
 

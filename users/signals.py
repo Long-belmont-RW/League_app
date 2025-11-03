@@ -1,10 +1,12 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from .models import UserProfile
-from league.models import Coach, CoachRoles, Player
+from .models import UserProfile, Notification
+from league.models import Coach, CoachRoles, Player, LineupPlayer
 from django.db import transaction
 import logging
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 User = get_user_model()
@@ -75,15 +77,6 @@ def create_user_profile_and_linked_object(sender, instance, created, **kwargs):
                 else:
                     logger.debug(f"Player object already linked to UserProfile for user: {instance.username}")
 
-            # Optional: Handle cases where a user's role changes from 'coach'/'player' to something else.
-            # You might want to unlink or delete the Coach/Player object here.
-            # This logic can become complex if you need to manage transitions between roles.
-            # For simplicity, this signal focuses on creation and linking.
-            # Example: if instance.role not in ['coach', 'player'] and user_profile.coach:
-            #     user_profile.coach = None
-            #     user_profile.save()
-            #     logger.info(f"Unlinked Coach from UserProfile for user {instance.username} due to role change.")
-
         except Exception as e:
             logger.error(f"Error in post_save signal for User {instance.username} (ID: {instance.id}): {e}", exc_info=True)
             raise # Re-raise to ensure the transaction is rolled back
@@ -93,39 +86,21 @@ def create_user_profile_and_linked_object(sender, instance, created, **kwargs):
 def delete_user_profile_on_coach_delete(sender, instance, **kwargs):
     """
     Signal handler to delete the associated UserProfile and User when a Coach object is deleted.
-    This ensures that if a Coach is removed, their profile and user account are also cleaned up.
-
-    Args:
-        sender: The model class that sent the signal (Coach in this case).
-        instance: The actual instance of the Coach that was just deleted.
-        kwargs: Additional keyword arguments.
     """
     with transaction.atomic():
         try:
-            # Find the UserProfile that was linked to this deleted Coach instance.
-            # We use select_related('user') to optimize fetching the related User object
-            # if we needed to access its attributes directly, though for deletion, it's not strictly necessary
-            # as CASCADE will handle the User deletion.
             user_profile = UserProfile.objects.select_related('user').get(coach=instance)
-
-            # Log the user and profile being deleted before deletion
             user_username = user_profile.user.username if user_profile.user else "N/A"
             logger.info(
                 f"Deleting UserProfile (ID: {user_profile.id}) and User (Username: {user_username}) "
                 f"due to Coach (ID: {instance.id}) deletion."
             )
-
-            # Delete the UserProfile.
-            # This will automatically trigger the deletion of the associated User
-            # because UserProfile.user has on_delete=models.CASCADE.
             user_profile.delete()
 
         except UserProfile.DoesNotExist:
-            # This can happen if the UserProfile was already deleted, or never existed for this coach.
             logger.warning(f"No UserProfile found for deleted Coach (ID: {instance.id}). No action needed.")
         except Exception as e:
             logger.error(f"Error deleting UserProfile/User for Coach (ID: {instance.id}): {e}", exc_info=True)
-            # Re-raise to ensure the transaction rolls back if this is part of a larger operation
             raise
 
 
@@ -133,37 +108,75 @@ def delete_user_profile_on_coach_delete(sender, instance, **kwargs):
 def delete_user_profile_on_player_delete(sender, instance, **kwargs):
     """
     Signal handler to delete the associated UserProfile and User when a Player object is deleted.
-    This ensures that if a Player is removed, their profile and user account are also cleaned up.
-
-    Args:
-        sender: The model class that sent the signal (Player in this case).
-        instance: The actual instance of the Player that was just deleted.
-        kwargs: Additional keyword arguments.
     """
     with transaction.atomic():
         try:
-            # Find the UserProfile that was linked to this deleted Player instance.
             user_profile = UserProfile.objects.select_related('user').get(player=instance)
-
-            # Log the user and profile being deleted before deletion
             user_username = user_profile.user.username if user_profile.user else "N/A"
             logger.info(
                 f"Deleting UserProfile (ID: {user_profile.id}) and User (Username: {user_username}) "
                 f"due to Player (ID: {instance.id}) deletion."
             )
-
-            # Delete the UserProfile.
-            # This will automatically trigger the deletion of the associated User
-            # because UserProfile.user has on_delete=models.CASCADE.
             user_profile.delete()
 
         except UserProfile.DoesNotExist:
-            # This can happen if the UserProfile was already deleted, or never existed for this player.
             logger.warning(f"No UserProfile found for deleted Player (ID: {instance.id}). No action needed.")
         except Exception as e:
             logger.error(f"Error deleting UserProfile/User for Player (ID: {instance.id}): {e}", exc_info=True)
-            # Re-raise to ensure the transaction rolls back if this is part of a larger operation
             raise
 
+@receiver(post_save, sender=LineupPlayer)
+def send_lineup_add_notification(sender, instance, created, **kwargs):
+    """Send notification to player when added to a lineup."""
+    if created:
+        print(f"DEBUG: send_lineup_add_notification triggered for player {instance.player.id}")
+        try:
+            user = instance.player.userprofile.user
+            print(f"DEBUG: User found for notification: {user.username}")
+            match_info = f"{instance.lineup.match.home_team} vs {instance.lineup.match.away_team} on {instance.lineup.match.date.strftime('%Y-%m-%d')}"
+            
+            # Create in-app notification
+            Notification.objects.create(
+                user=user,
+                title="You've been selected for a match lineup!",
+                message=f"You have been selected for the match: {match_info}. Check the lineup for details."
+            )
+
+            # Send email
+            send_mail(
+                subject='You have been selected for a match lineup!',
+                message=f"You have been selected for the match: {match_info}. Please log in to view the full lineup.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            logger.error(f"Error sending lineup add notification for player {instance.player.id}: {e}", exc_info=True)
 
 
+@receiver(post_delete, sender=LineupPlayer)
+def send_lineup_remove_notification(sender, instance, **kwargs):
+    """Send notification to player when removed from a lineup."""
+    print(f"DEBUG: send_lineup_remove_notification triggered for player {instance.player.id}")
+    try:
+        user = instance.player.userprofile.user
+        print(f"DEBUG: User found for notification: {user.username}")
+        match_info = f"{instance.lineup.match.home_team} vs {instance.lineup.match.away_team} on {instance.lineup.match.date.strftime('%Y-%m-%d')}"
+
+        # Create in-app notification
+        Notification.objects.create(
+            user=user,
+            title="You've been removed from a match lineup",
+            message=f"You have been removed from the lineup for the match: {match_info}."
+        )
+
+        # Send email
+        send_mail(
+            subject='You have been removed from a match lineup',
+            message=f"You have been removed from the lineup for the match: {match_info}.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        logger.error(f"Error sending lineup remove notification for player {instance.player.id}: {e}", exc_info=True)

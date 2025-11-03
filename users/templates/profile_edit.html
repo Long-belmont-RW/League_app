@@ -4,18 +4,23 @@
 {% block title %}Edit Profile{% endblock %}
 
 {% block content %}
-<div class="w-full max-w-md mx-auto text-white place-content-center backdrop-blur py-5">
-    <div class="bg-gray-800 rounded-2xl shadow-xl border-gray-700 overflow-hidden">
+<div class="w-full max-w-4xl mx-auto text-white py-8 px-4">
+    <!-- Profile Edit Section -->
+    <div class="bg-gray-800 rounded-2xl shadow-xl border border-gray-700 overflow-hidden mb-8">
         <div class="bg-gray-700 px-8 py-6 text-center">
-            <div class="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">Edit Your Profile</h1>
+                    {% if needs_completion %}
+                        <p class="text-sm text-yellow-200 mt-1">Please complete your profile information</p>
+                    {% endif %}
+                </div>
             </div>
-            <h1 class="text-2xl font-bold mb-2">Edit Your Profile</h1>
-            {% if needs_completion %}
-                <p class="text-sm text-yellow-300">Please fill in your birth date and gender to complete your profile.</p>
-            {% endif %}
         </div>
 
         <div class="p-8">
@@ -26,137 +31,235 @@
                 {% endif %}
 
                 {% if account_form.errors or profile_form.errors %}
-                    <div class="bg-red-900 border border-red-700 text-red-300 px-4 py-3 rounded relative">
-                        {% for field, errors in account_form.errors.items %}
-                            {% for error in errors %}
-                                <p class="text-sm">{{ error }}</p>
-                            {% endfor %}
-                        {% endfor %}
-                        {% for field, errors in profile_form.errors.items %}
-                            {% for error in errors %}
-                                <p class="text-sm">{{ error }}</p>
-                            {% endfor %}
-                        {% endfor %}
+                    <div class="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                {% for field, errors in account_form.errors.items %}
+                                    {% for error in errors %}
+                                        <p class="text-sm">{{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for field, errors in profile_form.errors.items %}
+                                    {% for error in errors %}
+                                        <p class="text-sm">{{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 {% endif %}
 
-                <div>
-                    <label for="{{ account_form.username.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">Username</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                        </div>
-                        <input type="text" id="{{ account_form.username.id_for_label }}" name="{{ account_form.username.name }}"
-                               class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-4 py-3 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700"
-                               placeholder="Enter your username" value="{{ account_form.username.value|default:'' }}" required>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="{{ account_form.email.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">Email</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <input type="email" id="{{ account_form.email.id_for_label }}" name="{{ account_form.email.name }}"
-                               class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-4 py-3 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700"
-                               placeholder="Enter your email" value="{{ account_form.email.value|default:'' }}" required>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="{{ account_form.first_name.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">First name</label>
-                        <input type="text" id="{{ account_form.first_name.id_for_label }}" name="{{ account_form.first_name.name }}"
-                               class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pr-4 py-3 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700"
-                               value="{{ account_form.first_name.value|default:'' }}">
-                    </div>
-                    <div>
-                        <label for="{{ account_form.last_name.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">Last name</label>
-                        <input type="text" id="{{ account_form.last_name.id_for_label }}" name="{{ account_form.last_name.name }}"
-                               class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pr-4 py-3 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700"
-                               value="{{ account_form.last_name.value|default:'' }}">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="{{ account_form.birth.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">Birth date</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        {% render_field account_form.birth type="date" class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-4 py-3 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700" %}
-                    </div>
-                </div>
-
-                <div>
-                    <label for="{{ account_form.gender.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">Gender</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14a5 5 0 100-10 5 5 0 000 10zm0 0v6m-3-3h6" />
-                            </svg>
-                        </div>
-                        {% render_field account_form.gender class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full py-3 pl-10 pr-8 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700" %}
-                    </div>
-                </div>
-
-                <div>
-                    <label for="{{ profile_form.bio.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">Bio</label>
-                    <textarea id="{{ profile_form.bio.id_for_label }}" name="{{ profile_form.bio.name }}" rows="4"
-                              class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pr-4 py-3 transition-all duration-200 hover:bg-gray-600 focus:bg-gray-700">{{ profile_form.bio.value|default:'' }}</textarea>
-                </div>
-
-                <div>
-                    <label for="{{ profile_form.favorite_teams.id_for_label }}" class="block mb-2 text-sm font-semibold text-gray-400">Favorite teams</label>
-                    <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
-                        {{ profile_form.favorite_teams }}
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1">Select one or more teams to follow.</p>
-                </div>
-
-                <div>
-                    <label class="block mb-2 text-sm font-semibold text-gray-400">Profile Image</label>
-                    <div class="border border-gray-600 rounded-xl p-4 bg-gray-700/40">
-                        {% if request.user.userprofile and request.user.userprofile.image %}
-                            <div class="flex items-center gap-4 mb-4">
-                                <img src="{{ request.user.userprofile.image.url }}" alt="Current profile image" class="w-16 h-16 rounded-lg object-cover border border-gray-600" />
-                                <div class="text-sm text-gray-300">
-                                    <p class="mb-1">Current image</p>
-                                    <a href="{{ request.user.userprofile.image.url }}" class="text-indigo-400 underline" target="_blank">Open full size</a>
+                <!-- Account Information Section -->
+                <div class="space-y-6">
+                    <h2 class="text-lg font-semibold text-gray-300 pb-2 border-b border-gray-700">Account Information</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label for="{{ account_form.username.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-300">Username</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
                                 </div>
+                                <input type="text" id="{{ account_form.username.id_for_label }}" name="{{ account_form.username.name }}"
+                                       class="bg-gray-700/50 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-11 pr-4 py-3 transition-all duration-200 hover:bg-gray-700"
+                                       placeholder="Enter your username" value="{{ account_form.username.value|default:'' }}" required>
                             </div>
-                        {% endif %}
-                        <div class="space-y-3">
-                            <input type="file" id="{{ profile_form.image.id_for_label }}" name="{{ profile_form.image.name }}"
-                                   class="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700" />
-                            {% if request.user.userprofile and request.user.userprofile.image %}
-                                <label class="inline-flex items-center gap-2 text-sm text-gray-300">
-                                    <input type="checkbox" name="remove_image" class="form-checkbox h-4 w-4 text-indigo-600 rounded" />
-                                    Remove current image
-                                </label>
-                                <p class="text-xs text-gray-400">If you select a new image, it will replace the current one regardless of the remove option.</p>
-                            {% endif %}
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label for="{{ account_form.email.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-300">Email</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <input type="email" id="{{ account_form.email.id_for_label }}" name="{{ account_form.email.name }}"
+                                       class="bg-gray-700/50 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-11 pr-4 py-3 transition-all duration-200 hover:bg-gray-700"
+                                       placeholder="Enter your email" value="{{ account_form.email.value|default:'' }}" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="{{ account_form.first_name.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-300">First name</label>
+                            <input type="text" id="{{ account_form.first_name.id_for_label }}" name="{{ account_form.first_name.name }}"
+                                   class="bg-gray-700/50 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full px-4 py-3 transition-all duration-200 hover:bg-gray-700"
+                                   placeholder="First name" value="{{ account_form.first_name.value|default:'' }}">
+                        </div>
+                        
+                        <div>
+                            <label for="{{ account_form.last_name.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-300">Last name</label>
+                            <input type="text" id="{{ account_form.last_name.id_for_label }}" name="{{ account_form.last_name.name }}"
+                                   class="bg-gray-700/50 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full px-4 py-3 transition-all duration-200 hover:bg-gray-700"
+                                   placeholder="Last name" value="{{ account_form.last_name.value|default:'' }}">
+                        </div>
+
+                        <div>
+                            <label for="{{ account_form.birth.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-300">Birth date</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                {% render_field account_form.birth type="date" class="bg-gray-700/50 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-11 pr-4 py-3 transition-all duration-200 hover:bg-gray-700" %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="{{ account_form.gender.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-300">Gender</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                </div>
+                                {% render_field account_form.gender class="bg-gray-700/50 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full py-3 pl-11 pr-8 transition-all duration-200 hover:bg-gray-700 appearance-none" %}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit"
-                        class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition duration-200 transform hover:scale-105">
-                    Save Changes
+                <!-- Profile Information Section -->
+                <div class="space-y-6">
+                    <h2 class="text-lg font-semibold text-gray-300 pb-2 border-b border-gray-700">Profile Information</h2>
+                    
+                    <div>
+                        <label for="{{ profile_form.bio.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-300">Bio</label>
+                        <textarea id="{{ profile_form.bio.id_for_label }}" name="{{ profile_form.bio.name }}" rows="4"
+                                  class="bg-gray-700/50 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full px-4 py-3 transition-all duration-200 hover:bg-gray-700 resize-none"
+                                  placeholder="Tell us about yourself...">{{ profile_form.bio.value|default:'' }}</textarea>
+                    </div>
+
+                    <div>
+                        <label for="{{ profile_form.favorite_teams.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-300">Favorite teams</label>
+                        <div class="bg-gray-700/30 border border-gray-600 rounded-lg p-4 space-y-2 max-h-64 overflow-y-auto">
+                            {{ profile_form.favorite_teams }}
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Hold Ctrl (Cmd on Mac) to select multiple teams</p>
+                    </div>
+
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Profile Image</label>
+                        <div class="bg-gray-700/30 border border-gray-600 rounded-lg p-6">
+                            {% if request.user.userprofile and request.user.userprofile.image %}
+                                <div class="flex items-center gap-4 mb-4 pb-4 border-b border-gray-600">
+                                    <img src="{{ request.user.userprofile.image.url }}" alt="Current profile image" class="w-20 h-20 rounded-lg object-cover border-2 border-gray-600 shadow-lg" />
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-300 mb-1">Current image</p>
+                                        <a href="{{ request.user.userprofile.image.url }}" class="text-indigo-400 hover:text-indigo-300 text-sm underline transition-colors" target="_blank">View full size →</a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="space-y-4">
+                                <div>
+                                    <input type="file" id="{{ profile_form.image.id_for_label }}" name="{{ profile_form.image.name }}" accept="image/*"
+                                           class="block w-full text-sm text-gray-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:cursor-pointer file:transition-colors" />
+                                </div>
+                                {% if request.user.userprofile and request.user.userprofile.image %}
+                                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-gray-200 transition-colors">
+                                        <input type="checkbox" name="remove_image" class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-2 focus:ring-indigo-500" />
+                                        <span>Remove current image</span>
+                                    </label>
+                                    <p class="text-xs text-gray-400">Uploading a new image will replace the current one</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit"
+                            class="flex-1 py-3 px-6 bg-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl">
+                        Save Changes
+                    </button>
+                    <a href="{% url 'home' %}" 
+                       class="py-3 px-6 bg-gray-700 hover:bg-gray-600 text-gray-200 font-semibold rounded-lg shadow-lg transition-all duration-200 border border-gray-600">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Password Change Section - Separate Card -->
+    <div class="bg-gray-800 rounded-2xl shadow-xl border border-gray-700 overflow-hidden">
+        <div class="bg-gray-700 px-8 py-6 text-center">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold">Change Password</h2>
+                    <p class="text-sm text-white/80 mt-1">Update your account security</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-8">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if password_form.errors %}
+                    <div class="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                {% for field, errors in password_form.errors.items %}
+                                    {% for error in errors %}
+                                        <p class="text-sm">{{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% for field in password_form %}
+                    <div>
+                        <label for="{{ field.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-300">{{ field.label }}</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            {% render_field field type="password" class="bg-gray-700/50 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 block w-full pl-11 pr-4 py-3 transition-all duration-200 hover:bg-gray-700" %}
+                        </div>
+                        {% if field.help_text %}
+                            <p class="text-xs text-gray-400 mt-1">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" name="change_password"
+                        class="w-full py-3 px-6 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl">
+                    Change Password
                 </button>
             </form>
         </div>
+    </div>
 
-        <div class="px-8 pb-8 text-center">
-            <a href="{% url 'home' %}" class="text-indigo-400 hover:underline text-sm">Back to home</a>
-        </div>
+    <!-- Back Link -->
+    <div class="text-center mt-8">
+        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to home
+        </a>
     </div>
 </div>
 {% endblock %}
