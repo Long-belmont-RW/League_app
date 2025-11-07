@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-4">Manage Team of the Week</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <h2 class="text-xl font-semibold mb-4">Details</h2>
+            {{ form.as_p }}
+        </div>
+
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <h2 class="text-xl font-semibold mb-4">Players</h2>
+            {{ formset.management_form }}
+            {% for form in formset %}
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    {{ form.as_p }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Save Team of the Week
+        </button>
+    </form>
+</div>
+{% endblock %}

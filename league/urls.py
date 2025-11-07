@@ -16,4 +16,6 @@ urlpatterns = [
     path('matches/<int:match_id>/lineup/', views.manage_lineup_view, name='manage_lineup'),
     path('player/<int:player_id>/', views.player_profile, name='player_profile'),
     path('match/<int:match_id>/details/', views.match_details, name='match_details'),
+    path('manage-team-of-the-week/', views.manage_team_of_the_week, name='manage_team_of_the_week'),
+    path('team-of-the-week/', views.team_of_the_week_view, name='team_of_the_week'),
 ]

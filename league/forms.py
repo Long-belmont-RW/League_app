@@ -3,7 +3,7 @@ from django import forms
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.utils import timezone
 from django.db.models import Q, Sum
-from .models import Match, PlayerStats, PlayerSeasonParticipation, Player, Lineup, MatchStatus, TeamSeasonParticipation, MatchEvent, LineupPlayer
+from .models import Match, PlayerStats, PlayerSeasonParticipation, Player, Lineup, MatchStatus, TeamSeasonParticipation, MatchEvent, LineupPlayer, TeamOfTheWeek, TeamOfTheWeekPlayer
 
 from django.forms import BaseInlineFormSet
 class MatchForm(forms.ModelForm):
@@ -365,3 +365,24 @@ class MatchEventForm(forms.ModelForm):
 
 class PlayerForm(forms.ModelForm):
     pass
+
+# --- Team of the Week Forms ---
+
+class TeamOfTheWeekForm(forms.ModelForm):
+    class Meta:
+        model = TeamOfTheWeek
+        fields = ['league', 'week_number']
+
+class TeamOfTheWeekPlayerForm(forms.ModelForm):
+    class Meta:
+        model = TeamOfTheWeekPlayer
+        fields = ['player', 'position']
+
+TeamOfTheWeekPlayerFormSet = forms.modelformset_factory(
+    TeamOfTheWeekPlayer,
+    form=TeamOfTheWeekPlayerForm,
+    extra=11,
+    max_num=11,
+    validate_max=True,
+    can_delete=True
+)

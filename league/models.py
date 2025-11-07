@@ -514,3 +514,34 @@ class Lineup(models.Model):
 
     def get_substitutes(self):
         return self.lineupplayer_set.filter(is_starter=False).select_related('player')
+
+
+# --- Team of the Week ---
+class TeamOfTheWeekPlayer(models.Model):
+    class Position(models.TextChoices):
+        GOALKEEPER = 'GK', 'Goalkeeper'
+        DEFENDER = 'DEF', 'Defender'
+        MIDFIELDER = 'MID', 'Midfielder'
+        FORWARD = 'FWD', 'Forward'
+
+    team_of_the_week = models.ForeignKey('TeamOfTheWeek', on_delete=models.CASCADE)
+    player = models.ForeignKey('Player', on_delete=models.CASCADE)
+    position = models.CharField(
+        max_length=3,
+        choices=Position.choices,
+        default=Position.DEFENDER
+    )
+
+    def __str__(self):
+        return f"{self.player.first_name} {self.player.last_name} ({self.get_position_display()}) on {self.team_of_the_week}"
+
+class TeamOfTheWeek(models.Model):
+    league = models.ForeignKey('League', on_delete=models.CASCADE)
+    week_number = models.IntegerField()
+    players = models.ManyToManyField('Player', through=TeamOfTheWeekPlayer, related_name='teams_of_the_week')
+
+    class Meta:
+        unique_together = ('league', 'week_number')
+
+    def __str__(self):
+        return f"Team of the Week for {self.league} - Week {self.week_number}"

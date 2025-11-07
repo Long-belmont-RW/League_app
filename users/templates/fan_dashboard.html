@@ -1,146 +1,313 @@
 {% extends 'base.html' %}
 
+{% block navbar_classes %}lg:hidden{% endblock %}
+
 {% block content %}
-<div class="flex flex-col lg:flex-row min-h-screen bg-gray-900 text-gray-100 font-sans">
-    <div id="fan-sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-4 lg:p-6 flex flex-col justify-between z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
-        <div>
-            <div class="flex items-center mb-8">
+<div class="flex min-h-screen bg-gray-900">
+    <!-- Sidebar -->
+    <div id="fan-sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 border-r border-gray-700 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+        <!-- Profile Section -->
+        <div class="p-6 border-b border-gray-700">
+            <div class="flex items-center space-x-3">
                 {% if fan_profile and fan_profile.image %}
-                    <img src="{{ fan_profile.image.url }}" alt="Fan Profile" class="w-10 h-10 rounded-full ">
+                <img src="{{ fan_profile.image.url }}" alt="Fan Profile" class="w-12 h-12 rounded-full ring-2 ring-indigo-500">
                 {% else %}
-                    <img
-          src='https://placehold.co/40x40/00b894/ffffff?text={{ user.username|slice:":1" }}'
-          alt="Player Profile"
-          class="w-10 h-10 rounded-full mr-3"
-        />
-        {% endif %}
-                <div>
-                    <h2 class="text-white font-semibold text-lg">{{user.username}}</h2>
-                    <p class="text-gray-400 text-sm">{{ user.email }}</p>
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center ring-2 ring-indigo-500">
+                    <span class="text-white font-bold text-lg">{{ user.username|slice:":1"|upper }}</span>
+                </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-white font-semibold text-base truncate">{{ user.username }}</h2>
+                    <p class="text-gray-400 text-xs truncate">{{ user.email }}</p>
                 </div>
             </div>
-
-            <nav class="space-y-4">
-                <a href="#" class="flex items-center text-white bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                    Dashboard
-                </a>
-                <a href="{% url 'match_list'%}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6m0 6a2 2 0 100-4 2 2 0 000 4zm0 0c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6"></path></svg>
-                    Matches
-                </a>
-                <a href="{%url 'teams' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h-4a2 2 0 01-2-2V8a2 2 0 012-2h4a2 2 0 012 2v10a2 2 0 01-2 2z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20h4a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    Teams
-                </a>
-                <a href="{% url 'top_stats' latest_league.id%}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-5m0 0V9m0 3h6m0-3v5m0 0V9m0 3h6m0-3v5"></path></svg>
-                    Stats
-                </a>
-            </nav>
         </div>
-        <div class="space-y-4">
-            <a href="{% url 'logout' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                Log out
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="{% url 'home' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200 group">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <span class="font-medium">Home</span>
             </a>
-            <a href="{% url 'profile_edit' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                Edit Profile
+            <a href="{% url 'match_list' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200 group">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span class="font-medium">Matches</span>
+            </a>
+            <a href="{% url 'teams' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200 group">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                <span class="font-medium">Teams</span>
+            </a>
+            <a href="{% url 'top_stats' latest_league.id %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200 group">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <span class="font-medium">Statistics</span>
+            </a>
+            <a href="{% url 'fantasy:league_list' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200 group">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                </svg>
+                <span class="font-medium">Fantasy</span>
+            </a>
+        </nav>
+
+        <!-- Bottom Actions -->
+        <div class="p-4 border-t border-gray-700 space-y-2">
+            <a href="{% url 'profile_edit' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span class="font-medium">Settings</span>
+            </a>
+            <a href="{% url 'logout' %}" class="flex items-center space-x-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 px-4 py-3 rounded-xl transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                <span class="font-medium">Log Out</span>
             </a>
         </div>
     </div>
 
-    <div id="fan-sidebar-overlay" class="fixed inset-0 bg-black opacity-50 z-40 hidden lg:hidden" onclick="toggleFanSidebar()"></div>
+    <!-- Overlay for mobile -->
+    <div id="fan-sidebar-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden lg:hidden" onclick="toggleFanSidebar()"></div>
 
-    <div class="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 bg-gray-900">
-        <header class="flex flex-col sm:flex-row items-center justify-between mb-8 bg-gray-800 p-4 rounded-xl shadow-md">
-            <div class="flex items-center w-full sm:w-auto mb-4 sm:mb-0">
-                <button id="fan-sidebar-toggle" class="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 lg:hidden mr-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
-                <h1 class="text-2xl font-bold text-white">Fan Dashboard</h1>
-            </div>
-             <!-- <div class="flex items-center space-x-4 w-full sm:w-auto">
-                <div class="relative flex-grow">
-                    <input type="text" placeholder="Search..." class="bg-gray-700 text-gray-300 rounded-full py-2 px-4 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-green-600">
-                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    <!-- Main Content -->
+    <div class="flex-1 lg:ml-64 min-h-screen">
+        <!-- Header -->
+        <header class="sticky top-0 z-30 bg-gray-800/95 backdrop-blur-sm border-b border-gray-700">
+            <div class="px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button id="fan-sidebar-toggle" class="lg:hidden text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                        <h1 class="text-2xl font-bold text-white">Fan Dashboard</h1>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <div class="px-4 py-2 bg-gray-700 rounded-lg">
+                            <div class="text-xs text-gray-400">Favorite Teams</div>
+                            <div class="text-lg font-bold text-white">{{ favorite_team_cards|length }}</div>
+                        </div>
+                    </div>
                 </div>
-                <button class="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                </button>
-            </div> -->
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-                    <h2 class="text-2xl font-bold text-white">Welcome, {{ user.username }}!</h2>
-                    <p class="text-gray-400 mt-2">Here's a quick overview of your fan activities.</p>
-                </div>
-
-                <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-                    <h3 class="text-lg font-bold text-white mb-4">Upcoming Matches</h3>
-                    {% if upcoming_matches %}
-                    <div class="space-y-4">
-                        {% for m in upcoming_matches %}
-                        <div class="bg-gray-700 p-4 rounded-lg flex items-center justify-between">
-                            <div>
-                                <p class="font-semibold text-white">{{ m.home_team.name }} vs {{ m.away_team.name }}</p>
-                                <p class="text-sm text-gray-400">{{ m.date|date:"D, M j, g:i A" }}</p>
-                            </div>
-                            <a href="#" class="text-sm text-blue-400 hover:underline">View Details</a>
-                        </div>
-                        {% endfor %}
+        <!-- Content Area -->
+        <main class="p-4 sm:p-6 lg:p-8">
+            <!-- Welcome Banner -->
+            <div class="mb-8 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/30 rounded-2xl p-8">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                        </svg>
                     </div>
-                    {% else %}
-                        <p class="text-gray-400">No upcoming matches.</p>
-                    {% endif %}
+                    <div>
+                        <h2 class="text-3xl font-black text-white">Welcome back, {{ user.username }}!</h2>
+                        <p class="text-gray-300 mt-1">Here's what's happening with your favorite teams</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-gray-800 rounded-xl p-6 shadow-md">
-                    <h5 class="font-semibold text-white text-lg mb-4">Favorite Teams</h5>
-                    {% if favorite_team_cards %}
-                        <div class="space-y-4">
-                            {% for card in favorite_team_cards %}
-                                <div class="flex items-center">
-                                    <img src="https://placehold.co/50x50/1abc9c/ffffff?text={{ card.team.name|slice:':1' }}" alt="Team Logo" class="rounded-full mr-4">
-                                    <div>
-                                        <p class="font-bold text-white">{{ card.team.name }}</p>
-                                        {% if card.next_match %}
-                                            <p class="text-sm text-gray-400">Next Match: {{ card.next_match.home_team.name }} vs {{ card.next_match.away_team.name }} • {{ card.next_match.date|date:"D, M j, g:i A" }}</p>
-                                        {% else %}
-                                            <p class="text-sm text-gray-400">No scheduled match yet.</p>
-                                        {% endif %}
+            <!-- Main Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Left Column - Upcoming Matches -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Upcoming Matches -->
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 shadow-xl">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <h3 class="text-xl font-bold text-white">Upcoming Matches</h3>
+                                </div>
+                                <span class="px-3 py-1 bg-green-500/20 border border-green-500 text-green-400 text-xs font-bold rounded-full">
+                                    {{ upcoming_matches|length }} Matches
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            {% if upcoming_matches %}
+                            <div class="space-y-4">
+                                {% for match in upcoming_matches %}
+                                <div class="group bg-gray-700/50 hover:bg-gray-700 rounded-xl p-5 border border-gray-600 hover:border-indigo-500 transition-all duration-300">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-3 mb-2">
+                                                <span class="text-lg font-bold text-white">{{ match.home_team.name }}</span>
+                                                <span class="text-gray-500 text-sm">vs</span>
+                                                <span class="text-lg font-bold text-white">{{ match.away_team.name }}</span>
+                                            </div>
+                                            <div class="flex items-center space-x-3 text-sm text-gray-400">
+                                                <div class="flex items-center space-x-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                    </svg>
+                                                    <span>{{ match.date|date:"D, M j" }}</span>
+                                                </div>
+                                                <span>•</span>
+                                                <div class="flex items-center space-x-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span>{{ match.date|date:"g:i A" }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'match_details' match.id %}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center space-x-2">
+                                            <span>Details</span>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
                                     </div>
                                 </div>
-                            {% endfor %}
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-12">
+                                <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <h4 class="text-lg font-bold text-white mb-2">No Upcoming Matches</h4>
+                                <p class="text-gray-400">Check back soon for the next fixtures</p>
+                            </div>
+                            {% endif %}
                         </div>
-                    {% else %}
-                        <p class="text-gray-400 mb-3">You haven’t selected any favorite teams yet.</p>
-                        <a href="{% url 'profile_edit' %}" class="text-blue-400 hover:underline">Select favorite teams</a>
-                    {% endif %}
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <a href="{% url 'match_list' %}" class="group bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl p-6 hover:border-blue-500 transition-all duration-300">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <h4 class="text-white font-bold text-lg mb-1">All Fixtures</h4>
+                            <p class="text-gray-400 text-sm">View complete schedule</p>
+                        </a>
+
+                        <a href="{% url 'top_stats' latest_league.id %}" class="group bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30 rounded-xl p-6 hover:border-purple-500 transition-all duration-300">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <h4 class="text-white font-bold text-lg mb-1">Statistics</h4>
+                            <p class="text-gray-400 text-sm">Top performers</p>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Column - Favorite Teams -->
+                <div class="lg:col-span-1">
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 shadow-xl sticky top-24">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <svg class="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <h3 class="text-xl font-bold text-white">Favorite Teams</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            {% if favorite_team_cards %}
+                            <div class="space-y-4">
+                                {% for card in favorite_team_cards %}
+                                <div class="group bg-gray-700/50 hover:bg-gray-700 rounded-xl p-4 border border-gray-600 hover:border-indigo-500 transition-all duration-300">
+                                    <div class="flex items-start space-x-3">
+                                        {% if card.team.logo %}
+                                        <img src="{{ card.team.logo.url }}" alt="{{ card.team.name }}" class="w-12 h-12 rounded-full ring-2 ring-gray-600 group-hover:ring-indigo-500 transition-all">
+                                        {% else %}
+                                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center ring-2 ring-gray-600 group-hover:ring-indigo-500 transition-all">
+                                            <span class="text-white font-bold">{{ card.team.name|slice:":1"|upper }}</span>
+                                        </div>
+                                        {% endif %}
+                                        <div class="flex-1 min-w-0">
+                                            <a href="{% url 'team' card.team.id %}" class="font-bold text-white group-hover:text-indigo-300 transition-colors block mb-1">
+                                                {{ card.team.name }}
+                                            </a>
+                                            {% if card.next_match %}
+                                            <div class="text-xs text-gray-400 mb-2">
+                                                <div class="font-medium mb-1">Next Match:</div>
+                                                <div>{{ card.next_match.home_team.name }} vs {{ card.next_match.away_team.name }}</div>
+                                                <div class="flex items-center space-x-1 mt-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                    </svg>
+                                                    <span>{{ card.next_match.date|date:"M j, g:i A" }}</span>
+                                                </div>
+                                            </div>
+                                            {% else %}
+                                            <p class="text-xs text-gray-500">No scheduled match</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-8">
+                                <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                <h4 class="text-lg font-bold text-white mb-2">No Favorites Yet</h4>
+                                <p class="text-gray-400 text-sm mb-4">Select your favorite teams to track them</p>
+                                <a href="{% url 'profile_edit' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add Teams
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 </div>
 
+<!-- Scripts -->
 <script>
-    function toggleFanSidebar() {
-        const sidebar = document.getElementById('fan-sidebar');
-        const overlay = document.getElementById('fan-sidebar-overlay');
-        sidebar.classList.toggle('-translate-x-full');
-        overlay.classList.toggle('hidden');
-    }
+function toggleFanSidebar() {
+    const sidebar = document.getElementById('fan-sidebar');
+    const overlay = document.getElementById('fan-sidebar-overlay');
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+}
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const sidebarToggle = document.getElementById('fan-sidebar-toggle');
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', toggleFanSidebar);
-        }
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebarToggle = document.getElementById('fan-sidebar-toggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleFanSidebar);
+    }
+});
 </script>
 {% endblock content %}

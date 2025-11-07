@@ -1,6 +1,9 @@
 from django.contrib import admin
-from .models import Player, PlayerStats, Coach, Team, League, TeamSeasonParticipation, Match, PlayerSeasonParticipation,\
-      CoachSeasonParticipation, Lineup, LineupPlayer
+from .models import (
+    Player, PlayerStats, Coach, Team, League, TeamSeasonParticipation, Match,
+    PlayerSeasonParticipation, CoachSeasonParticipation, Lineup, LineupPlayer,
+    TeamOfTheWeek, TeamOfTheWeekPlayer
+)
 
 @admin.register(TeamSeasonParticipation)
 class TeamSeasonParticipaationAdmin(admin.ModelAdmin):
@@ -16,6 +19,16 @@ class PlayerAdmin(admin.ModelAdmin):
 @admin.register(PlayerStats)
 class PlayerStatsAdmin(admin.ModelAdmin):
     pass
+
+class TeamOfTheWeekPlayerInline(admin.TabularInline):
+    model = TeamOfTheWeekPlayer
+    extra = 11
+
+# @admin.register(TeamOfTheWeek)
+# class TeamOfTheWeekAdmin(admin.ModelAdmin):
+#     inlines = [TeamOfTheWeekPlayerInline]
+#     list_display = ('league', 'week_number')
+#     list_filter = ('league', 'week_number')
 
 admin.site.register(Coach)
 admin.site.register(Team)

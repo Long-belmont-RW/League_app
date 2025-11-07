@@ -8,7 +8,7 @@
                 <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent"></div>
                 <div class="slide-content relative max-w-full mx-auto px-4 sm:px-10 lg:px-20 py-24 text-center flex flex-col justify-center h-full">
                     <h1 class="text-4xl md:text-6xl font-bold mb-6 text-white">Welcome to AUN League</h1>
-                    <p class="text-xl md:text-2xl mb-8 text-gray-300">The premier university football league - Spring 2025 Season</p>
+                    <p class="text-xl md:text-2xl mb-8 text-gray-300">The premier university football league - {% if active_league.session == 'F' %}Fall{% else %}Spring{% endif %} {{ active_league.year }} Season</p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
                         <a href="{% url 'match_list' %}" class="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">View Fixtures</a>
                     </div>

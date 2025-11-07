@@ -118,58 +118,92 @@
                 <div class="flex-grow h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
             </div>
 
+            {% comment %}
+            <!-- Team of the Week Section -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold text-white mb-4">Team of the Week</h2>
+                <form method="get" action="{% url 'home' %}" class="mb-4">
+                    <select name="league">
+                        <option value="">Select League</option>
+                        {% for league in leagues %}
+                            <option value="{{ league.id }}" {% if league.id == selected_league %}selected{% endif %}>{{ league }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="week">
+                        <option value="">Select Week</option>
+                        {% for week in weeks %}
+                            <option value="{{ week }}" {% if week == selected_week %}selected{% endif %}>Week {{ week }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Search</button>
+                </form>
+                {% include 'partials/team_of_the_week.html' %}
+            </div>
+            {% endcomment %}
+
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 
                 <!-- Recent Matches Section -->
                 <div class="xl:col-span-2">
-                    <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-gray-700">
-                        <div class="bg-gradient-to-r from-gray-800 to-gray-700 px-6 py-4 flex items-center justify-between">
-                            <h2 class="text-2xl font-bold text-white flex items-center">
-                                <svg class="w-6 h-6 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="bg-gray-700 px-6 py-4 flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Recent Matches
-                            </h2>
+                                <h2 class="text-xl font-bold text-white">Recent Matches</h2>
+                            </div>
                             <a href="{% url 'match_list' %}" class="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors">
                                 View All →
                             </a>
                         </div>
                         
-                        <div class="p-6 space-y-4">
+                        <div class="p-4 space-y-3">
                             {% for match in matches %}
-                                <div class="group bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700 hover:border-indigo-500 transition-all duration-300 hover:shadow-lg">
-                                    <a href="{% url 'match_details' match.id%}">
-                                    <div class="flex items-center justify-between">
-                                        
-                                        <div class="flex-grow">
-                                            <h3 class="font-semibold text-lg text-white mb-2 group-hover:text-indigo-300 transition-colors">
-                                                {{ match.home_team }} <span class="text-gray-500 text-sm">vs</span> {{ match.away_team }}
-                                            </h3>
-                                            <p class="text-sm text-gray-400 flex items-center">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                </svg>
-                                                {{ match.date|date:"M d, Y H:i" }}
-                                            </p>
+                            <a href="{% url 'match_details' match.id %}" class="block">
+                                <div class="bg-gray-900 rounded-xl p-4 hover:bg-gray-800 transition-colors duration-200">
+                                    <!-- Teams and Score Row -->
+                                    <div class="flex items-center justify-between mb-3">
+                                        <!-- Teams Column -->
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center space-x-2 mb-1.5">
+                                                <span class="text-white font-semibold truncate">{{ match.home_team }}</span>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-white font-semibold truncate">{{ match.away_team }}</span>
+                                            </div>
                                         </div>
-                                        <div class="ml-4">
-                                            <div class="bg-gray-700/50 backdrop-blur-sm px-5 py-3 rounded-lg border border-gray-600 group-hover:border-indigo-500 transition-colors">
-                                                <span class="text-2xl font-bold text-white">{{ match.home_score }}</span>
-                                                <span class="text-gray-500 mx-2">-</span>
-                                                <span class="text-2xl font-bold text-white">{{ match.away_score }}</span>
+                                        
+                                        <!-- Score Column -->
+                                        <div class="ml-4 flex-shrink-0">
+                                            <div class="bg-gray-700 rounded-lg px-4 py-3 min-w-[80px]">
+                                                <div class="flex items-center justify-center space-x-3">
+                                                    <span class="text-2xl font-bold text-white">{{ match.home_score }}</span>
+                                                    <span class="text-gray-500 text-lg">-</span>
+                                                    <span class="text-2xl font-bold text-white">{{ match.away_score }}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    </a>
+                                    
+                                    <!-- Date/Time Row -->
+                                    <div class="flex items-center text-xs text-gray-400">
+                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <span>{{ match.date|date:"M d, Y" }}</span>
+                                        <span class="mx-2">•</span>
+                                        <span>{{ match.date|date:"f A" }}</span>
+                                    </div>
                                 </div>
+                            </a>
                             {% empty %}
-                                <div class="text-center py-16">
-                                    <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                                    </svg>
-                                    <p class="text-gray-400 text-lg">No recent matches available</p>
-                                    <p class="text-gray-500 text-sm mt-2">Check back soon for updates</p>
-                                </div>
+                            <div class="text-center py-8">
+                                <svg class="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                </svg>
+                                <p class="text-gray-400 text-sm">No recent matches available</p>
+                            </div>
                             {% endfor %}
                         </div>
                     </div>
@@ -200,7 +234,7 @@
                                         </div>
                                         <div class="ml-4 text-right bg-gray-700/50 px-3 py-2 rounded-lg">
                                             <div class="text-sm font-medium text-white">{{ match.date|date:"M d" }}</div>
-                                            <div class="text-xs text-gray-400">{{ match.date|date:"H:i" }}</div>
+                                            <div class="text-xs text-gray-400">{{ match.date|date:"f A" }}</div>
                                         </div>
                                     </div>
                                 </div>

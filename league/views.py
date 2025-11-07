@@ -15,7 +15,7 @@ from django.db import transaction
 from django.db.models.functions import Coalesce
 from django.db.models import Sum, Q, F, Prefetch, Count, Subquery, OuterRef
 
-from .models import League, Lineup, Team, Match, Player, PlayerSeasonParticipation, PlayerStats, MatchStatus,     TeamSeasonParticipation, CoachSeasonParticipation, LineupPlayer
+from .models import League, Lineup, Team, Match, Player, PlayerSeasonParticipation, PlayerStats, MatchStatus,     TeamSeasonParticipation, CoachSeasonParticipation, LineupPlayer, TeamOfTheWeek
 from .forms import LineupPlayerForm, MatchForm, PlayerStatsForm, PlayerStatsFormSet, LineupFormSet, MatchEventForm, ValidatingLineupFormSet
 from .utils import get_league_standings
 from .services import update_league_table
@@ -38,6 +38,28 @@ def home(request):
     active_league = League.objects.filter(is_active=True).first()
     matches = Match.objects.none()
     top_scorers = PlayerSeasonParticipation.objects.none()
+    # team_of_the_week = None
+    
+    # # Dropdown population
+    # leagues = League.objects.filter(is_active=True)
+    # weeks = TeamOfTheWeek.objects.values_list('week_number', flat=True).distinct().order_by('week_number')
+
+    # # Search/filter logic
+    # selected_league_id = request.GET.get('league')
+    # selected_week = request.GET.get('week')
+
+    # if selected_league_id and selected_week:
+    #     try:
+    #         team_of_the_week = TeamOfTheWeek.objects.prefetch_related('players').get(
+    #             league_id=selected_league_id, 
+    #             week_number=selected_week
+    #         )
+    #     except TeamOfTheWeek.DoesNotExist:
+    #         team_of_the_week = None
+    # else:
+    #     # Default to the latest team of the week
+    #     team_of_the_week = TeamOfTheWeek.objects.prefetch_related('players').order_by('-league__year', '-week_number').first()
+
     if active_league:
         matches = Match.objects.filter(season=active_league, status=MatchStatus.FINISHED).select_related('home_team', 'away_team').order_by('-date')[:5]
         top_scorers = PlayerSeasonParticipation.objects.filter(
@@ -46,14 +68,20 @@ def home(request):
 
         upcoming_matches = Match.objects.filter(season=active_league, status=MatchStatus.SCHEDULED).select_related('home_team', 'away_team').order_by('-date')[:5]
         league_table = TeamSeasonParticipation.objects.filter(league=active_league)[:3]
-    rendered = render_to_string('home.html', {
+
+    context = {
         'matches': matches,
         'top_scorers': top_scorers,
         'active_league': active_league,
-        'upcoming_matches':upcoming_matches,
-        'league_table':league_table,
-    }, request=request)
-    return HttpResponse(rendered)
+        'upcoming_matches': upcoming_matches,
+        'league_table': league_table,
+        # 'team_of_the_week': team_of_the_week,
+        # 'leagues': leagues,
+        # 'weeks': weeks,
+        # 'selected_league': int(selected_league_id) if selected_league_id else None,
+        # 'selected_week': int(selected_week) if selected_week else None,
+    }
+    return render(request, 'home.html', context)
 
 
 # Leagues List View
@@ -699,7 +727,8 @@ def match_details(request, match_id):
     else:
         form = MatchEventForm(match=match)
 
-    
+    logger.debug
+    (f'There are events{bool(events)}')
     context = {
         'match': match,
         'home_lineup': home_lineup,
@@ -1004,3 +1033,73 @@ def serialize_player(player):
         'jersey_number': getattr(player, 'jersey_number', ''),
     }
    
+
+
+@user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
+def manage_team_of_the_week(request):
+    if request.method == 'POST':
+        form = TeamOfTheWeekForm(request.POST)
+        formset = TeamOfTheWeekPlayerFormSet(request.POST)
+        if form.is_valid() and formset.is_valid():
+            team_of_the_week = form.save(commit=False)
+            # Check if a team of the week for this league and week already exists
+            existing_totw = TeamOfTheWeek.objects.filter(league=team_of_the_week.league, week_number=team_of_the_week.week_number).first()
+            if existing_totw:
+                team_of_the_week.pk = existing_totw.pk
+                
+            team_of_the_week.save()
+            
+            # Clear existing players if we are updating
+            if existing_totw:
+                TeamOfTheWeekPlayer.objects.filter(team_of_the_week=team_of_the_week).delete()
+            
+            players = formset.save(commit=False)
+            for player in players:
+                player.team_of_the_week = team_of_the_week
+                player.save()
+            messages.success(request, 'Team of the Week saved successfully!')
+            return redirect('home')
+    else:
+        # Check if there are query params to pre-fill the form for editing
+        league_id = request.GET.get('league')
+        week_number = request.GET.get('week')
+        
+        if league_id and week_number:
+            totw = get_object_or_404(TeamOfTheWeek, league_id=league_id, week_number=week_number)
+            form = TeamOfTheWeekForm(instance=totw)
+            formset = TeamOfTheWeekPlayerFormSet(queryset=TeamOfTheWeekPlayer.objects.filter(team_of_the_week=totw))
+        else:
+            form = TeamOfTheWeekForm()
+            formset = TeamOfTheWeekPlayerFormSet(queryset=TeamOfTheWeekPlayer.objects.none())
+
+    context = {
+        'form': form,
+        'formset': formset
+    }
+    return render(request, 'league/manage_team_of_the_week.html', context)
+
+def team_of_the_week_view(request):
+    league_id = request.GET.get('league')
+    week_number = request.GET.get('week')
+
+    if league_id and week_number:
+        team_of_the_week = get_object_or_404(
+            TeamOfTheWeek,
+            league_id=league_id,
+            week_number=week_number
+        )
+    else:
+        team_of_the_week = TeamOfTheWeek.objects.order_by('-league__year', '-week_number').first()
+
+    leagues = League.objects.filter(is_active=True)
+    weeks = TeamOfTheWeek.objects.values_list('week_number', flat=True).distinct().order_by('week_number')
+
+
+    context = {
+        'team_of_the_week': team_of_the_week,
+        'leagues': leagues,
+        'weeks': weeks,
+        'selected_league': int(league_id) if league_id else None,
+        'selected_week': int(week_number) if week_number else None,
+    }
+    return render(request, 'league/team_of_the_week_detail.html', context)

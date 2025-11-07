@@ -37,3 +37,11 @@ class Invitation(models.Model):
 
     def __str__(self):
         return f"Invitation for {self.email} to join {self.team.name}"
+    
+
+
+# class Complaint(models.Model):
+#     """Allows for users to send complaints to admin"""
+#     text = models.TextField(max_length=500)
+#     author = models.ForeignKey(User, on_delete=models.CASCADE)
+#     reciever = models.ForeignKey(User, on_delete=models.CASCADE)

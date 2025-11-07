@@ -118,7 +118,13 @@
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
                     </svg>
-                    <span>{{ match.season }}</span>
+                    <span>
+                    {% if match.season.session == 'F' %}
+                        Fall {{ match.season.year }}
+                    {% else %}
+                        Spring {{ match.season.year }}
+                    {% endif %}
+                </span>
                 </div>
                 {% endif %}
             </div>
@@ -178,31 +184,53 @@
                         </h2>
                     </div>
                     <div class="p-6">
-                        {% if home_lineup and home_lineup.players.all %}
-                        <ul class="space-y-3">
-                            {% for player in home_lineup.players.all %}
-                            <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                                        <span class="text-white font-bold text-sm">{{ player.jersey_number|default:"?" }}</span>
-                                    </div>
-                                    <div>
-                                        <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-indigo-300 transition-colors">
-                                            {{ player.first_name }} {{ player.last_name }}
-                                        </a>
-                                        <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
-                                    </div>
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
+                        {% if home_lineup %}
+                            <h3 class="text-lg font-semibold text-gray-300 mb-3">Starters</h3>
+                            <ul class="space-y-3 mb-6">
+                                {% for player in home_lineup.players.all %}
+                                    <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                                                <span class="text-white font-bold text-sm">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                                            </div>
+                                            <div>
+                                                <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-indigo-300 transition-colors">
+                                                    {{ player.first_name }} {{ player.last_name }}
+                                                </a>
+                                                <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+
+                            <h3 class="text-lg font-semibold text-gray-300 mb-3">Substitutes</h3>
+                            <ul class="space-y-3">
+                                {% for player in home_lineup.substitutes.all %}
+                                    <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                                                <span class="text-white font-bold text-sm">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                                            </div>
+                                            <div>
+                                                <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-indigo-300 transition-colors">
+                                                    {{ player.first_name }} {{ player.last_name }}
+                                                </a>
+                                                <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% empty %}
+                                <p class="text-gray-400">Subs not available</p>
+                                {% endfor %}
+                            </ul>
                         {% else %}
-                        <div class="text-center py-12">
-                            <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                            <p class="text-gray-400">Lineup not available</p>
-                        </div>
+                            <div class="text-center py-12">
+                                <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                <p class="text-gray-400">Lineup not available</p>
+                            </div>
                         {% endif %}
                     </div>
                 </div>
@@ -218,31 +246,53 @@
                         </h2>
                     </div>
                     <div class="p-6">
-                        {% if away_lineup and away_lineup.players.all %}
-                        <ul class="space-y-3">
-                            {% for player in away_lineup.players.all %}
-                            <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                                        <span class="text-white font-bold text-sm">{{ player.jersey_number|default:"?" }}</span>
-                                    </div>
-                                    <div>
-                                        <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-purple-300 transition-colors">
-                                            {{ player.first_name }} {{ player.last_name }}
-                                        </a>
-                                        <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
-                                    </div>
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
+                        {% if away_lineup %}
+                            <h3 class="text-lg font-semibold text-gray-300 mb-3">Starters</h3>
+                            <ul class="space-y-3 mb-6">
+                                {% for player in away_lineup.players.all %}
+                                    <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                                                <span class="text-white font-bold text-sm">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                                            </div>
+                                            <div>
+                                                <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-purple-300 transition-colors">
+                                                    {{ player.first_name }} {{ player.last_name }}
+                                                </a>
+                                                <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+
+                            <h3 class="text-lg font-semibold text-gray-300 mb-3">Substitutes</h3>
+                            <ul class="space-y-3">
+                                {% for player in away_lineup.substitutes.all %}
+                                    <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                                                <span class="text-white font-bold text-sm">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                                            </div>
+                                            <div>
+                                                <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-purple-300 transition-colors">
+                                                    {{ player.first_name }} {{ player.last_name }}
+                                                </a>
+                                                <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    {% empty %}
+                                <p class="text-gray-400">Subs not available</p>
+                                {% endfor %}
+                            </ul>
                         {% else %}
-                        <div class="text-center py-12">
-                            <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                            <p class="text-gray-400">Lineup not available</p>
-                        </div>
+                            <div class="text-center py-12">
+                                <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                <p class="text-gray-400">Lineup not available</p>
+                            </div>
                         {% endif %}
                     </div>
                 </div>

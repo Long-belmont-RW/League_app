@@ -1,5 +1,7 @@
 # league/templatetags/league_extras.py
 from django import template
+from itertools import groupby
+from operator import itemgetter
 
 register = template.Library()
 
@@ -18,4 +20,17 @@ def parse_formation(formation_str):
         return [range(count) for count in rows]
     except (ValueError, TypeError):
         return [] # Return empty on parsing error
+
+@register.filter(name='group_by')
+def group_by(queryset, key):
+    """
+    Groups a queryset by a specific key.
+    """
+    if not queryset:
+        return []
+    
+    # Ensure the queryset is sorted by the key
+    queryset = sorted(queryset, key=lambda x: getattr(x, key))
+    
+    return [{'grouper': k, 'list': list(v)} for k, v in groupby(queryset, key=lambda x: getattr(x, key))]
 

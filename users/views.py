@@ -19,7 +19,7 @@ from league.models import (
 )
 from django.utils import timezone
 
-from .utils import get_season_progress, get_team_season_progress, get_win_ratio
+from .utils import get_season_progress, get_team_season_progress, get_win_ratio, get_matches_completed
 from .forms import UserRegistrationForm, EmailAuthenticationForm, InvitationRegistrationForm, CustomUserCreationForm, UserAccountForm, UserProfileForm, PlayerCreationForm
 from django.contrib.auth.forms import PasswordChangeForm
 from content.models import Invitation
@@ -134,15 +134,27 @@ def register_view(request):
 
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
 def admin_dashboard_view(request): 
-    all_users = User.objects.all()[:10]
+
+    #Component Data
+    all_users = User.objects.order_by('-date_joined')[:10]
     all_coaches = Coach.objects.all()[:10]
     all_players = Player.objects.all()[:10]
+
+    #Numerics
+    user_count = User.objects.all().count()
+    coach_count = Coach.objects.all().count()
+    player_count = Player.objects.all().count()
 
     # Get the season progress
     season_progress = get_season_progress()
 
+    #Get the matches completed
+    matches_completed = get_matches_completed()
+
     #Get the latest match
     latest_match = Match.objects.order_by('-date').first()
+
+
 
     # Check if the user is an admin
     # Redirect if not an admin
@@ -158,7 +170,12 @@ def admin_dashboard_view(request):
         'all_coaches': all_coaches,
         'all_players': all_players,
         'season_progress': season_progress,
-        'latest_match': latest_match
+        'latest_match': latest_match,
+        'matches_completed':matches_completed,
+        'user_count':user_count,
+        'player_count':player_count,
+        'coach_count':coach_count,
+       
     }
 
     return render(request, 'admin_dashboard.html', context)

@@ -1,0 +1,149 @@
+<!-- team_of_the_week.html -->
+{% if team_of_the_week %}
+<div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-700">
+    <!-- Header with League and Week Info -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-2xl font-bold text-white flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                    Team of the Week
+                </h3>
+                <p class="text-indigo-100 text-sm mt-1">{{ team_of_the_week.league }} - Week {{ team_of_the_week.week_number }}</p>
+            </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                <span class="text-white font-bold text-lg">⭐</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Football Pitch -->
+    <div class="p-6 md:p-8">
+        <div class="relative bg-gradient-to-b from-green-700 to-green-800 rounded-lg p-6 md:p-8 shadow-2xl" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(255,255,255,0.03) 50px, rgba(255,255,255,0.03) 100px);">
+            <!-- Pitch Lines Overlay -->
+            <div class="absolute inset-0 pointer-events-none">
+                <!-- Center Circle -->
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-white/20 rounded-full"></div>
+                <!-- Center Line -->
+                <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-white/20"></div>
+            </div>
+
+            <!-- Players by Position -->
+            <div class="relative space-y-6 md:space-y-8">
+                <!-- Forwards -->
+                <div class="pitch-row flex justify-center items-center gap-4 md:gap-6">
+                    {% for player in team_of_the_week.players.all %}
+                        {% if player.teamoftheweekplayer_set.first.position == 'FWD' %}
+                        <div class="group transform hover:scale-110 hover:-translate-y-2 transition-all duration-300">
+                            <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-3 md:p-4 border-2 border-red-400 hover:border-yellow-400 hover:shadow-xl hover:shadow-red-500/50 min-w-[100px] md:min-w-[120px]">
+                                <div class="text-center">
+                                    <div class="bg-white/90 rounded-full w-12 h-12 md:w-14 md:h-14 mx-auto mb-2 flex items-center justify-center shadow-lg">
+                                        <span class="text-2xl md:text-3xl font-bold text-red-600">{{ player.first_name.0 }}{{ player.last_name.0 }}</span>
+                                    </div>
+                                    <p class="text-white font-bold text-sm md:text-base truncate">{{ player.first_name }}</p>
+                                    <p class="text-white font-bold text-xs md:text-sm truncate">{{ player.last_name }}</p>
+                                    <span class="inline-block bg-white/20 text-white text-xs px-2 py-0.5 rounded-full mt-1">FWD</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Midfielders -->
+                <div class="pitch-row flex justify-center items-center gap-4 md:gap-6 flex-wrap">
+                    {% for player in team_of_the_week.players.all %}
+                        {% if player.teamoftheweekplayer_set.first.position == 'MID' %}
+                        <div class="group transform hover:scale-110 hover:-translate-y-2 transition-all duration-300">
+                            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-3 md:p-4 border-2 border-green-400 hover:border-yellow-400 hover:shadow-xl hover:shadow-green-500/50 min-w-[100px] md:min-w-[120px]">
+                                <div class="text-center">
+                                    <div class="bg-white/90 rounded-full w-12 h-12 md:w-14 md:h-14 mx-auto mb-2 flex items-center justify-center shadow-lg">
+                                        <span class="text-2xl md:text-3xl font-bold text-green-600">{{ player.first_name.0 }}{{ player.last_name.0 }}</span>
+                                    </div>
+                                    <p class="text-white font-bold text-sm md:text-base truncate">{{ player.first_name }}</p>
+                                    <p class="text-white font-bold text-xs md:text-sm truncate">{{ player.last_name }}</p>
+                                    <span class="inline-block bg-white/20 text-white text-xs px-2 py-0.5 rounded-full mt-1">MID</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Defenders -->
+                <div class="pitch-row flex justify-center items-center gap-4 md:gap-6 flex-wrap">
+                    {% for player in team_of_the_week.players.all %}
+                        {% if player.teamoftheweekplayer_set.first.position == 'DEF' %}
+                        <div class="group transform hover:scale-110 hover:-translate-y-2 transition-all duration-300">
+                            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-3 md:p-4 border-2 border-blue-400 hover:border-yellow-400 hover:shadow-xl hover:shadow-blue-500/50 min-w-[100px] md:min-w-[120px]">
+                                <div class="text-center">
+                                    <div class="bg-white/90 rounded-full w-12 h-12 md:w-14 md:h-14 mx-auto mb-2 flex items-center justify-center shadow-lg">
+                                        <span class="text-2xl md:text-3xl font-bold text-blue-600">{{ player.first_name.0 }}{{ player.last_name.0 }}</span>
+                                    </div>
+                                    <p class="text-white font-bold text-sm md:text-base truncate">{{ player.first_name }}</p>
+                                    <p class="text-white font-bold text-xs md:text-sm truncate">{{ player.last_name }}</p>
+                                    <span class="inline-block bg-white/20 text-white text-xs px-2 py-0.5 rounded-full mt-1">DEF</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Goalkeeper -->
+                <div class="pitch-row flex justify-center items-center">
+                    {% for player in team_of_the_week.players.all %}
+                        {% if player.teamoftheweekplayer_set.first.position == 'GK' %}
+                        <div class="group transform hover:scale-110 hover:-translate-y-2 transition-all duration-300">
+                            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-3 md:p-4 border-2 border-yellow-400 hover:border-white hover:shadow-xl hover:shadow-yellow-500/50 min-w-[100px] md:min-w-[120px]">
+                                <div class="text-center">
+                                    <div class="bg-white/90 rounded-full w-12 h-12 md:w-14 md:h-14 mx-auto mb-2 flex items-center justify-center shadow-lg">
+                                        <span class="text-2xl md:text-3xl font-bold text-yellow-600">{{ player.first_name.0 }}{{ player.last_name.0 }}</span>
+                                    </div>
+                                    <p class="text-white font-bold text-sm md:text-base truncate">{{ player.first_name }}</p>
+                                    <p class="text-white font-bold text-xs md:text-sm truncate">{{ player.last_name }}</p>
+                                    <span class="inline-block bg-white/20 text-white text-xs px-2 py-0.5 rounded-full mt-1">GK</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="mt-6 flex flex-wrap justify-center gap-3 md:gap-4 text-xs md:text-sm">
+            <div class="flex items-center gap-2 bg-gray-700/50 px-3 py-2 rounded-lg">
+                <div class="w-4 h-4 bg-gradient-to-br from-red-500 to-red-600 rounded"></div>
+                <span class="text-gray-300">Forward</span>
+            </div>
+            <div class="flex items-center gap-2 bg-gray-700/50 px-3 py-2 rounded-lg">
+                <div class="w-4 h-4 bg-gradient-to-br from-green-500 to-green-600 rounded"></div>
+                <span class="text-gray-300">Midfielder</span>
+            </div>
+            <div class="flex items-center gap-2 bg-gray-700/50 px-3 py-2 rounded-lg">
+                <div class="w-4 h-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded"></div>
+                <span class="text-gray-300">Defender</span>
+            </div>
+            <div class="flex items-center gap-2 bg-gray-700/50 px-3 py-2 rounded-lg">
+                <div class="w-4 h-4 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded"></div>
+                <span class="text-gray-300">Goalkeeper</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700 p-8 md:p-12">
+    <div class="text-center">
+        <svg class="w-16 h-16 md:w-20 md:h-20 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+        <h3 class="text-xl md:text-2xl font-bold text-white mb-2">No Team Selected Yet</h3>
+        <p class="text-gray-400 text-sm md:text-base">The Team of the Week for this selection has not been created yet.</p>
+        <p class="text-gray-500 text-xs md:text-sm mt-2">Try selecting a different league or week.</p>
+    </div>
+</div>
+{% endif %}

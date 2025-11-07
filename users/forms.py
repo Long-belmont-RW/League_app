@@ -22,6 +22,10 @@ class UserRegistrationForm(forms.ModelForm):
         model = User
         fields = ('username', 'email', 'birth', 'gender', 'role')
 
+    def __init__(self, *args, **kwargs):
+        super(UserRegistrationForm, self).__init__(*args, **kwargs)
+        self.fields['role'].choices = [choice for choice in self.fields['role'].choices if choice[0] != 'admin']
+
     def clean_password2(self):
         cd = self.cleaned_data
         if cd['password'] != cd['password2']:
