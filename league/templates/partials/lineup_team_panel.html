@@ -70,33 +70,52 @@
         </div>
     </div>
 
-    <!-- Substitutes Bench -->
-    <div class="px-6 py-4 bg-gray-750 border-t border-gray-700">
-        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-            Substitutes Bench
-        </h3>
-        <div id="substitutes-{{ team_type }}" 
-             class="min-h-[100px] flex flex-wrap gap-2 p-3 bg-gray-800 rounded-lg border-2 border-dashed border-gray-600"
-             data-substitutes-zone="{{ team_type }}">
-            <!-- Players will be added here -->
+    <!-- Substitutes Bench (Collapsible) -->
+    <div class="px-6 py-4 bg-gray-750 border-t border-gray-700" data-collapsible-section>
+        <button type="button" class="w-full text-left" data-collapsible-trigger>
+            <h3 class="text-lg font-semibold text-white mb-3 flex items-center justify-between gap-2">
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Substitutes Bench
+                </span>
+                <svg class="w-5 h-5 transform transition-transform" data-collapsible-icon fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h3>
+        </button>
+        <div class="collapsible-content" data-collapsible-content>
+            <div id="substitutes-{{ team_type }}" 
+                 class="min-h-[100px] flex flex-wrap gap-2 p-3 bg-gray-800 rounded-lg border-2 border-dashed border-gray-600"
+                 data-substitutes-zone="{{ team_type }}">
+                <!-- Players will be added here -->
+            </div>
         </div>
     </div>
 
-    <!-- Available Players Pool -->
-    <div class="px-6 py-4 bg-gray-800">
-        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-            </svg>
-            Available Players
-        </h3>
-        <div id="available-{{ team_type }}" 
-             class="min-h-[120px] max-h-[300px] overflow-y-auto flex flex-wrap gap-2 p-3 bg-gray-700 rounded-lg border-2 border-dashed border-gray-500"
-             data-available-zone="{{ team_type }}">
-            <!-- Players will be added here -->
+    <!-- Mobile: Manage Roster Button -->
+    <div class="px-6 py-4 xl:hidden">
+        <button type="button" data-modal-trigger="available-players-modal-{{ team_type }}" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            Manage Roster
+        </button>
+    </div>
+
+    <!-- Desktop: Available Players Pool (Collapsible) -->
+    <div class="hidden xl:block px-6 py-4 bg-gray-800" data-collapsible-section>
+        <button type="button" class="w-full text-left" data-collapsible-trigger>
+            <h3 class="text-lg font-semibold text-white mb-3 flex items-center justify-between gap-2">
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Available Players
+                </span>
+                <svg class="w-5 h-5 transform transition-transform" data-collapsible-icon fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h3>
+        </button>
+        <div class="collapsible-content" data-collapsible-content>
+            <input type="search" data-player-search="{{ team_type }}" placeholder="Search players..." class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 mb-3 focus:ring-2 focus:ring-blue-500">
+            <div id="available-{{ team_type }}" 
+                 class="min-h-[120px] max-h-[300px] overflow-y-auto flex flex-wrap gap-2 p-3 bg-gray-700 rounded-lg border-2 border-dashed border-gray-500"
+                 data-available-zone="{{ team_type }}">
+                <!-- Players will be added here -->
+            </div>
         </div>
     </div>
 
@@ -114,4 +133,23 @@
         </button>
     </div>
 
+</div>
+
+<!-- Mobile: Available Players Modal -->
+<div id="available-players-modal-{{ team_type }}" class="fixed inset-0 bg-black bg-opacity-75 z-40 hidden" data-modal>
+    <div class="flex flex-col h-full bg-gray-800 w-full max-w-lg mx-auto shadow-xl">
+        <div class="flex items-center justify-between p-4 border-b border-gray-700">
+            <h3 class="text-xl font-bold text-white">Available Players</h3>
+            <button type="button" data-modal-close class="text-gray-400 hover:text-white">&times;</button>
+        </div>
+        <div class="p-4">
+            <input type="search" data-player-search="{{ team_type }}" placeholder="Search players..." class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 mb-3 focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="flex-1 overflow-y-auto p-4" data-available-zone-modal="{{ team_type }}">
+            <!-- Mobile available players list will be cloned here by JS -->
+        </div>
+        <div class="p-4 border-t border-gray-700">
+             <button type="button" data-modal-close class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">Done</button>
+        </div>
+    </div>
 </div>

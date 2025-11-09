@@ -743,3 +743,74 @@ class MatchDetailsViewTests(TestCase):
         self.assertContains(response, 'First goal!')
         self.assertContains(response, 'Yellow card for diving.')
         self.assertEqual(len(response.context['events']), 2)
+
+
+class PlayerProfileViewTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.league1 = League.objects.create(year=2023, session='S', is_active=False)
+        self.league2 = League.objects.create(year=2024, session='A', is_active=True)
+        self.team1 = Team.objects.create(name='Team A')
+        self.team2 = Team.objects.create(name='Team B')
+        self.player = Player.objects.create(first_name='John', last_name='Doe', position='FW')
+
+        # Player participation in league1
+        self.psp1 = PlayerSeasonParticipation.objects.create(
+            player=self.player,
+            team=self.team1,
+            league=self.league1,
+            matches_played=10,
+            goals=5,
+            assists=3,
+            yellow_cards=1,
+            red_cards=0,
+            is_active=True
+        )
+
+        # Player participation in league2
+        self.psp2 = PlayerSeasonParticipation.objects.create(
+            player=self.player,
+            team=self.team2,
+            league=self.league2,
+            matches_played=15,
+            goals=8,
+            assists=5,
+            yellow_cards=2,
+            red_cards=1,
+            is_active=True
+        )
+
+    def test_player_profile_view_context(self):
+        response = self.client.get(reverse('player_profile', args=[self.player.id]))
+
+        self.assertEqual(response.status_code, 200)
+        
+        # Check if player object is in context
+        self.assertIn('player', response.context)
+        self.assertEqual(response.context['player'], self.player)
+
+        # Check if season_participations are in context and ordered correctly
+        self.assertIn('season_participations', response.context)
+        season_participations = list(response.context['season_participations'])
+        self.assertEqual(len(season_participations), 2)
+        self.assertEqual(season_participations[0], self.psp2) # 2024 season first
+        self.assertEqual(season_participations[1], self.psp1) # 2023 season second
+
+        # Check if total_stats are in context and aggregated correctly
+        self.assertIn('total_matches', response.context)
+        self.assertEqual(response.context['total_matches'], 25) # 10 + 15
+
+        self.assertIn('total_goals', response.context)
+        self.assertEqual(response.context['total_goals'], 13) # 5 + 8
+
+        self.assertIn('total_assists', response.context)
+        self.assertEqual(response.context['total_assists'], 8) # 3 + 5
+
+        self.assertIn('total_yellow_cards', response.context)
+        self.assertEqual(response.context['total_yellow_cards'], 3) # 1 + 2
+
+        self.assertIn('total_red_cards', response.context)
+        self.assertEqual(response.context['total_red_cards'], 1) # 0 + 1
+
+        # Check if the correct template is used
+        self.assertTemplateUsed(response, 'player_profile.html')

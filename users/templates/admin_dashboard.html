@@ -37,13 +37,13 @@
                 </svg>
                 <span class="font-medium">All Users</span>
             </a>
-            <a href="#" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
+            <a href="{% url 'coming_soon' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                 </svg>
                 <span class="font-medium">Content</span>
             </a>
-            <a href="#" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
+            <a href="{% url 'coming_soon' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
@@ -212,17 +212,17 @@
                         <div class="p-6 space-y-4">
                             <div class="bg-gray-700/50 border border-gray-600 rounded-xl p-4 hover:border-yellow-500/50 transition-colors">
                                 <div class="flex justify-between items-start mb-2">
-                                    <div class="flex items-start space-x-2">
+                                    <!-- <div class="flex items-start space-x-2">
                                         <span class="w-2 h-2 bg-red-400 rounded-full mt-2"></span>
                                         <p class="text-white font-semibold">Complaint: Match scheduling issue</p>
                                     </div>
-                                    <span class="text-xs text-gray-400">2 hours ago</span>
+                                    <span class="text-xs text-gray-400">2 hours ago</span> -->
                                 </div>
-                                <p class="text-sm text-gray-400 ml-4 mb-1">From: Player ID 12345</p>
-                                <p class="text-sm text-gray-300 ml-4">"The last match schedule was changed without proper notification."</p>
+                                <!-- <p class="text-sm text-gray-400 ml-4 mb-1">From: Player ID 12345</p> -->
+                                <p class="text-sm text-gray-300 ml-4">Coming Soon</p>
                             </div>
 
-                            <div class="bg-gray-700/50 border border-gray-600 rounded-xl p-4 hover:border-blue-500/50 transition-colors">
+                            <!-- <div class="bg-gray-700/50 border border-gray-600 rounded-xl p-4 hover:border-blue-500/50 transition-colors">
                                 <div class="flex justify-between items-start mb-2">
                                     <div class="flex items-start space-x-2">
                                         <span class="w-2 h-2 bg-blue-400 rounded-full mt-2"></span>
@@ -244,7 +244,7 @@
                                 </div>
                                 <p class="text-sm text-gray-400 ml-4 mb-1">From: Fan ID 98765</p>
                                 <p class="text-sm text-gray-300 ml-4">"The app keeps crashing when trying to view live scores on Android."</p>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
@@ -257,7 +257,7 @@
                         <div class="p-6 border-b border-gray-700">
                             <h3 class="text-xl font-bold text-white">Quick Actions</h3>
                         </div>
-                        <div class="p-6 grid grid-cols-2 gap-3">
+<div class="p-6 grid grid-cols-2 gap-3">
                             <a href="{% url 'create_user' %}" class="bg-gray-700/50 hover:bg-gray-700 border border-gray-600 hover:border-indigo-500 p-4 rounded-xl flex flex-col items-center transition-all duration-200 group">
                                 <div class="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                                     <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,6 +274,15 @@
                                     </svg>
                                 </div>
                                 <span class="text-xs text-white font-medium text-center">Invite Coach</span>
+                            </a>
+
+                            <a href="{% url 'bulk_upload_players' %}" class="bg-gray-700/50 hover:bg-gray-700 border border-gray-600 hover:border-indigo-500 p-4 rounded-xl flex flex-col items-center transition-all duration-200 group">
+                                <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                    <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 3h16M4 9h16M4 15h16M4 21h16"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-xs text-white font-medium text-center">Bulk Upload Players</span>
                             </a>
 
                             <a href="{% url 'match_list' %}" class="bg-gray-700/50 hover:bg-gray-700 border border-gray-600 hover:border-indigo-500 p-4 rounded-xl flex flex-col items-center transition-all duration-200 group">

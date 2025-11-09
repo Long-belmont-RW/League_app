@@ -18,6 +18,23 @@ class FantasyLeagueAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     readonly_fields = ("created_at", "updated_at")
     actions = ["seed_default_scoring_rules"]
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'scoring_rules')
+        }),
+        ('Dates', {
+            'fields': ('start_date', 'end_date')
+        }),
+        ('Team Rules', {
+            'fields': ('max_team_size', 'budget_cap', 'transfer_limit', 'max_per_real_team', 'sell_price_policy')
+        }),
+        ('Captain Rules', {
+            'fields': ('allow_captain_multiplier', 'captain_multiplier')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
 
     def seed_default_scoring_rules(self, request, queryset):
         updated = 0
@@ -42,6 +59,7 @@ class FantasyTeamAdmin(admin.ModelAdmin):
     list_filter = ("fantasy_league",)
     search_fields = ("name", "user__username", "user__email")
     readonly_fields = ("created_at", "updated_at")
+    raw_id_fields = ("user", "fantasy_league")
     inlines = [FantasyPlayerInline]
 
 
@@ -51,6 +69,7 @@ class FantasyMatchWeekAdmin(admin.ModelAdmin):
     list_filter = ("fantasy_league",)
     search_fields = ("name",)
     filter_horizontal = ("matches",)
+    raw_id_fields = ("fantasy_league",)
 
 
 @admin.register(FantasyPlayerStats)
@@ -59,6 +78,7 @@ class FantasyPlayerStatsAdmin(admin.ModelAdmin):
     list_filter = ("fantasy_match_week",)
     search_fields = ("fantasy_player__player__full_name", "fantasy_player__fantasy_team__name")
     readonly_fields = ("created_at", "updated_at")
+    raw_id_fields = ("fantasy_player", "fantasy_match_week")
 
 
 @admin.register(FantasyLeaderboard)
@@ -66,6 +86,7 @@ class FantasyLeaderboardAdmin(admin.ModelAdmin):
     list_display = ("fantasy_team", "fantasy_match_week", "is_overall", "points_week", "cumulative_points", "rank", "updated_at")
     list_filter = ("fantasy_match_week", "is_overall", "fantasy_team__fantasy_league")
     search_fields = ("fantasy_team__name", "fantasy_team__user__username", "fantasy_team__user__email")
+    raw_id_fields = ("fantasy_team", "fantasy_match_week")
 
 
 @admin.register(FantasyTransfer)
@@ -73,5 +94,5 @@ class FantasyTransferAdmin(admin.ModelAdmin):
     list_display = ("fantasy_team", "fantasy_match_week", "player_in", "player_out", "cost", "created_at")
     list_filter = ("fantasy_match_week", "fantasy_team__fantasy_league")
     search_fields = ("fantasy_team__name", "player_in__first_name", "player_in__last_name")
-
+    raw_id_fields = ("fantasy_team", "fantasy_match_week", "player_in", "player_out")
 

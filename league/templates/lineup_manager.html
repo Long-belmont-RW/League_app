@@ -20,7 +20,19 @@
             </p>
         </div>
 
-        <!-- Two-Column Layout -->
+        <!-- Mobile-First Tabbed Interface -->
+        <div class="xl:hidden">
+            <div class="flex border-b border-gray-700 mb-4">
+                <button data-tab-target="#home-team-panel" class="tab-btn active-tab text-lg font-semibold py-3 px-6 text-white border-b-2 border-blue-500">
+                    {{ home_team_context.team.name }}
+                </button>
+                <button data-tab-target="#away-team-panel" class="tab-btn text-lg font-semibold py-3 px-6 text-gray-400">
+                    {{ away_team_context.team.name }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content: Grid for Desktop, Single Column for Mobile Tabs -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
             
             <!-- Home Team Panel -->
@@ -28,8 +40,8 @@
                 {% include 'partials/lineup_team_panel.html' with team_context=home_team_context team_type='home' can_edit=can_edit_home formations=formations %}
             </div>
 
-            <!-- Away Team Panel -->
-            <div class="lineup-panel" id="away-team-panel">
+            <!-- Away Team Panel (Hidden on mobile by default) -->
+            <div class="lineup-panel hidden xl:block" id="away-team-panel">
                 {% include 'partials/lineup_team_panel.html' with team_context=away_team_context team_type='away' can_edit=can_edit_away formations=formations %}
             </div>
 
@@ -65,6 +77,29 @@
 <script src="{% static 'js/lineup-manager.js' %}?v={% now "U" %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Mobile Tab Logic
+        const tabs = document.querySelectorAll('[data-tab-target]');
+        const lineupPanels = document.querySelectorAll('.lineup-panel');
+
+        if (window.innerWidth < 1280) { // Corresponds to 'xl' breakpoint
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = document.querySelector(tab.dataset.tabTarget);
+
+                    lineupPanels.forEach(panel => panel.classList.add('hidden'));
+                    target.classList.remove('hidden');
+
+                    tabs.forEach(t => {
+                        t.classList.remove('active-tab', 'text-white', 'border-blue-500');
+                        t.classList.add('text-gray-400');
+                    });
+                    
+                    tab.classList.add('active-tab', 'text-white', 'border-blue-500');
+                    tab.classList.remove('text-gray-400');
+                });
+            });
+        }
+
         try {
             const matchData = JSON.parse(document.getElementById('match-data').textContent);
             

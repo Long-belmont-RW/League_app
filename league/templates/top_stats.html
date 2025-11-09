@@ -75,9 +75,9 @@
                                         
                                         <!-- Player Info -->
                                         <div class="flex-1 min-w-0">
-                                            <span class="font-semibold text-white text-lg block truncate group-hover/item:text-green-300 transition-colors">
+                                            <a href="{% url 'player_profile' stat.player.id %}" class="font-semibold text-white text-lg block truncate group-hover/item:text-green-300 transition-colors hover:underline">
                                                 {{ stat.player }}
-                                            </span>
+                                            </a>
                                             {% if stat.team %}
                                             <span class="text-sm text-gray-400 truncate block">{{ stat.team }}</span>
                                             {% endif %}
@@ -154,9 +154,9 @@
                                         
                                         <!-- Player Info -->
                                         <div class="flex-1 min-w-0">
-                                            <span class="font-semibold text-white text-lg block truncate group-hover/item:text-blue-300 transition-colors">
+                                            <a href="{% url 'player_profile' stat.player.id %}" class="font-semibold text-white text-lg block truncate group-hover/item:text-blue-300 transition-colors hover:underline">
                                                 {{ stat.player }}
-                                            </span>
+                                            </a>
                                             {% if stat.team %}
                                             <span class="text-sm text-gray-400 truncate block">{{ stat.team }}</span>
                                             {% endif %}

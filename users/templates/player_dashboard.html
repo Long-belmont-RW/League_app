@@ -3,365 +3,377 @@
 {% block navbar_classes %}lg:hidden{% endblock %}
 
 {% block content %}
-<div
-  class="flex flex-col lg:flex-row min-h-screen bg-gray-900 text-gray-100 font-sans"
->
-  <!-- Sidebar -->
-  <div
-    id="player-sidebar"
-    class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-4 lg:p-6 flex flex-col justify-between z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out"
-  >
-    <div>
-      <div class="flex items-center mb-8">
-        {% if not player_profile.image %}
-        <img
-          src="https://placehold.co/40x40/00b894/ffffff?text=PL"
-          alt="Player Profile"
-          class="w-10 h-10 rounded-full mr-3"
-        />
-        {% else %}
-        <img
-          src="{{ player_profile.image.url }}"
-          alt="Player Profile"
-          class="w-10 h-10 rounded-full object-cover"
-        />
-        {% endif %}
-        <div>
-          <h2 class="text-white font-semibold text-lg px-1">
-            {{player_profile.player}}
-          </h2>
-          <p class="text-gray-400 text-sm">{{player_profile.user.email}}</p>
+<div class="flex min-h-screen bg-gray-900">
+    <!-- Sidebar -->
+    <div id="player-sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 border-r border-gray-700 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+        <!-- Profile Section -->
+        <div class="p-6 border-b border-gray-700">
+            <div class="flex items-center space-x-3">
+                {% if player_profile.image %}
+                <img src="{{ player_profile.image.url }}" alt="Player Profile" class="w-12 h-12 rounded-full ring-2 ring-indigo-500 object-cover">
+                {% else %}
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center ring-2 ring-indigo-500">
+                    <span class="text-white font-bold text-lg">{{ player_profile.player.first_name|slice:":1"|upper }}{{ player_profile.player.last_name|slice:":1"|upper }}</span>
+                </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-white font-semibold text-base truncate">{{ player_profile.player.first_name }} {{ player_profile.player.last_name }}</h2>
+                    <p class="text-gray-400 text-xs truncate">{{ player_profile.user.email }}</p>
+                </div>
+            </div>
         </div>
-      </div>
 
-      <nav class="space-y-4">
-        <a
-          href="{% url 'home' %}"
-          class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200"
-        >
-          <svg
-            class="w-5 h-5 mr-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            ></path>
-          </svg>
-          Home
-        </a>
-        <a
-          href="#"
-          class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200"
-        >
-          <svg
-            class="w-5 h-5 mr-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 19V6l12-3v13M9 19c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6m0 6a2 2 0 100-4 2 2 0 000 4zm0 0c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6"
-            ></path>
-          </svg>
-          My Stats
-        </a>
-      </nav>
-    </div>
-
-    <div class="space-y-4">
-       <a href="{% url 'profile_edit'%}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                Settings
+        <!-- Navigation -->
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="#" class="flex items-center space-x-3 text-white bg-indigo-600 px-4 py-3 rounded-xl transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <span class="font-medium">Dashboard</span>
             </a>
-      <a
-        href="{% url 'logout' %}"
-        class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 p-3 rounded-lg transition-colors duration-200"
-      >
-        <svg
-          class="w-5 h-5 mr-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-          ></path>
-        </svg>
-        Log out
-      </a>
+            <a href="#" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <span class="font-medium">My Stats</span>
+            </a>
+            <a href="{% url 'match_list' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span class="font-medium">Fixtures</span>
+            </a>
+        </nav>
+
+        <!-- Bottom Actions -->
+        <div class="p-4 border-t border-gray-700 space-y-2">
+            <a href="{% url 'profile_edit' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span class="font-medium">Settings</span>
+            </a>
+            <a href="{% url 'logout' %}" class="flex items-center space-x-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 px-4 py-3 rounded-xl transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                <span class="font-medium">Log Out</span>
+            </a>
+        </div>
     </div>
-  </div>
 
-  <!-- Main Content Area -->
-  <div class="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 bg-gray-900">
-    <!-- Header -->
-    <header
-      class="flex flex-col sm:flex-row items-center justify-between mb-8 bg-gray-800 p-4 rounded-xl shadow-md"
-    >
-      <div class="flex items-center w-full sm:w-auto mb-4 sm:mb-0">
-        <button
-          id="player-sidebar-toggle"
-          class="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 lg:hidden mr-4"
-        >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            ></path>
-          </svg>
-        </button>
-        <h1 class="text-2xl font-bold text-white">Player Dashboard</h1>
-      </div>
-    </header>
+    <!-- Overlay -->
+    <div id="player-sidebar-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden lg:hidden" onclick="closePlayerSidebar()"></div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Left column: Next match and recent matches -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Next Match Card -->
-        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-          <h2 class="text-xl font-semibold text-white mb-4">Next Match</h2>
-          {% if next_match %}
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-300">
-                {{ next_match.home_team }} vs {{ next_match.away_team }}
-              </p>
-              <p class="text-gray-400 text-sm">
-                {{ next_match.date|date:'D, M j, g:i a' }}
-              </p>
+    <!-- Main Content -->
+    <div class="flex-1 lg:ml-64 min-h-screen">
+        <!-- Header -->
+        <header class="sticky top-0 z-30 bg-gray-800/95 backdrop-blur-sm border-b border-gray-700">
+            <div class="px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button id="player-sidebar-toggle" class="lg:hidden text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                        <h1 class="text-2xl font-bold text-white">Player Dashboard</h1>
+                    </div>
+                    
+                    <div class="hidden md:block px-4 py-2 bg-indigo-600 rounded-lg">
+                        <div class="text-xs text-indigo-200">Position</div>
+                        <div class="text-sm font-bold text-white">{{ player_profile.player.get_position_display }}</div>
+                    </div>
+                </div>
             </div>
-            <div>
-              {% if is_in_lineup %}
-              <span
-                class="px-3 py-1 text-xs font-medium rounded-full bg-green-900 text-green-200 border border-green-700"
-                >In Lineup</span
-              >
-              {% else %}
-              <span
-                class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-900 text-yellow-200 border border-yellow-700"
-                >Not Selected</span
-              >
-              {% endif %}
-            </div>
-          </div>
-          {% else %}
-          <p class="text-gray-400">No upcoming match scheduled.</p>
-          {% endif %}
-        </div>
+        </header>
 
-        <!-- Recent Matches Card -->
-        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-          <h2 class="text-xl font-semibold text-white mb-4">Recent Matches</h2>
-          {% if recent_stats %}
-          <ul class="divide-y divide-gray-700">
-            {% for s in recent_stats %}
-            <li class="py-3 flex items-center justify-between">
-              <div>
-                <p class="text-gray-300">
-                  {{ s.match.home_team }} vs {{ s.match.away_team }}
-                </p>
-                <p class="text-gray-500 text-xs">
-                  {{ s.match.date|date:'D, M j' }}
-                </p>
-              </div>
-              <div class="flex gap-2 text-xs">
-                {% if s.goals %}<span
-                  class="px-2 py-1 rounded bg-indigo-900 text-indigo-200 border border-indigo-700"
-                  >G {{ s.goals }}</span
-                >{% endif %} {% if s.assists %}<span
-                  class="px-2 py-1 rounded bg-blue-900 text-blue-200 border border-blue-700"
-                  >A {{ s.assists }}</span
-                >{% endif %} {% if s.yellow_cards %}<span
-                  class="px-2 py-1 rounded bg-yellow-900 text-yellow-200 border border-yellow-700"
-                  >YC {{ s.yellow_cards }}</span
-                >{% endif %} {% if s.red_cards %}<span
-                  class="px-2 py-1 rounded bg-red-900 text-red-200 border border-red-700"
-                  >RC {{ s.red_cards }}</span
-                >{% endif %}
-              </div>
-            </li>
-            {% endfor %}
-          </ul>
-          {% else %}
-          <p class="text-gray-400">No recent match contributions yet.</p>
-          {% endif %}
-        </div>
-      </div>
+        <!-- Content Area -->
+        <main class="p-4 sm:p-6 lg:p-8">
+            
+            <!-- Season Stats Overview -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                <div class="bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-black text-green-400">{{ season_totals.goals|default:"0" }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Goals</div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-black text-blue-400">{{ season_totals.assists|default:"0" }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Assists</div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-black text-purple-400">{{ season_totals.matches_played|default:"0" }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Matches</div>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-black text-yellow-400">{{ season_totals.yellow_cards|default:"0" }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Yellow Cards</div>
+                </div>
+                <div class="bg-gradient-to-br from-red-500/20 to-red-600/20 border border-red-500/30 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-black text-red-400">{{ season_totals.red_cards|default:"0" }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Red Cards</div>
+                </div>
+                <div class="bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border border-cyan-500/30 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-black text-cyan-400">{{ season_totals.clean_sheets|default:"0" }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Clean Sheets</div>
+                </div>
+            </div>
 
-      <!-- Right column: Season stats, table, notifications -->
-      <div class="space-y-6">
-        <!-- Season Stats -->
-        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-          <h2 class="text-xl font-semibold text-white mb-4">Season Stats</h2>
-          {% if season_totals %}
-          <dl class="grid grid-cols-2 gap-4 text-sm">
-            <div class="p-3 bg-gray-700 rounded-lg">
-              <dt class="text-gray-400">Goals</dt>
-              <dd class="text-white text-lg font-bold">
-                {{ season_totals.goals }}
-              </dd>
-            </div>
-            <div class="p-3 bg-gray-700 rounded-lg">
-              <dt class="text-gray-400">Assists</dt>
-              <dd class="text-white text-lg font-bold">
-                {{ season_totals.assists }}
-              </dd>
-            </div>
-            <div class="p-3 bg-gray-700 rounded-lg">
-              <dt class="text-gray-400">Yellow Cards</dt>
-              <dd class="text-white text-lg font-bold">
-                {{ season_totals.yellow_cards }}
-              </dd>
-            </div>
-            <div class="p-3 bg-gray-700 rounded-lg">
-              <dt class="text-gray-400">Red Cards</dt>
-              <dd class="text-white text-lg font-bold">
-                {{ season_totals.red_cards }}
-              </dd>
-            </div>
-            <div class="p-3 bg-gray-700 rounded-lg">
-              <dt class="text-gray-400">Clean Sheets</dt>
-              <dd class="text-white text-lg font-bold">
-                {{ season_totals.clean_sheets }}
-              </dd>
-            </div>
-            <div class="p-3 bg-gray-700 rounded-lg">
-              <dt class="text-gray-400">Matches Played</dt>
-              <dd class="text-white text-lg font-bold">
-                {{ season_totals.matches_played }}
-              </dd>
-            </div>
-          </dl>
-          {% else %}
-          <p class="text-gray-400">No season data available.</p>
-          {% endif %}
-        </div>
+            <!-- Main Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Next Match -->
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 shadow-xl">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <h3 class="text-xl font-bold text-white">Next Match</h3>
+                            </div>
+                        </div>
 
-        <!-- Team Table (mini) -->
-        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-          <h2 class="text-xl font-semibold text-white mb-4">League Table</h2>
-          {% if team_table %}
-          <table class="w-full text-left text-sm">
-            <thead class="text-gray-400">
-              <tr>
-                <th class="py-2">Team</th>
-                <th class="py-2 text-center">Pts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in team_table %}
-              <tr
-                class="border-t border-gray-700 {% if row.team.id == player_team.team.id %}bg-gray-700/40{% endif %}"
-              >
-                <td class="py-2">{{ row.team.name }}</td>
-                <td class="py-2 text-center font-semibold">{{ row.points }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          {% else %}
-          <p class="text-gray-400">No standings yet.</p>
-          {% endif %}
-        </div>
+                        <div class="p-6">
+                            {% if next_match %}
+                            <div class="bg-gray-700/50 rounded-xl p-6">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <div class="flex-1">
+                                        <div class="text-xl font-bold text-white mb-2">
+                                            {{ next_match.home_team }} <span class="text-gray-500 text-base">vs</span> {{ next_match.away_team }}
+                                        </div>
+                                        <div class="flex items-center space-x-3 text-sm text-gray-400">
+                                            <div class="flex items-center space-x-1">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                                <span>{{ next_match.date|date:"D, M j" }}</span>
+                                            </div>
+                                            <span>•</span>
+                                            <div class="flex items-center space-x-1">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <span>{{ next_match.date|date:"g:i a" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {% if is_in_lineup %}
+                                        <span class="px-4 py-2 bg-green-500/20 border border-green-500 text-green-400 text-sm font-bold rounded-full">
+                                            ✓ In Lineup
+                                        </span>
+                                        {% else %}
+                                        <span class="px-4 py-2 bg-yellow-500/20 border border-yellow-500 text-yellow-400 text-sm font-bold rounded-full">
+                                            Not Selected
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-12">
+                                <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <h4 class="text-lg font-bold text-white mb-2">No Upcoming Match</h4>
+                                <p class="text-gray-400">No matches scheduled yet</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
 
-        <!-- Notifications -->
-        <div class="bg-gray-800 p-6 rounded-xl shadow-md">
-          <h2 class="text-xl font-semibold text-white mb-4">Notifications</h2>
-          <ul class="list-disc pl-6 space-y-2 text-gray-300">
-            {% if notifications %}
-              {% for note in notifications %}
-              <li>{{ note }}</li>
-              {% endfor %}
-            {% endif %}
-            {% if request.user.notifications.all %}
-              {% for n in request.user.notifications.all|slice:":5" %}
-              <li>
-                <span class="font-semibold">{{ n.title }}:</span> {{ n.message }}
-              </li>
-              {% endfor %}
-            {% endif %}
-          </ul>
-          {% if not notifications and not request.user.notifications.all %}
-          <p class="text-gray-400">No notifications.</p>
-          {% endif %}
-        </div>
-      </div>
+                    <!-- Recent Matches -->
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 shadow-xl">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3 class="text-xl font-bold text-white">Recent Performances</h3>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            {% if recent_stats %}
+                            <div class="space-y-3">
+                                {% for s in recent_stats %}
+                                <div class="bg-gray-700/50 hover:bg-gray-700 rounded-xl p-4 border border-gray-600 transition-colors">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                        <div class="flex-1">
+                                            <div class="text-white font-semibold mb-1">
+                                                {{ s.match.home_team }} vs {{ s.match.away_team }}
+                                            </div>
+                                            <div class="text-xs text-gray-400">{{ s.match.date|date:"D, M j, Y" }}</div>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            {% if s.goals %}
+                                            <span class="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-bold rounded-full">
+                                                ⚽ {{ s.goals }}
+                                            </span>
+                                            {% endif %}
+                                            {% if s.assists %}
+                                            <span class="px-3 py-1 bg-blue-500/20 border border-blue-500/50 text-blue-400 text-xs font-bold rounded-full">
+                                                🎯 {{ s.assists }}
+                                            </span>
+                                            {% endif %}
+                                            {% if s.yellow_cards %}
+                                            <span class="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-xs font-bold rounded-full">
+                                                🟨 {{ s.yellow_cards }}
+                                            </span>
+                                            {% endif %}
+                                            {% if s.red_cards %}
+                                            <span class="px-3 py-1 bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold rounded-full">
+                                                🟥 {{ s.red_cards }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-12">
+                                <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <h4 class="text-lg font-bold text-white mb-2">No Recent Stats</h4>
+                                <p class="text-gray-400">Your match statistics will appear here</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="lg:col-span-1 space-y-6">
+                    
+                    <!-- League Table -->
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 shadow-xl">
+                        <div class="p-6 border-b border-gray-700">
+                            <h3 class="text-xl font-bold text-white">League Table</h3>
+                        </div>
+                        <div class="p-6">
+                            {% if team_table %}
+                            <div class="space-y-2">
+                                {% for row in team_table %}
+                                <div class="flex items-center justify-between p-3 rounded-lg {% if row.team.id == player_team.team.id %}bg-indigo-500/20 border border-indigo-500/50{% else %}bg-gray-700/30{% endif %} hover:bg-gray-700/50 transition-colors">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-6 text-center">
+                                            <span class="text-sm font-bold text-gray-400">{{ forloop.counter }}</span>
+                                        </div>
+                                        <span class="text-white font-medium">{{ row.team.name }}</span>
+                                    </div>
+                                    <div class="px-3 py-1 bg-gray-700 rounded-full">
+                                        <span class="text-white font-bold text-sm">{{ row.points }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-8">
+                                <p class="text-gray-400">No standings yet</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 shadow-xl">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                </svg>
+                                <h3 class="text-xl font-bold text-white">Notifications</h3>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            {% if notifications or request.user.notifications.all %}
+                            <div class="space-y-3">
+                                {% for note in notifications %}
+                                <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
+                                    <p class="text-sm text-gray-300">{{ note }}</p>
+                                </div>
+                                {% endfor %}
+                                {% for n in request.user.notifications.all|slice:":5" %}
+                                <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
+                                    <p class="text-sm font-semibold text-white mb-1">{{ n.title }}</p>
+                                    <p class="text-sm text-gray-300">{{ n.message }}</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-8">
+                                <svg class="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                </svg>
+                                <p class="text-gray-400 text-sm">No notifications</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-  </div>
 </div>
 
+<!-- Scripts -->
 <script>
-  function togglePlayerSidebar() {
-    const sidebar = document.getElementById("player-sidebar");
-    sidebar.classList.toggle("-translate-x-full");
-  }
+function togglePlayerSidebar() {
+    const sidebar = document.getElementById('player-sidebar');
+    const overlay = document.getElementById('player-sidebar-overlay');
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+}
 
-  function closePlayerSidebar() {
-    const sidebar = document.getElementById("player-sidebar");
-    sidebar.classList.add("-translate-x-full");
-  }
+function closePlayerSidebar() {
+    const sidebar = document.getElementById('player-sidebar');
+    const overlay = document.getElementById('player-sidebar-overlay');
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('hidden');
+}
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const sidebar = document.getElementById("player-sidebar");
-    const sidebarToggle = document.getElementById("player-sidebar-toggle");
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebarToggle = document.getElementById('player-sidebar-toggle');
+    const sidebar = document.getElementById('player-sidebar');
     
-    // Toggle sidebar when button is clicked
     if (sidebarToggle) {
-      sidebarToggle.addEventListener("click", (e) => {
-        e.stopPropagation(); // Prevent event from bubbling
-        togglePlayerSidebar();
-      });
+        sidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePlayerSidebar();
+        });
     }
 
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener("click", (e) => {
-      // Only handle this on mobile (when sidebar is position: fixed and hidden by default)
-      if (window.innerWidth < 1024) { // lg breakpoint
-        const isClickInsideSidebar = sidebar.contains(e.target);
-        const isClickOnToggle = sidebarToggle && sidebarToggle.contains(e.target);
-        const isSidebarOpen = !sidebar.classList.contains("-translate-x-full");
-        
-        if (!isClickInsideSidebar && !isClickOnToggle && isSidebarOpen) {
-          closePlayerSidebar();
-        }
-      }
-    });
-
-    // Prevent clicks inside sidebar from closing it
     if (sidebar) {
-      sidebar.addEventListener("click", (e) => {
-        e.stopPropagation();
-      });
+        sidebar.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
     }
 
-    // Close sidebar when window is resized to desktop
-    window.addEventListener("resize", () => {
-      if (window.innerWidth >= 1024) {
-        sidebar.classList.remove("-translate-x-full");
-      }
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth < 1024) {
+            const isClickInsideSidebar = sidebar && sidebar.contains(e.target);
+            const isClickOnToggle = sidebarToggle && sidebarToggle.contains(e.target);
+            const isSidebarOpen = sidebar && !sidebar.classList.contains('-translate-x-full');
+            
+            if (!isClickInsideSidebar && !isClickOnToggle && isSidebarOpen) {
+                closePlayerSidebar();
+            }
+        }
     });
-  });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024 && sidebar) {
+            sidebar.classList.remove('-translate-x-full');
+            const overlay = document.getElementById('player-sidebar-overlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+    });
+});
 </script>
 {% endblock content %}

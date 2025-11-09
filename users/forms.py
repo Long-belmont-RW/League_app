@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
-from league.models import Coach, Player, Team
+from league.models import Coach, Player, Team, League, TeamSeasonParticipation
 from .models import User, UserProfile  # Assuming User extends AbstractUser
 
 class EmailAuthenticationForm(AuthenticationForm):
@@ -166,3 +166,20 @@ class PlayerCreationForm(forms.ModelForm):
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("A user with this email already exists.")
         return email
+
+
+class PlayerBulkUploadForm(forms.Form):
+    team = forms.ModelChoiceField(queryset=Team.objects.all())
+    league = forms.ModelChoiceField(queryset=League.objects.all())
+    file = forms.FileField(
+        help_text="CSV with headers: first_name,last_name,email,position (GK|DF|MF|FW)",
+        widget=forms.ClearableFileInput(attrs={"accept": ".csv"}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        team = cleaned.get('team')
+        league = cleaned.get('league')
+        if team and league and not TeamSeasonParticipation.objects.filter(team=team, league=league).exists():
+            self.add_error('team', f"{team.name} is not active in {league}.")
+        return cleaned

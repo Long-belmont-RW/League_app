@@ -20,7 +20,7 @@ from league.models import (
 from django.utils import timezone
 
 from .utils import get_season_progress, get_team_season_progress, get_win_ratio, get_matches_completed
-from .forms import UserRegistrationForm, EmailAuthenticationForm, InvitationRegistrationForm, CustomUserCreationForm, UserAccountForm, UserProfileForm, PlayerCreationForm
+from .forms import UserRegistrationForm, EmailAuthenticationForm, InvitationRegistrationForm, CustomUserCreationForm, UserAccountForm, UserProfileForm, PlayerCreationForm, PlayerBulkUploadForm
 from django.contrib.auth.forms import PasswordChangeForm
 from content.models import Invitation
 import logging
@@ -30,6 +30,9 @@ import string
 
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
+from .services.bulk_upload import import_players_csv_for_team
+
+
 
 #set up logging
 logger = logging.getLogger(__name__)
@@ -179,6 +182,36 @@ def admin_dashboard_view(request):
     }
 
     return render(request, 'admin_dashboard.html', context)
+
+
+@user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
+def bulk_upload_players_view(request):
+    # Match admin check behavior with admin_dashboard_view
+    if request.user.role != 'admin' or request.user.is_superuser is False:
+        messages.error(request, "Only admins can access this page.")
+        return redirect('login')
+
+    if request.method == 'POST':
+        form = PlayerBulkUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            result = import_players_csv_for_team(
+                form.cleaned_data['team'],
+                form.cleaned_data['league'],
+                form.cleaned_data['file'],
+            )
+            if result.errors:
+                for e in result.errors[:200]:
+                    messages.error(request, e)
+            else:
+                messages.success(
+                    request,
+                    f"Users created: {result.created_users}, attached: {result.existing_attached}, emails sent: {result.emails_sent}."
+                )
+                return redirect('admin_dashboard')
+    else:
+        form = PlayerBulkUploadForm()
+
+    return render(request, 'bulk_upload_players.html', { 'form': form })
 
 
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'coach')
@@ -498,12 +531,6 @@ def fan_dashboard_view(request):
 
 
 
-
-""""Future improvements:"""
-# - Add email verification for new registrations
-# - Implement password reset functionality
-# - Add user profile management
-
 @login_required
 @user_passes_test(lambda u: u.role == 'admin')
 def create_user_view(request):
@@ -632,3 +659,6 @@ def add_player_view(request):
         form = PlayerCreationForm()
 
     return render(request, 'add_player.html', {'form': form})
+
+def coming_soon(request):
+    return render(request, 'coming_soon.html')

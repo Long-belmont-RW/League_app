@@ -1,10 +1,219 @@
-@import "tailwindcss";
+/* 
+ * Source CSS file for Django Tailwind theme
+ * This file gets compiled to theme/static/css/dist/styles.css
+ */
 
-/**
-  * A catch-all path to Django template files, JavaScript, and Python files
-  * that contain Tailwind CSS classes and will be scanned by Tailwind to generate the final CSS file.
-  *
-  * If your final CSS file is not being updated after code changes, you may want to broaden or narrow
-  * the scope of this path.
-  */
-@source "../../../**/*.{html,py,js}";
+/* Import Tailwind directives */
+@import 'tailwindcss';
+
+/* =============================================================================
+   CUSTOM BASE STYLES
+   ============================================================================= */
+@layer base {
+  body {
+    @apply bg-gray-900 text-gray-200;
+  }
+}
+
+/* =============================================================================
+   CUSTOM COMPONENT STYLES
+   ============================================================================= */
+@layer components {
+  /* Enhanced Navbar Styles */
+  .navbar-enhanced {
+    @apply bg-gray-800/95 backdrop-blur-md text-white shadow-lg sticky top-0 z-50 border-b border-gray-700;
+  }
+
+  /* Gradient Text */
+  .gradient-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500;
+  }
+
+  /* Enhanced Buttons */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center px-6 py-2.5 overflow-hidden font-medium transition duration-300 ease-out rounded-lg shadow-md bg-gradient-to-r from-indigo-600 to-purple-700 text-white hover:from-indigo-700 hover:to-purple-800;
+  }
+
+  /* Card Styles */
+  .card-enhanced {
+    @apply bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-lg p-6 border border-gray-700 hover:border-indigo-500 hover:scale-105 transition-all duration-200;
+  }
+
+  /* Dropdown Menu Enhanced */
+  .dropdown-enhanced {
+    @apply bg-gray-800 backdrop-blur-lg divide-y divide-gray-700 rounded-xl shadow-2xl border border-gray-700;
+  }
+
+  /* Navigation Link Styles */
+  .nav-link {
+    @apply group flex items-center space-x-2 py-2 px-4 text-gray-300 rounded-lg hover:text-white hover:bg-gray-700/50 transition-all duration-200 relative overflow-hidden;
+  }
+
+  .nav-link-active {
+    @apply text-white bg-gray-700/50;
+  }
+
+  /* Animated underline effect */
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 transform scale-x-0 transition-transform duration-200;
+  }
+
+  .nav-link:hover::after {
+    @apply scale-x-100;
+  }
+
+  /* User Avatar */
+  .user-avatar {
+    @apply w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm;
+  }
+
+  .user-avatar-large {
+    @apply w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold;
+  }
+
+  /* Badge Styles */
+  .badge {
+    @apply px-2 py-0.5 text-xs font-semibold rounded-full;
+  }
+
+  .badge-new {
+    @apply bg-gradient-to-r from-indigo-500 to-purple-600 text-white;
+  }
+
+  .badge-admin {
+    @apply bg-indigo-500/20 text-indigo-300;
+  }
+
+  .badge-coach {
+    @apply bg-green-500/20 text-green-300;
+  }
+
+  .badge-player {
+    @apply bg-blue-500/20 text-blue-300;
+  }
+
+  .badge-fan {
+    @apply bg-purple-500/20 text-purple-300;
+  }
+
+  /* Message/Alert Styles */
+  .alert {
+    @apply p-4 rounded-md text-sm;
+  }
+
+  .alert-error {
+    @apply bg-red-900 border border-red-700 text-red-200;
+  }
+
+  .alert-warning {
+    @apply bg-yellow-900 border border-yellow-700 text-yellow-200;
+  }
+
+  .alert-success {
+    @apply bg-green-900 border border-green-700 text-green-200;
+  }
+
+  .alert-info {
+    @apply bg-blue-900 border border-blue-700 text-blue-200;
+  }
+
+  /* Form Input Styles */
+  .input-enhanced {
+    @apply bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+  }
+
+  /* Hover effects for icons */
+  .icon-hover {
+    @apply transition-transform duration-200 group-hover:scale-110;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply animate-spin rounded-full border-4 border-gray-700 border-t-indigo-500;
+  }
+}
+
+/* =============================================================================
+   CUSTOM UTILITY STYLES
+   ============================================================================= */
+@layer utilities {
+  /* Glassmorphism effect */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+
+  /* Text gradient utilities */
+  .text-gradient-indigo {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-600;
+  }
+
+  .text-gradient-purple {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600;
+  }
+
+  /* Smooth scroll */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* =============================================================================
+   CUSTOM ANIMATIONS
+   ============================================================================= */
+@keyframes slideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in;
+}
+
+/* =============================================================================
+   FLOWBITE OVERRIDES (if needed)
+   ============================================================================= */
+@layer components {
+  /* Override Flowbite dropdown to match your theme */
+  [data-dropdown-toggle] + div {
+    @apply bg-gray-800 border-gray-700;
+  }
+}

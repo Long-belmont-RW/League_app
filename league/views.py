@@ -4,7 +4,7 @@ import logging
 from django.conf import settings
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib import messages
 
 from django.urls import reverse, reverse_lazy
@@ -183,7 +183,7 @@ def team(request, team_id):
 
     return HttpResponse(rendered)
 
-# Match List View (with HTMX filtering)
+# Match List View 
 class MatchListView(ListView):
     model = Match
     template_name = 'match_list.html'
@@ -678,8 +678,9 @@ def edit_player_stats_view(request, match_id):
     return render(request, 'edit_player_stats.html', context)
 
 
+
 def player_profile(request, player_id):
-    print("Executing player_profile view")
+    
     player = get_object_or_404(Player, id=player_id)
     season_participations = PlayerSeasonParticipation.objects.filter(player=player).select_related('team', 'league').order_by('-league__year', '-league__session')
     
@@ -700,8 +701,7 @@ def player_profile(request, player_id):
         'total_yellow_cards': total_stats['total_yellow_cards'],
         'total_red_cards': total_stats['total_red_cards'],
     }
-    rendered = render_to_string('league/player_profile.html', context, request=request)
-    return HttpResponse(rendered)
+    return render(request, 'player_profile.html', context)
 
 
 
@@ -1035,8 +1035,10 @@ def serialize_player(player):
    
 
 
-@user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
-def manage_team_of_the_week(request):
+###### TEAM OF THE WEEK ####
+
+# @user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
+# def manage_team_of_the_week(request):
     if request.method == 'POST':
         form = TeamOfTheWeekForm(request.POST)
         formset = TeamOfTheWeekPlayerFormSet(request.POST)
@@ -1078,7 +1080,7 @@ def manage_team_of_the_week(request):
     }
     return render(request, 'league/manage_team_of_the_week.html', context)
 
-def team_of_the_week_view(request):
+# def team_of_the_week_view(request):
     league_id = request.GET.get('league')
     week_number = request.GET.get('week')
 
