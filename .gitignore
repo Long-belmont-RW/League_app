@@ -1,24 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+myvenv/
+
 # Django
-*.db
-*.sqlite3
-/media
-/staticfiles
-static/*
-static/**/*
+*.log
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
 
 # Environment
 .env
-venv/
-env/
+.env.example
 
-# VSCode
+# IDE / Editor
 .vscode/
+.idea/
 
-#git
-.gitignore
-
-# Theme - Only ignore compiled CSS, track source
-theme/static/css/dist/
+# Other
+.pytest_cache/
 node_modules/
-
-!static/js/lineup-manager.js
+debug.log
+error.txt

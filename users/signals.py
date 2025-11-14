@@ -125,31 +125,51 @@ def delete_user_profile_on_player_delete(sender, instance, **kwargs):
             logger.error(f"Error deleting UserProfile/User for Player (ID: {instance.id}): {e}", exc_info=True)
             raise
 
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+
 @receiver(post_save, sender=LineupPlayer)
 def send_lineup_add_notification(sender, instance, created, **kwargs):
     """Send notification to player when added to a lineup."""
     if created:
-        print(f"DEBUG: send_lineup_add_notification triggered for player {instance.player.id}")
+        logger.debug(f"send_lineup_add_notification triggered for player {instance.player.id}")
         try:
             user = instance.player.userprofile.user
-            print(f"DEBUG: User found for notification: {user.username}")
+            logger.debug(f"User found for notification: {user.username}")
             match_info = f"{instance.lineup.match.home_team} vs {instance.lineup.match.away_team} on {instance.lineup.match.date.strftime('%Y-%m-%d')}"
             
             # Create in-app notification
             Notification.objects.create(
                 user=user,
                 title="You've been selected for a match lineup!",
-                message=f"You have been selected for the match: {match_info}. Check the lineup for details."
+                message=f"You have been selected for the match: {match_info}. Check the lineup for details.",
+                match=instance.lineup.match
             )
 
+            # Prepare email context
+            context = {
+                'player_name': user.first_name or user.username,
+                'match': instance.lineup.match,
+                'added': True,
+                'match_url': settings.BASE_URL + reverse('match_details', args=[instance.lineup.match.id]),
+            }
+            
+            # Render HTML and text versions
+            html_content = render_to_string('emails/lineup_notification.html', context)
+            text_content = f"Hi {context['player_name']},\n\nYou have been selected for the match: {match_info}. Please log in to view the full lineup.\n\nView the lineup: {context['match_url']}"
+
             # Send email
-            send_mail(
-                subject='You have been selected for a match lineup!',
-                message=f"You have been selected for the match: {match_info}. Please log in to view the full lineup.",
+            msg = EmailMultiAlternatives(
+                subject="You've Been Selected for a Match Lineup!",
+                body=text_content,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
+                to=[user.email]
             )
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
+
+        except UserProfile.DoesNotExist:
+            logger.debug(f"No user profile found for player {instance.player.id}. Skipping notification.")
         except Exception as e:
             logger.error(f"Error sending lineup add notification for player {instance.player.id}: {e}", exc_info=True)
 
@@ -157,10 +177,10 @@ def send_lineup_add_notification(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=LineupPlayer)
 def send_lineup_remove_notification(sender, instance, **kwargs):
     """Send notification to player when removed from a lineup."""
-    print(f"DEBUG: send_lineup_remove_notification triggered for player {instance.player.id}")
+    logger.debug(f"send_lineup_remove_notification triggered for player {instance.player.id}")
     try:
         user = instance.player.userprofile.user
-        print(f"DEBUG: User found for notification: {user.username}")
+        logger.debug(f"User found for notification: {user.username}")
         match_info = f"{instance.lineup.match.home_team} vs {instance.lineup.match.away_team} on {instance.lineup.match.date.strftime('%Y-%m-%d')}"
 
         # Create in-app notification
@@ -170,13 +190,29 @@ def send_lineup_remove_notification(sender, instance, **kwargs):
             message=f"You have been removed from the lineup for the match: {match_info}."
         )
 
+        # Prepare email context
+        context = {
+            'player_name': user.first_name or user.username,
+            'match': instance.lineup.match,
+            'added': False,
+            'match_url': settings.BASE_URL + reverse('match_details', args=[instance.lineup.match.id]),
+        }
+
+        # Render HTML and text versions
+        html_content = render_to_string('emails/lineup_notification.html', context)
+        text_content = f"Hi {context['player_name']},\n\nYou have been removed from the lineup for the match: {match_info}.\n\nSee the updated lineup: {context['match_url']}"
+
         # Send email
-        send_mail(
-            subject='You have been removed from a match lineup',
-            message=f"You have been removed from the lineup for the match: {match_info}.",
+        msg = EmailMultiAlternatives(
+            subject="Lineup Update for Your Upcoming Match",
+            body=text_content,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
+            to=[user.email]
         )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send()
+
+    except UserProfile.DoesNotExist:
+        logger.debug(f"No user profile found for player {instance.player.id}. Skipping notification.")
     except Exception as e:
         logger.error(f"Error sending lineup remove notification for player {instance.player.id}: {e}", exc_info=True)

@@ -1,54 +1,104 @@
-<!-- league/templates/league/manage_lineup_redesigned.html -->
-{% load static league_extras %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Lineup | {{ match.home_team.name }} vs {{ match.away_team.name }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{% static 'css/lineup-responsive.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+{% extends 'base.html' %}
+{% load static %}
 
-</head>
-<body class="bg-gray-900 text-gray-200 p-4 lg:p-8">
-    <h1 class="text-3xl font-bold text-center mb-8">Lineup Management: {{ match.home_team.name }} vs {{ match.away_team.name }}</h1>
+{% block title %}Manage Lineup | {{ match.home_team.name }} vs {{ match.away_team.name }}{% endblock %}
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        <!-- ================== HOME TEAM COLUMN ================== -->
-        <div id="home-team-manager" data-team-id="{{ home.team.id }}" data-team-prefix="home">
-            {% include 'partials/team_lineup_panel.html' with team_context=home team_prefix='home' %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/lineup-manager.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-900 py-6 pb-20">
+    <div class="container mx-auto px-2 lg:px-8">
+
+        <div class="flex flex-col items-center mb-6 text-white">
+            <div class="text-sm text-gray-400 uppercase tracking-widest mb-1">{{ match.season.name }}</div>
+            <div class="flex items-center gap-4 text-xl md:text-3xl font-black">
+                <span>{{ match.home_team.name }}</span>
+                <span class="text-blue-500">VS</span>
+                <span>{{ match.away_team.name }}</span>
+            </div>
+            <div class="text-sm text-gray-400 mt-1">{{ match.date|date:"D, d M Y H:i" }}</div>
         </div>
 
-        <!-- ================== AWAY TEAM COLUMN ================== -->
-        <div id="away-team-manager" data-team-id="{{ away.team.id }}" data-team-prefix="away">
-            {% include 'partials/team_lineup_panel.html' with team_context=away team_prefix='away' %}
+        <div class="xl:hidden flex mb-4 bg-gray-800 rounded-lg p-1 border border-gray-700">
+            <button onclick="switchTab('home')" id="tab-home" class="flex-1 py-2 text-sm font-bold rounded-md transition-all bg-blue-600 text-white shadow">
+                {{ match.home_team.name }}
+            </button>
+            <button onclick="switchTab('away')" id="tab-away" class="flex-1 py-2 text-sm font-bold rounded-md transition-all text-gray-400 hover:text-white">
+                {{ match.away_team.name }}
+            </button>
         </div>
 
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-12 h-[800px]">
+            
+            <div id="panel-home" class="h-full">
+                {% include 'partials/lineup_team_panel.html' with team_context=home_team_context team_type='home' can_edit=can_edit_home formations=formations %}
+            </div>
+
+            <div id="panel-away" class="h-full hidden xl:block">
+                {% include 'partials/lineup_team_panel.html' with team_context=away_team_context team_type='away' can_edit=can_edit_away formations=formations %}
+            </div>
+            
+        </div>
     </div>
+</div>
 
-    
-    
-    {{ home_json|json_script:"home-data" }}
-    {{ away_json|json_script:"away-data" }}
-    
-    
-    {{ home_json|json_script:"home-data" }}
-    {{ away_json|json_script:"away-data" }}
-    
-    
-    {{ home_json|json_script:"home-data" }}
-    {{ away_json|json_script:"away-data" }}
-    <script>
-        // This is a simplified way to pass Django context to JS.
-        // A more robust solution might use a dedicated API endpoint or a library.
-        const pageContext = {
-            home: JSON.parse(document.getElementById('home-data').textContent),
-            away: JSON.parse(document.getElementById('away-data').textContent)
+<div id="toast" class="fixed top-4 right-4 z-[100] transform translate-x-full transition-transform duration-300">
+    <div class="bg-gray-800 text-white px-4 py-3 rounded shadow-xl border-l-4 border-blue-500 flex items-center gap-3">
+        <div id="toast-icon"></div>
+        <span id="toast-message" class="text-sm font-medium"></span>
+    </div>
+</div>
+
+{{ home_team_context.js_data|json_script:"home-team-data" }}
+{{ away_team_context.js_data|json_script:"away-team-data" }}
+
+<script>
+    // Mobile Tab Switching Logic
+    function switchTab(team) {
+        const homePanel = document.getElementById('panel-home');
+        const awayPanel = document.getElementById('panel-away');
+        const homeTab = document.getElementById('tab-home');
+        const awayTab = document.getElementById('tab-away');
+
+        if (team === 'home') {
+            homePanel.classList.remove('hidden');
+            awayPanel.classList.add('hidden');
+            
+            homeTab.classList.add('bg-blue-600', 'text-white', 'shadow');
+            homeTab.classList.remove('text-gray-400');
+            
+            awayTab.classList.remove('bg-blue-600', 'text-white', 'shadow');
+            awayTab.classList.add('text-gray-400');
+        } else {
+            homePanel.classList.add('hidden');
+            awayPanel.classList.remove('hidden');
+            
+            awayTab.classList.add('bg-blue-600', 'text-white', 'shadow');
+            awayTab.classList.remove('text-gray-400');
+            
+            homeTab.classList.remove('bg-blue-600', 'text-white', 'shadow');
+            homeTab.classList.add('text-gray-400');
         }
-    </script>
-    <script src="{% static 'js/lineup-manager.js' %}"></script>
-    <script src="{% static 'js/lineup-manager.js' %}"></script>
-</body>
-</html>
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="{% static 'js/lineup-manager.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const saveUrl = "{% url 'manage_lineup' match.id %}";
+        
+        // Initialize Home Team
+        const homeData = JSON.parse(document.getElementById('home-team-data').textContent);
+        homeData.saveUrl = saveUrl;
+        new LineupManager(homeData);
+
+        // Initialize Away Team
+        const awayData = JSON.parse(document.getElementById('away-team-data').textContent);
+        awayData.saveUrl = saveUrl;
+        new LineupManager(awayData);
+    });
+</script>
+{% endblock %}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block navbar_classes %}lg:hidden{% endblock %}
+{% block navbar_classes %}hidden{% endblock %}
 
 {% block content %}
 <div class="flex min-h-screen bg-gray-900">
@@ -124,8 +124,56 @@
             <!-- Main Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <!-- Left Column - Upcoming Matches -->
+                <!-- Left Column - Live & Upcoming Matches -->
                 <div class="lg:col-span-2 space-y-6">
+
+                    <!-- Live Match -->
+                    {% if live_match %}
+                    <div class="bg-gradient-to-br from-green-800/50 to-gray-900 rounded-2xl border border-green-700 shadow-xl">
+                        <div class="p-6 border-b border-green-700">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.636 5.636a9 9 0 0112.728 0m-12.728 0a9 9 0 000 12.728m0-12.728l12.728 12.728"></path>
+                                    </svg>
+                                    <h3 class="text-xl font-bold text-white">Live Match</h3>
+                                </div>
+                                <span class="relative flex h-3 w-3">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            <div class="group bg-gray-700/50 hover:bg-gray-700 rounded-xl p-5 border border-gray-600 hover:border-green-500 transition-all duration-300">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-3 mb-2">
+                                            <span class="text-lg font-bold text-white">{{ live_match.home_team.name }}</span>
+                                            <span class="text-2xl font-bold text-green-400">{{ live_match.home_score }} - {{ live_match.away_score }}</span>
+                                            <span class="text-lg font-bold text-white">{{ live_match.away_team.name }}</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3 text-sm text-gray-400">
+                                            <div class="flex items-center space-x-1">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <span>{{ live_match.get_display_minute }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a href="{% url 'match_details' live_match.id %}" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center space-x-2">
+                                        <span>Match Center</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     
                     <!-- Upcoming Matches -->
                     <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 shadow-xl">

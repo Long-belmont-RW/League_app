@@ -1,0 +1,49 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}
+    {% if added %}
+        You're in the Lineup!
+    {% else %}
+        Lineup Update
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <h1>
+        {% if added %}
+            You've Been Selected!
+        {% else %}
+            Lineup Update
+        {% endif %}
+    </h1>
+    <p>Hi {{ player_name }},</p>
+    
+    {% if added %}
+        <p>Great news! You have been selected for the lineup for the upcoming match.</p>
+    {% else %}
+        <p>Just a heads-up, you have been removed from the lineup for the following match.</p>
+    {% endif %}
+
+    <div style="background-color: #374151; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #ffffff;">Match Details</h3>
+        <p style="margin: 0;">
+            <strong>{{ match.home_team.name }} vs {{ match.away_team.name }}</strong>
+        </p>
+        <p style="margin: 8px 0 0; color: #d1d5db;">
+            {{ match.date|date:"F j, Y" }} at {{ match.date|date:"g:i A" }}
+        </p>
+    </div>
+
+    <p style="text-align: center;">
+        <a href="{{ match_url }}" class="button">
+            {% if added %}
+                View Full Lineup
+            {% else %}
+                See Updated Lineup
+            {% endif %}
+        </a>
+    </p>
+    
+    <p>Good luck!</p>
+    <p>The AUNLeague Team</p>
+{% endblock %}

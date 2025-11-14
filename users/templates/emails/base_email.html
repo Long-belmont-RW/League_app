@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AUNLeague Notification{% endblock %}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111827;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+            color: #d1d5db;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .header a {
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .header .logo-main {
+            color: #ffffff;
+        }
+        .header .logo-gradient {
+            background: -webkit-linear-gradient(45deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .content {
+            background-color: #1f2937;
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid #374151;
+        }
+        .content h1 {
+            color: #ffffff;
+            font-size: 22px;
+            margin-top: 0;
+        }
+        .content p {
+            line-height: 1.6;
+            margin: 16px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #6366f1, #a855f7);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .footer a {
+            color: #818cf8;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'home' %}">
+                <span class="logo-main">AUN</span><span class="logo-gradient">League</span>
+            </a>
+        </div>
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+        <div class="footer">
+            <p>&copy; {% now "Y" %} AUNLeague. All rights reserved.</p>
+            <p>
+                <a href="{% url 'home' %}">Visit our website</a> | 
+                <a href="{% url 'profile_edit' %}">Account Settings</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

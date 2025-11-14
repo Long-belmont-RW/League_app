@@ -19,6 +19,7 @@ from .models import League, Lineup, Team, Match, Player, PlayerSeasonParticipati
 from .forms import LineupPlayerForm, MatchForm, PlayerStatsForm, PlayerStatsFormSet, LineupFormSet, MatchEventForm, ValidatingLineupFormSet
 from .utils import get_league_standings
 from .services import update_league_table
+from users.services.fan_dashboard import build_live_section
 
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -68,6 +69,9 @@ def home(request):
 
         upcoming_matches = Match.objects.filter(season=active_league, status=MatchStatus.SCHEDULED).select_related('home_team', 'away_team').order_by('-date')[:5]
         league_table = TeamSeasonParticipation.objects.filter(league=active_league)[:3]
+        
+        live_section_data = build_live_section(active_league)
+        live_match = live_section_data.get('live_match')
 
     context = {
         'matches': matches,
@@ -75,6 +79,7 @@ def home(request):
         'active_league': active_league,
         'upcoming_matches': upcoming_matches,
         'league_table': league_table,
+        'live_match': live_match,
         # 'team_of_the_week': team_of_the_week,
         # 'leagues': leagues,
         # 'weeks': weeks,
@@ -684,6 +689,19 @@ def player_profile(request, player_id):
     player = get_object_or_404(Player, id=player_id)
     season_participations = PlayerSeasonParticipation.objects.filter(player=player).select_related('team', 'league').order_by('-league__year', '-league__session')
     
+    # Get the active league
+    active_league = League.objects.filter(is_active=True).first()
+    current_team = None
+    if active_league:
+        # Try to find the player's participation in the active league
+        current_participation = PlayerSeasonParticipation.objects.filter(
+            player=player, 
+            league=active_league, 
+            is_active=True
+        ).select_related('team').first()
+        if current_participation:
+            current_team = current_participation.team
+
     total_stats = season_participations.aggregate(
         total_matches=Sum('matches_played'),
         total_goals=Sum('goals'),
@@ -700,6 +718,7 @@ def player_profile(request, player_id):
         'total_assists': total_stats['total_assists'],
         'total_yellow_cards': total_stats['total_yellow_cards'],
         'total_red_cards': total_stats['total_red_cards'],
+        'current_team': current_team, # Add current team to context
     }
     return render(request, 'player_profile.html', context)
 
@@ -711,6 +730,17 @@ def match_details(request, match_id):
     home_lineup = Lineup.objects.filter(match=match, team=match.home_team).first()
     away_lineup = Lineup.objects.filter(match=match, team=match.away_team).first()
     events = match.events.all().select_related('player')
+
+    # Get Starters and subs
+    home_lineup_starters, home_lineup_subs = [], []
+    if home_lineup:
+        home_lineup_starters = home_lineup.get_starters()
+        home_lineup_subs = home_lineup.get_substitutes()
+
+    away_lineup_starters, away_lineup_subs = [], []
+    if away_lineup:
+        away_lineup_starters = away_lineup.get_starters()
+        away_lineup_subs = away_lineup.get_substitutes()
 
     if request.method == 'POST':
         form = MatchEventForm(request.POST, match=match)
@@ -727,12 +757,14 @@ def match_details(request, match_id):
     else:
         form = MatchEventForm(match=match)
 
-    logger.debug
-    (f'There are events{bool(events)}')
     context = {
         'match': match,
         'home_lineup': home_lineup,
+        'home_lineup_starters': home_lineup_starters,
+        'home_lineup_subs': home_lineup_subs,
         'away_lineup': away_lineup,
+        'away_lineup_starters': away_lineup_starters,
+        'away_lineup_subs': away_lineup_subs,
         'events': events,
         'form': form,
     }
@@ -997,21 +1029,36 @@ def get_team_lineup_context(team, match, can_edit=False):
     except Exception:
         pass
 
+    # Build a players dictionary keyed by player ID for easy lookup
+    all_players_list = starters + substitutes + available_players
+    players_dict = {}
+    for player_data in all_players_list:
+        players_dict[str(player_data['id'])] = player_data
+    
+    # Extract starter and substitute IDs as arrays
+    starter_ids = [str(p['id']) for p in starters]
+    substitute_ids = [str(p['id']) for p in substitutes]
+    
+    # Get formation, defaulting to '4-4-2' if not set
+    formation = '4-4-2'
+    if lineup and lineup.formation:
+        formation = lineup.formation
+    
     # Create the payload for JavaScript.
     js_payload = {
-        'teamId': team.id,
-        'teamName': team.name,
-        'teamType': 'home' if team == match.home_team else 'away',
-        'canEdit': can_edit,
-        'formation': lineup.formation if lineup else '4-4-2',
-        'starters': starters,
-        'substitutes': substitutes,
-        'availablePlayers': available_players,
+        'team_id': team.id,
+        'team_name': team.name,
+        'team_type': 'home' if team == match.home_team else 'away',
+        'can_edit': can_edit,
+        'formation': formation,
+        'starters': starter_ids,
+        'substitutes': substitute_ids,
+        'players': players_dict,
     }
 
     # If no lineup exists, create an in-memory one for the template context.
     if not lineup:
-        lineup = Lineup(team=team, match=match)
+        lineup = Lineup(team=team, match=match, formation=formation)
 
     return {
         'team': team,
@@ -1024,13 +1071,23 @@ def serialize_player(player):
     """
     Serialize player data for JavaScript consumption.
     """
+    # Get photo URL if picture exists
+    photo_url = ''
+    if player.picture:
+        try:
+            photo_url = player.picture.url
+        except (ValueError, AttributeError):
+            photo_url = ''
+    
     return {
         'id': player.id,
         'first_name': player.first_name,
         'last_name': player.last_name,
         'full_name': f"{player.first_name} {player.last_name}",
+        'name': f"{player.first_name} {player.last_name}",  # JS expects 'name' property
         'position': getattr(player, 'position', 'N/A'),
         'jersey_number': getattr(player, 'jersey_number', ''),
+        'photo_url': photo_url,  # JS expects 'photo_url' property
     }
    
 

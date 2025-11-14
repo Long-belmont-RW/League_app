@@ -26,9 +26,10 @@
             <!-- Match Status Badge -->
             <div class="flex justify-center mb-6">
                 {% if match.status == 'LIV' %}
-                <span class="px-4 py-2 bg-red-500/20 border border-red-500 text-red-400 text-sm font-bold rounded-full flex items-center space-x-2">
-                    <span class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></span>
+                <span class="px-4 py-2 bg-green-500/20 border border-green-500 text-green-400 text-sm font-bold rounded-full flex items-center space-x-2">
+                    <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                     <span>LIVE</span>
+                    <span class="ml-2">{{ match.get_display_minute }}</span>
                 </span>
                 {% elif match.status == 'FIN' %}
                 <span class="px-4 py-2 bg-blue-500/20 border border-blue-500 text-blue-400 text-sm font-bold rounded-full">
@@ -187,17 +188,17 @@
                         {% if home_lineup %}
                             <h3 class="text-lg font-semibold text-gray-300 mb-3">Starters</h3>
                             <ul class="space-y-3 mb-6">
-                                {% for player in home_lineup.players.all %}
+                                {% for lineup_player in home_lineup_starters%}
                                     <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
                                         <div class="flex items-center space-x-3">
                                             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                                                <span class="text-white font-bold text-sm">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                                                <span class="text-white font-bold text-sm">{{ lineup_player.player.first_name|slice:":1" }}{{ lineup_player.player.last_name|slice:":1" }}</span>
                                             </div>
                                             <div>
-                                                <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-indigo-300 transition-colors">
-                                                    {{ player.first_name }} {{ player.last_name }}
+                                                <a href="{% url 'player_profile' lineup_player.player.id %}" class="font-semibold text-white hover:text-indigo-300 transition-colors">
+                                                    {{ lineup_player.player.first_name }} {{ lineup_player.player.last_name }}
                                                 </a>
-                                                <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
+                                                <p class="text-sm text-gray-400">{{ lineup_player.player.get_position_display }}</p>
                                             </div>
                                         </div>
                                     </li>
@@ -206,17 +207,17 @@
 
                             <h3 class="text-lg font-semibold text-gray-300 mb-3">Substitutes</h3>
                             <ul class="space-y-3">
-                                {% for player in home_lineup.substitutes.all %}
+                                {% for lineup_player in home_lineup_subs%}
                                     <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
                                         <div class="flex items-center space-x-3">
                                             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                                                <span class="text-white font-bold text-sm">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                                                <span class="text-white font-bold text-sm">{{ lineup_player.player.first_name|slice:":1" }}{{ lineup_player.player.last_name|slice:":1" }}</span>
                                             </div>
                                             <div>
-                                                <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-indigo-300 transition-colors">
-                                                    {{ player.first_name }} {{ player.last_name }}
+                                                <a href="{% url 'player_profile' lineup_player.player.id %}" class="font-semibold text-white hover:text-indigo-300 transition-colors">
+                                                    {{ lineup_player.player.first_name }} {{ lineup_player.player.last_name }}
                                                 </a>
-                                                <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
+                                                <p class="text-sm text-gray-400">{{ lineup_player.player.get_position_display }}</p>
                                             </div>
                                         </div>
                                     </li>
@@ -249,17 +250,17 @@
                         {% if away_lineup %}
                             <h3 class="text-lg font-semibold text-gray-300 mb-3">Starters</h3>
                             <ul class="space-y-3 mb-6">
-                                {% for player in away_lineup.players.all %}
+                                {% for lineup_player in away_lineup_starters%}
                                     <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
                                         <div class="flex items-center space-x-3">
                                             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                                                <span class="text-white font-bold text-sm">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                                                <span class="text-white font-bold text-sm">{{ lineup_player.player.first_name|slice:":1" }}{{ lineup_player.player.last_name|slice:":1" }}</span>
                                             </div>
                                             <div>
-                                                <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-purple-300 transition-colors">
-                                                    {{ player.first_name }} {{ player.last_name }}
+                                                <a href="{% url 'player_profile' lineup_player.player.id %}" class="font-semibold text-white hover:text-purple-300 transition-colors">
+                                                    {{ lineup_player.player.first_name }} {{ lineup_player.player.last_name }}
                                                 </a>
-                                                <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
+                                                <p class="text-sm text-gray-400">{{ lineup_player.player.get_position_display }}</p>
                                             </div>
                                         </div>
                                     </li>
@@ -268,17 +269,17 @@
 
                             <h3 class="text-lg font-semibold text-gray-300 mb-3">Substitutes</h3>
                             <ul class="space-y-3">
-                                {% for player in away_lineup.substitutes.all %}
+                                {% for lineup_player in away_lineup_subs%}
                                     <li class="flex items-center justify-between p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 transition-colors">
                                         <div class="flex items-center space-x-3">
                                             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                                                <span class="text-white font-bold text-sm">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                                                <span class="text-white font-bold text-sm">{{ lineup_player.player.first_name|slice:":1" }}{{ lineup_player.player.last_name|slice:":1" }}</span>
                                             </div>
                                             <div>
-                                                <a href="{% url 'player_profile' player.id %}" class="font-semibold text-white hover:text-purple-300 transition-colors">
-                                                    {{ player.first_name }} {{ player.last_name }}
+                                                <a href="{% url 'player_profile' lineup_player.player.id %}" class="font-semibold text-white hover:text-purple-300 transition-colors">
+                                                    {{ lineup_player.player.first_name }} {{ lineup_player.player.last_name }}
                                                 </a>
-                                                <p class="text-sm text-gray-400">{{ player.get_position_display }}</p>
+                                                <p class="text-sm text-gray-400">{{ lineup_player.player.get_position_display }}</p>
                                             </div>
                                         </div>
                                     </li>

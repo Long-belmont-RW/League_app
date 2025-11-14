@@ -1,0 +1,33 @@
+services:
+  # Web Service for Django
+  - type: web
+    name: league-app
+    env: python
+    # The region should match your database region
+    region: ohio
+    plan: free # Or your desired plan
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --no-input
+    startCommand: "gunicorn league_app.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: league-app-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true # Let Render generate a random value
+      - key: CLOUDINARY_URL
+        sync: false # Add this manually in the dashboard
+      - key: GOOGLE_CLIENT_ID
+        sync: false # Add this manually
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false # Add this manually
+
+  # PostgreSQL Database
+  - type: psql
+    name: league-app-db
+    region: ohio
+    plan: free # Or your desired plan
+    # Free tier databases are deleted after 90 days of inactivity.
+    # Set 'deletionProtection: true' for paid plans.

@@ -7,12 +7,17 @@
 <div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8">
     <div class="container mx-auto px-4">
         
+        <!-- CSRF Token Form (Hidden but accessible to JS) -->
+        <form id="csrf-form" style="display: none;">
+            {% csrf_token %}
+        </form>
+        
         <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-white mb-2">Manage Lineup</h1>
             <div class="flex items-center justify-center gap-4 text-gray-300">
                 <span class="text-xl font-semibold">{{ match.home_team.name }}</span>
-                <span class="text-2xl font-bold text-blue-400">VS</span>
+                <span class="text-2xl font-bold text-indigo-400">VS</span>
                 <span class="text-xl font-semibold">{{ match.away_team.name }}</span>
             </div>
             <p class="text-gray-400 mt-2">
@@ -21,13 +26,27 @@
         </div>
 
         <!-- Mobile-First Tabbed Interface -->
-        <div class="xl:hidden">
-            <div class="flex border-b border-gray-700 mb-4">
-                <button data-tab-target="#home-team-panel" class="tab-btn active-tab text-lg font-semibold py-3 px-6 text-white border-b-2 border-blue-500">
-                    {{ home_team_context.team.name }}
+        <div class="xl:hidden mb-6">
+            <div class="flex border-b-2 border-gray-700 bg-gray-800 rounded-t-lg overflow-hidden">
+                <button data-tab-target="#home-team-panel" 
+                        data-team-name="{{ home_team_context.team.name }}"
+                        class="tab-btn flex-1 text-lg font-semibold py-4 px-6 text-white bg-blue-600 border-b-2 border-blue-500 transition-all duration-200 active-tab">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        {{ home_team_context.team.name }}
+                    </span>
                 </button>
-                <button data-tab-target="#away-team-panel" class="tab-btn text-lg font-semibold py-3 px-6 text-gray-400">
-                    {{ away_team_context.team.name }}
+                <button data-tab-target="#away-team-panel" 
+                        data-team-name="{{ away_team_context.team.name }}"
+                        class="tab-btn flex-1 text-lg font-semibold py-4 px-6 text-gray-400 hover:text-gray-300 bg-gray-800 border-b-2 border-transparent transition-all duration-200">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5 opacity-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        {{ away_team_context.team.name }}
+                    </span>
                 </button>
             </div>
         </div>
@@ -81,24 +100,103 @@
         const tabs = document.querySelectorAll('[data-tab-target]');
         const lineupPanels = document.querySelectorAll('.lineup-panel');
 
-        if (window.innerWidth < 1280) { // Corresponds to 'xl' breakpoint
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const target = document.querySelector(tab.dataset.tabTarget);
+        // Improved Tab Switching Logic
+        function switchTab(activeTabButton) {
+            const targetId = activeTabButton.dataset.tabTarget;
+            const targetPanel = document.querySelector(targetId);
+            const teamName = activeTabButton.dataset.teamName;
+            
+            if (!targetPanel) {
+                console.error('Target panel not found:', targetId);
+                return;
+            }
 
-                    lineupPanels.forEach(panel => panel.classList.add('hidden'));
-                    target.classList.remove('hidden');
-
-                    tabs.forEach(t => {
-                        t.classList.remove('active-tab', 'text-white', 'border-blue-500');
-                        t.classList.add('text-gray-400');
-                    });
-                    
-                    tab.classList.add('active-tab', 'text-white', 'border-blue-500');
-                    tab.classList.remove('text-gray-400');
-                });
+            // Hide all panels
+            lineupPanels.forEach(panel => {
+                panel.classList.add('hidden');
             });
+
+            // Show target panel
+            targetPanel.classList.remove('hidden');
+
+            // Update all tabs
+            tabs.forEach(tab => {
+                const isActive = tab === activeTabButton;
+                const icon = tab.querySelector('svg');
+                
+                if (isActive) {
+                    // Active tab styling
+                    tab.classList.remove('text-gray-400', 'bg-gray-800', 'border-transparent');
+                    tab.classList.add('text-white', 'bg-blue-600', 'border-blue-500', 'active-tab');
+                    if (icon) icon.classList.remove('opacity-0');
+                } else {
+                    // Inactive tab styling
+                    tab.classList.remove('text-white', 'bg-blue-600', 'border-blue-500', 'active-tab');
+                    tab.classList.add('text-gray-400', 'bg-gray-800', 'border-transparent');
+                    if (icon) icon.classList.add('opacity-0');
+                }
+            });
+
+            console.log('Switched to team:', teamName);
         }
+
+        // Update panel visibility based on screen size
+        function updatePanelVisibility() {
+            const isMobile = window.innerWidth < 1280;
+            const homePanel = document.getElementById('home-team-panel');
+            const awayPanel = document.getElementById('away-team-panel');
+            
+            if (isMobile) {
+                // Mobile: show only active tab's panel
+                // Check which tab is active
+                const activeTab = document.querySelector('.tab-btn.active-tab');
+                if (activeTab) {
+                    const targetId = activeTab.dataset.tabTarget;
+                    const targetPanel = document.querySelector(targetId);
+                    if (targetPanel) {
+                        lineupPanels.forEach(panel => {
+                            if (panel === targetPanel) {
+                                panel.classList.remove('hidden');
+                            } else {
+                                panel.classList.add('hidden');
+                            }
+                        });
+                    }
+                } else {
+                    // No active tab, show home by default
+                    if (homePanel) homePanel.classList.remove('hidden');
+                    if (awayPanel) awayPanel.classList.add('hidden');
+                }
+            } else {
+                // Desktop: show both panels
+                lineupPanels.forEach(panel => {
+                    panel.classList.remove('hidden');
+                });
+            }
+        }
+
+        // Add click handlers to tabs (only once)
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Only switch if on mobile
+                if (window.innerWidth < 1280) {
+                    switchTab(tab);
+                }
+            });
+        });
+
+        // Handle window resize
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                updatePanelVisibility();
+            }, 250);
+        });
+
+        // Initialize panel visibility on load
+        updatePanelVisibility();
 
         try {
             const matchData = JSON.parse(document.getElementById('match-data').textContent);
@@ -108,7 +206,7 @@
                 console.error('Error: Home team data is missing or null. Cannot initialize lineup manager.');
             } else {
                 const homeData = JSON.parse(homeDataContext);
-                homeData.saveUrl = matchData.save_url; // Add saveUrl from match-data
+                homeData.saveUrl = matchData.save_url;
                 new LineupManager(homeData);
             }
 
@@ -117,7 +215,7 @@
                 console.error('Error: Away team data is missing or null. Cannot initialize lineup manager.');
             } else {
                 const awayData = JSON.parse(awayDataContext);
-                awayData.saveUrl = matchData.save_url; // Add saveUrl from match-data
+                awayData.saveUrl = matchData.save_url;
                 new LineupManager(awayData);
             }
             console.log('Lineup managers initialized successfully from template script.');
@@ -129,4 +227,7 @@
 {% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/lineup-styles.css' %}">
+<link rel="stylesheet" href="{% static 'css/lineup-responsive.css'%}">
+<link rel="stylesheet" href="{% static 'css/hotfix.css'%}">
+
 {% endblock %}

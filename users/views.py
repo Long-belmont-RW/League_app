@@ -28,8 +28,20 @@ import os
 import random
 import string
 
-from django.contrib.auth.views import PasswordChangeView
-from django.urls import reverse_lazy
+from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmView
+from django.urls import reverse_lazy, reverse
+
+# Helper function to get dashboard URL based on user role
+def get_dashboard_url(user):
+    if user.role == 'admin':
+        return reverse('admin_dashboard')
+    elif user.role == 'coach':
+        return reverse('coach_dashboard')
+    elif user.role == 'player':
+        return reverse('player_dashboard')
+    elif user.role == 'fan':
+        return reverse('fan_dashboard')
+    return reverse('home') # Default fallback
 from .services.bulk_upload import import_players_csv_for_team
 
 
@@ -328,7 +340,6 @@ def coach_dashboard_view(request):
 
 
 #Work needs to be done here....DON'T FORGET
-@login_required
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'player')
 def player_dashboard_view(request):
     if request.user.role != 'player':
@@ -558,7 +569,7 @@ def profile_edit_view(request):
                 user = password_form.save()
                 update_session_auth_hash(request, user)  # Important!
                 messages.success(request, 'Your password was successfully updated!')
-                return redirect('profile_edit')
+                return redirect(get_dashboard_url(request.user))
             else:
                 messages.error(request, 'Please correct the password change errors below.')
         
@@ -583,7 +594,7 @@ def profile_edit_view(request):
 
             messages.success(request, 'Profile updated successfully.')
             next_url = request.POST.get('next') or request.GET.get('next')
-            return redirect(next_url or 'profile_edit')
+            return redirect(next_url or get_dashboard_url(request.user))
         else:
             # Only show profile form errors if it's not a password change attempt
             if 'change_password' not in request.POST:
@@ -605,6 +616,10 @@ def profile_edit_view(request):
 
 class CustomPasswordChangeView(PasswordChangeView):
     success_url = reverse_lazy('profile_edit')
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    success_url = reverse_lazy('login')
+    template_name = 'registration/password_reset_confirm.html'
 
 @login_required
 def add_player_view(request):

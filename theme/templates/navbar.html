@@ -1,17 +1,11 @@
-<nav class="bg-gray-800/95 backdrop-blur-md text-white shadow-lg sticky top-0 z-50 border-b border-gray-700 positon">
+<nav class="bg-gradient-to-b from-gray-800 to-gray-900 text-white shadow-lg sticky top-0 left-0 right-0 z-50 border-b border-gray-700">
   <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
     <!-- Enhanced Logo/Brand with gradient and icon -->
     <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse group">
-      <!-- Logo Icon -->
-      <!-- <div class="relative">
-        <div class="absolute inset-0 bg-indigo-500 rounded-lg blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
-        
-      </div> -->
-      <!-- Brand Text -->
-      <span class="self-center text-2xl font-bold whitespace-nowrap">
-        <span class="text-white group-hover:text-indigo-300 transition-colors">AUN</span><span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">League</span>
-      </span>
-    </a>
+  <span class="self-center text-2xl font-bold whitespace-nowrap antialiased">
+    <span class="text-white group-hover:text-indigo-300 transition-colors">AUN</span><span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 antialiased">League</span>
+  </span>
+</a>
 
     <!-- Mobile Menu Button with animation -->
     <button
@@ -217,7 +211,7 @@
               
               <li>
                 <a
-                  href="#"
+                  href="{% url 'profile_edit' %}"
                   class="flex items-center space-x-3 px-4 py-3 hover:bg-gray-700/50 text-gray-200 hover:text-white transition-colors group"
                 >
                   <svg class="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

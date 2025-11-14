@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block navbar_classes %}lg:hidden{% endblock %}
+{% block navbar_classes %}hidden{% endblock %}
 
 {% block content %}
 <div class="flex min-h-screen bg-gray-900">
@@ -43,7 +43,7 @@
                 </svg>
                 <span class="font-medium">Standings</span>
             </a>
-            <a href="#" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
+            <a href="{% url 'coming_soon' %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                 </svg>
@@ -291,7 +291,7 @@
 
                         <div>
                             <div class="flex justify-between text-sm text-gray-300 mb-2">
-                                <span>Team Development</span>
+                                <span>Team Progress</span>
                                 <span class="font-bold">{{ team_progress }}%</span>
                             </div>
                             <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">

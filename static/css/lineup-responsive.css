@@ -1,0 +1,555 @@
+/* static/css/lineup-responsive.css - ENHANCED VERSION */
+
+/* ========================================
+   IMPROVED TOUCH TARGETS & MOBILE UX
+   ======================================== */
+
+/* General layout helpers */
+.lineup-panel {
+    width: 100%;
+}
+
+.lineup-panel .bg-gray-800,
+.lineup-panel .bg-gray-750 {
+    border-radius: 1rem;
+}
+
+@media (max-width: 640px) {
+    .lineup-panel .bg-gray-800,
+    .lineup-panel .bg-gray-750 {
+        border-radius: 0.875rem;
+    }
+}
+
+/* ========================================
+   LARGER TOUCH TARGETS FOR MOBILE
+   ======================================== */
+
+.pitch-row {
+    width: 100%;
+}
+
+/* Responsive pitch positions */
+.pitch-position {
+    width: 100% !important;
+    min-width: 0 !important;
+    aspect-ratio: 3 / 4;
+    max-width: 120px;
+    margin-inline: auto;
+    display: flex;
+}
+
+.pitch-position .player-card,
+.pitch-position .empty-player-placeholder {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+}
+
+.pitch-position .player-card img {
+    width: clamp(2.5rem, 11vw, 3.5rem) !important;
+    height: clamp(2.5rem, 11vw, 3.5rem) !important;
+}
+
+@media (max-width: 1024px) {
+    .pitch-position {
+        max-width: 110px;
+    }
+}
+
+@media (max-width: 640px) {
+    .pitch-row {
+        gap: 0.75rem !important;
+    }
+
+    .pitch-position {
+        aspect-ratio: 11 / 16;
+        max-width: 92px;
+    }
+}
+
+@media (max-width: 420px) {
+    .pitch-position {
+        max-width: 82px;
+    }
+}
+
+/* ========================================
+   ENHANCED PLAYER CARDS
+   ======================================== */
+
+.player-card {
+    width: 100% !important;
+    max-width: 140px;
+    flex: 1 1 auto;
+    min-width: 72px !important;
+    min-height: 76px !important;
+    padding: 0.5rem !important;
+    position: relative;
+}
+
+.player-card img {
+    width: clamp(2.5rem, 10vw, 3.75rem) !important;
+    height: clamp(2.5rem, 10vw, 3.75rem) !important;
+}
+
+.player-card p {
+    white-space: normal;
+}
+
+/* Better active/pressed states for mobile */
+.player-card:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+
+@media (max-width: 640px) {
+    .player-card {
+        min-width: 68px !important;
+        min-height: 72px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-card {
+        max-width: 120px;
+        min-width: 64px !important;
+        min-height: 68px !important;
+    }
+}
+
+/* ========================================
+   IMPROVED SUBSTITUTES SECTION
+   ======================================== */
+
+[data-substitutes-zone] {
+    min-height: 140px !important; /* Increased from 100px */
+    padding: 1rem !important;
+    transition: all 0.3s ease;
+}
+
+[data-substitutes-zone],
+[data-available-zone],
+[data-available-zone-modal] {
+    gap: 1rem; /* Increased from 0.75rem */
+}
+
+/* Enhanced empty state for substitutes */
+.empty-subs-state {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Better touch targets for subs zone */
+[data-substitutes-zone] .player-card,
+[data-substitutes-zone] .empty-player-placeholder,
+[data-available-zone] .player-card,
+[data-available-zone-modal] .player-card {
+    width: 100% !important;
+    max-width: none;
+    min-height: 96px !important; /* Even larger for subs */
+}
+
+[data-available-zone-modal] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); /* Increased from 120px */
+    gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+    [data-substitutes-zone] {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
+
+    [data-available-zone] {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    [data-substitutes-zone],
+    [data-available-zone],
+    [data-available-zone-modal] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.875rem;
+    }
+
+    [data-available-zone] {
+        max-height: 300px; /* Increased from 260px */
+    }
+    
+    /* Make substitutes section more prominent on mobile */
+    [data-substitutes-zone] {
+        min-height: 160px !important;
+        border-width: 3px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    [data-substitutes-zone],
+    [data-available-zone],
+    [data-available-zone-modal] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+}
+
+/* ========================================
+   ENHANCED VISUAL FEEDBACK
+   ======================================== */
+
+/* Slot selection animation */
+.slot-selected {
+    animation: pulse-ring 1.5s ease-in-out infinite !important;
+    position: relative;
+}
+
+@keyframes pulse-ring {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 12px rgba(251, 191, 36, 0);
+    }
+}
+
+/* Destination hints */
+.destination-available {
+    position: relative;
+    animation: dash-border 1.5s linear infinite;
+}
+
+.destination-available::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px dashed #34d399;
+    border-radius: 0.75rem;
+    animation: dash-rotate 20s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.destination-available::after {
+    content: '👆 TAP HERE';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    font-weight: 700;
+    color: #34d399;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 2;
+    animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes dash-rotate {
+    to {
+        stroke-dashoffset: -20;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -45%) scale(1.05);
+    }
+}
+
+/* ========================================
+   FORMATION DISPLAY ENHANCEMENTS
+   ======================================== */
+
+/* Formation badge */
+.formation-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    z-index: 10;
+    pointer-events: none;
+    animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Position zone labels */
+.position-zone-label {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+    z-index: 5;
+}
+
+@media (max-width: 640px) {
+    .position-zone-label {
+        font-size: 0.65rem;
+        padding: 3px 8px;
+        left: 4px;
+    }
+    
+    .formation-badge {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        top: 6px;
+        right: 6px;
+    }
+}
+
+/* ========================================
+   IMPROVED TOAST NOTIFICATIONS
+   ======================================== */
+
+#toast {
+    max-width: 90vw;
+    z-index: 9999 !important;
+}
+
+@media (max-width: 640px) {
+    #toast {
+        top: auto !important;
+        bottom: 1.5rem !important;
+        right: 50% !important;
+        transform: translateX(150%) !important;
+        left: auto !important;
+    }
+
+    #toast.toast-show,
+    #toast.translate-x-0 {
+        transform: translateX(50%) !important;
+    }
+    
+    #toast > div {
+        min-width: 280px;
+        max-width: calc(100vw - 2rem);
+    }
+}
+
+/* ========================================
+   EMPTY PLACEHOLDER ENHANCEMENTS
+   ======================================== */
+
+.empty-player-placeholder {
+    border-width: 3px !important; /* Thicker for visibility */
+    border-style: dashed !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: visible;
+}
+
+.empty-player-placeholder:hover,
+.empty-player-placeholder:focus {
+    border-color: #60a5fa !important;
+    background: rgba(96, 165, 250, 0.15) !important;
+    opacity: 1 !important;
+    transform: scale(1.05);
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
+}
+
+.empty-player-placeholder:active {
+    transform: scale(0.98);
+    background: rgba(96, 165, 250, 0.25) !important;
+}
+
+/* ========================================
+   COLLAPSIBLE SECTIONS - START EXPANDED
+   ======================================== */
+
+[data-collapsible-content] {
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+[data-collapsible-content]:not(.hidden) {
+    max-height: 2000px;
+    opacity: 1;
+}
+
+[data-collapsible-content].hidden {
+    max-height: 0;
+    opacity: 0;
+}
+
+/* ========================================
+   BUTTON ENHANCEMENTS
+   ======================================== */
+
+button[data-save-btn] {
+    min-height: 52px !important; /* Larger touch target */
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+button[data-save-btn]:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+button[data-save-btn]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.add-sub-from-empty {
+    min-height: 52px !important;
+    min-width: 200px;
+}
+
+/* ========================================
+   MODAL IMPROVEMENTS
+   ======================================== */
+
+[data-modal] {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+[data-modal]:not(.hidden) {
+    animation: fadeIn 0.2s ease-out;
+}
+
+[data-modal] .flex-col {
+    max-height: 90vh;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   PLAYER SELECTION STATES
+   ======================================== */
+
+.player-selected {
+    z-index: 100 !important;
+    box-shadow: 0 0 0 4px rgb(59, 130, 246), 0 8px 24px rgba(59, 130, 246, 0.4) !important;
+    animation: pulse-blue 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-blue {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgb(59, 130, 246), 0 8px 24px rgba(59, 130, 246, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgb(59, 130, 246), 0 12px 32px rgba(59, 130, 246, 0.6);
+    }
+}
+
+/* ========================================
+   COUNT INDICATORS
+   ======================================== */
+
+#starters-count-home,
+#starters-count-away,
+#substitutes-count-home,
+#substitutes-count-away {
+    transition: color 0.3s ease, transform 0.2s ease;
+    font-weight: 700;
+}
+
+.text-green-400 {
+    animation: success-pulse 0.5s ease-out;
+}
+
+@keyframes success-pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+
+/* Ensure good contrast */
+.player-card:focus,
+.empty-player-placeholder:focus,
+button:focus {
+    outline: 3px solid #60a5fa;
+    outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+.loading-spinner {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

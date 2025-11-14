@@ -44,6 +44,12 @@ def _normalize_row(row: Dict[str, str]) -> Dict[str, str]:
     return {k: (v or "").strip() for k, v in row.items()}
 
 
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+
 def import_players_csv_for_team(team: Team, league: League, uploaded_file) -> BulkImportResult:
     """Validate then atomically import players for a team from CSV.
 
@@ -185,27 +191,31 @@ def import_players_csv_for_team(team: Team, league: League, uploaded_file) -> Bu
             # Queue welcome email only for new users
             if new_user and plain_pw:
                 username = user.username or user.email
-                notifications.append((user.email, username, plain_pw))
+                notifications.append((user, username, plain_pw))
 
         # Send emails after commit
-        login_url = reverse("login")
-
         def _send_all():
-            for email, username, pwd in notifications:
-                send_mail(
-                    subject="Your League account",
-                    message=(
-                        f"Hi {username},\n\n"
-                        f"Your account has been created.\n"
-                        f"Email: {email}\n"
-                        f"Password: {pwd}\n"
-                        f"Login: {login_url}\n\n"
-                        f"Please change your password after first login."
-                    ),
-                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
-                    recipient_list=[email],
-                    fail_silently=False,
+            for user, username, pwd in notifications:
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                password_set_url = settings.BASE_URL + reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+
+                context = {
+                    'username': username,
+                    'password_set_url': password_set_url,
+                }
+
+                html_content = render_to_string('emails/welcome_email.html', context)
+                text_content = f"Hi {username},\n\nYour account has been created. Please set your password by visiting the following link:\n{password_set_url}\n\nThanks,\nThe AUNLeague Team"
+
+                msg = EmailMultiAlternatives(
+                    subject="Welcome to AUNLeague!",
+                    body=text_content,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email]
                 )
+                msg.attach_alternative(html_content, "text/html")
+                msg.send()
 
         if notifications:
             transaction.on_commit(_send_all)

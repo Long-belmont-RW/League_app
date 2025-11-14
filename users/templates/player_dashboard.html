@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block navbar_classes %}lg:hidden{% endblock %}
+{% block navbar_classes %}hidden{% endblock %}
 
 {% block content %}
 <div class="flex min-h-screen bg-gray-900">
@@ -25,13 +25,13 @@
 
         <!-- Navigation -->
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <a href="#" class="flex items-center space-x-3 text-white bg-indigo-600 px-4 py-3 rounded-xl transition-all duration-200">
+            <a href="{% url 'home'%}" class="flex items-center space-x-3 text-white bg-indigo-600 px-4 py-3 rounded-xl transition-all duration-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                 </svg>
-                <span class="font-medium">Dashboard</span>
+                <span class="font-medium">Home</span>
             </a>
-            <a href="#" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
+            <a href="{% url 'player_profile' player_profile.player.id %}" class="flex items-center space-x-3 text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-xl transition-all duration-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
@@ -163,13 +163,13 @@
                                     </div>
                                     <div>
                                         {% if is_in_lineup %}
-                                        <span class="px-4 py-2 bg-green-500/20 border border-green-500 text-green-400 text-sm font-bold rounded-full">
+                                        <a href="{% url 'match_details' next_match.id %}" class="px-4 py-2 bg-green-500/20 border border-green-500 text-green-400 text-sm font-bold rounded-full hover:bg-green-100">
                                             ✓ In Lineup
-                                        </span>
+                                        </a>
                                         {% else %}
-                                        <span class="px-4 py-2 bg-yellow-500/20 border border-yellow-500 text-yellow-400 text-sm font-bold rounded-full">
+                                        <a href="{% url 'match_details' next_match.id %}" class="px-4 py-2 bg-yellow-500/20 border border-yellow-500 text-yellow-400 text-sm font-bold rounded-full hover:bg-yellow-100">
                                             Not Selected
-                                        </span>
+                                        </a>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -265,7 +265,7 @@
                                         <div class="w-6 text-center">
                                             <span class="text-sm font-bold text-gray-400">{{ forloop.counter }}</span>
                                         </div>
-                                        <span class="text-white font-medium">{{ row.team.name }}</span>
+                                        <a href="{% url 'team' row.team.id %}" class="text-white font-medium">{{ row.team.name }}</a>
                                     </div>
                                     <div class="px-3 py-1 bg-gray-700 rounded-full">
                                         <span class="text-white font-bold text-sm">{{ row.points }}</span>
@@ -303,6 +303,11 @@
                                 <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
                                     <p class="text-sm font-semibold text-white mb-1">{{ n.title }}</p>
                                     <p class="text-sm text-gray-300">{{ n.message }}</p>
+                                    {% if n.match %}
+                                        <div class="mt-2">
+                                            <a href="{% url 'match_details' n.match.id %}" class="inline-block px-3 py-1 bg-indigo-600 text-white text-xs font-bold rounded hover:bg-indigo-500 transition-colors">View Match</a>
+                                        </div>
+                                    {% endif %}
                                 </div>
                                 {% endfor %}
                             </div>

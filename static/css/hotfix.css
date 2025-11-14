@@ -1,0 +1,74 @@
+/* static/css/hotfix.css - v2 */
+
+/* General layout improvements for mobile */
+@media (max-width: 768px) {
+    .pitch-grid {
+        padding: 0.25rem;
+    }
+
+    .pitch-row {
+        gap: 0.25rem;
+    }
+}
+
+/* More flexible pitch position and player card sizing */
+.pitch-position {
+    width: clamp(3.5rem, 16vw, 5rem) !important;
+    height: clamp(4rem, 18vw, 6rem) !important;
+}
+
+.player-card {
+    width: 100% !important;
+    max-width: none;
+    min-height: 0;
+    padding: 0.25rem;
+    font-size: 0.75rem;
+    margin: 0.25rem; /* Add margin to cards */
+}
+
+.player-card img {
+    width: clamp(2rem, 8vw, 2.5rem) !important;
+    height: clamp(2rem, 8vw, 2.5rem) !important;
+}
+
+/* Adjustments for substitutes and available players zones */
+[data-substitutes-zone],
+[data-available-zone],
+[data-available-zone-modal] {
+    gap: 0.25rem;
+    padding: 0.25rem;
+}
+
+[data-substitutes-zone] .player-card,
+[data-available-zone] .player-card,
+[data-available-zone-modal] .player-card {
+    min-height: 0 !important;
+    padding: 0.25rem;
+}
+
+/* Responsive grid for available players */
+[data-available-zone-modal] {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+}
+
+@media (max-width: 480px) {
+    .pitch-position {
+        width: clamp(3rem, 18vw, 4rem) !important;
+        height: clamp(3.5rem, 20vw, 4.5rem) !important;
+    }
+
+    .player-card {
+        font-size: 0.65rem;
+        padding: 0.125rem;
+        margin: 0.125rem;
+    }
+
+    .player-card img {
+        width: clamp(1.5rem, 10vw, 2rem) !important;
+        height: clamp(1.5rem, 10vw, 2rem) !important;
+    }
+
+    [data-available-zone-modal] {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
+}

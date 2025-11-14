@@ -137,6 +137,7 @@ class MatchModelTests(TestCase):
     def test_get_current_minute_at_halftime(self):
         """
         Tests get_current_minute() returns 45 for a match that kicked off 45 minutes ago
+        and get_display_minute returns "HT".
         """
 
         kickoff = timezone.now() - timedelta(minutes=45, seconds=30)
@@ -152,7 +153,7 @@ class MatchModelTests(TestCase):
         )
 
         self.assertEqual(match.get_current_minute(), 45)
-        self.assertEqual(match.get_display_minute, "45'")
+        self.assertEqual(match.get_display_minute, "HT")
 
 
     @freeze_time("2025-07-29 11:00:00")
@@ -171,8 +172,8 @@ class MatchModelTests(TestCase):
             status=MatchStatus.LIVE,
             actual_kickoff_time=kickoff,
         )
-        self.assertEqual(match.get_current_minute(), 92)
-        self.assertEqual(match.get_display_minute, "90 + 2'")
+        self.assertEqual(match.get_current_minute(), 77) # 92 raw - 15 HT = 77 playing
+        self.assertEqual(match.get_display_minute, "77'")
 
     
     @freeze_time("2025-07-29 12:00:00")
@@ -191,8 +192,8 @@ class MatchModelTests(TestCase):
             status=MatchStatus.LIVE,
             actual_kickoff_time=kickoff
         )
-        self.assertEqual(match.get_current_minute(), 90)
-        self.assertEqual(match.get_display_minute, "90'")
+        self.assertEqual(match.get_current_minute(), 75) # 90 raw - 15 HT = 75 playing
+        self.assertEqual(match.get_display_minute, "75'")
 
 
     @freeze_time("2025-07-29 13:00:00")

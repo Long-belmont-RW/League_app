@@ -22,23 +22,22 @@
         </div>
     </div>
 
-    <!-- Formation Selector -->
-    <div class="px-6 py-4 bg-gray-750 border-b border-gray-700">
-        <label for="formation-{{ team_type }}" class="block text-sm font-medium text-gray-300 mb-2">
-            Formation
-        </label>
-        <select id="formation-{{ team_type }}" 
-                class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                data-formation-select="{{ team_type }}"
-                {% if not can_edit %}disabled{% endif %}>
-            {% for formation in formations %}
-            <option value="{{ formation }}" {% if formation == team_context.formation %}selected{% endif %}>
-                {{ formation }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-
+    <!-- Formation Selector Section -->
+<div class="px-6 py-4 bg-gray-750 border-b border-gray-700">
+    <label for="formation-{{ team_type }}" class="block text-sm font-medium text-gray-300 mb-2">
+        Formation
+    </label>
+    <select id="formation-{{ team_type }}" 
+            class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            data-formation-select="{{ team_type }}"
+            {% if not can_edit %}disabled{% endif %}>
+        {% for formation in formations %}
+        <option value="{{ formation }}" {% if formation == team_context.formation %}selected{% endif %}>
+            {{ formation }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
     <!-- Football Pitch -->
     <div class="px-6 py-6">
         <div class="relative bg-gradient-to-b from-green-600 to-green-700 rounded-lg border-4 border-white shadow-inner" 
@@ -87,6 +86,13 @@
                  data-substitutes-zone="{{ team_type }}">
                 <!-- Players will be added here -->
             </div>
+            {% if can_edit %}
+            <div class="mt-2">
+                <button type="button" id="add-substitute-{{ team_type }}" class="w-full text-center px-3 py-2 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 text-xs transition-colors">
+                    + Add Substitute Slot
+                </button>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -99,7 +105,7 @@
     </div>
 
     <!-- Desktop: Available Players Pool (Collapsible) -->
-    <div class="hidden xl:block px-6 py-4 bg-gray-800" data-collapsible-section>
+    <div class="hidden xl:block px-6 py-8 bg-gray-800" data-collapsible-section>
         <button type="button" class="w-full text-left" data-collapsible-trigger>
             <h3 class="text-lg font-semibold text-white mb-3 flex items-center justify-between gap-2">
                 <span class="flex items-center gap-2">
@@ -126,9 +132,7 @@
                 data-save-btn="{{ team_type }}"
                 class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 {% if not can_edit %}disabled{% endif %}>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-            </svg>
+          
             <span data-save-text>Save Lineup</span>
         </button>
     </div>

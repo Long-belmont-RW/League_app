@@ -162,46 +162,64 @@ class Match(models.Model):
         super().save(*args, **kwargs)
 
     def get_current_minute(self):
-        """Returns the current minute of the match 
-        if the match is live, otherwise returns None."""
-
-
+        """
+        Returns the current minute of the match if the match is live, 
+        otherwise returns None. This version accounts for a 15-minute half-time break.
+        """
         if self.status != MatchStatus.LIVE:
             return None
-        
-        #Determine the actual kickoff time:
-        kickoff_time = self.actual_kickoff_time if self.actual_kickoff_time else self.date
 
-        #Track current time
-        now = timezone.now() 
+        kickoff_time = self.actual_kickoff_time or self.date
+        now = timezone.now()
 
-        #Ensure that kickoff time is not in the future
         if kickoff_time > now:
             return 0
-        
-        #Calculate the elapsed time since kickoff
+
         elapsed_time = now - kickoff_time
-        #Convert elapsed time to minutes
-        return int(elapsed_time.total_seconds() // 60)
+        total_minutes = int(elapsed_time.total_seconds() // 60)
+
+        # Standard match is 90 minutes + half-time.
+        # If elapsed time is greater than 45 minutes, we assume half-time has started or passed.
+        if total_minutes > 45:
+            # Subtract 15 minutes for the half-time break.
+            # We cap the result at 90 to handle post-match scenarios gracefully.
+            return min(90, total_minutes - 15)
+        
+        return total_minutes
 
     @property
     def get_display_minute(self):
         """
-        Returns a user-friendly string for displaying the match minute, and 
-        handling extra time formatting (e.g "90 + 2")
+        Returns a user-friendly string for displaying the match minute,
+        handling half-time and extra time formatting.
         """
         current_minutes = self.get_current_minute()
-        
+
         if current_minutes is None:
             return ""
-        
-        #Ensure the match is not longer than 90 minutes
+
+        if self.status == MatchStatus.LIVE and 45 <= self.get_raw_elapsed_minutes() < 60:
+            return "HT"
+
         if current_minutes > 90:
             extra_time = current_minutes - 90
             return f"90 + {extra_time}'"
-        
             
         return f"{current_minutes}'"
+        
+    def get_raw_elapsed_minutes(self):
+        """Helper to get total elapsed minutes without half-time adjustment."""
+        if self.status != MatchStatus.LIVE:
+            return None
+        
+        kickoff_time = self.actual_kickoff_time or self.date
+        now = timezone.now()
+
+        if kickoff_time > now:
+            return 0
+            
+        elapsed_time = now - kickoff_time
+        return int(elapsed_time.total_seconds() // 60)
         
         
 

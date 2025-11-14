@@ -37,7 +37,7 @@ def get_season_progress():
     matches = get_team_matches()
     total = matches.count()
     finished = matches.filter(status="FIN").count()
-    return (finished / total) * 100 if total else 0
+    return (round(finished / total,2)) * 100 if total else 0
 
 def get_team_season_progress(team):
     """Calculate a team's current season progress as a percentage."""
@@ -45,7 +45,7 @@ def get_team_season_progress(team):
     total = matches.count()
     finished = matches.filter(status="FIN").count()
     
-    return (round(finished / total)) * 100 if total else 0
+    return (round(finished / total,2)) * 100 if total else 0
 
 def get_matches_completed():
     matches = get_team_matches()
@@ -64,4 +64,4 @@ def get_win_ratio(team):
     finished_matches = matches.filter(status="FIN")
     won_matches = sum(1 for match in finished_matches if match.get_winner() == team)
 
-    return (won_matches / total) * 100
+    return (round(won_matches / total,2)) * 100

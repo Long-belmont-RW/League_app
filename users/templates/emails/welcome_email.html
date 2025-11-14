@@ -1,0 +1,17 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Welcome to AUNLeague!{% endblock %}
+
+{% block content %}
+    <h1>Welcome Aboard, {{ username }}!</h1>
+    <p>We're excited to have you join AUNLeague. Your account has been created, and you're one step away from getting in on the action.</p>
+    <p>To get started, please set a secure password for your account by clicking the button below. This link is valid for 24 hours.</p>
+    
+    <p style="text-align: center; margin: 30px 0;">
+        <a href="{{ password_set_url }}" class="button">Set Your Password</a>
+    </p>
+    
+    <p>If you have any trouble, please don't hesitate to contact our support team.</p>
+    <p>Welcome to the league!</p>
+    <p>The AUNLeague Team</p>
+{% endblock %}

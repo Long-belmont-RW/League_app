@@ -45,3 +45,9 @@ python-decouple
 django-widget-tweaks
 PyJWT
 cryptography
+gunicorn
+psycopg2-binary
+dj-database-url
+whitenoise
+cloudinary
+dj3-cloudinary-storage

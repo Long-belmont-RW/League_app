@@ -26,10 +26,17 @@
         <!-- Home Team Lineup -->
         <div class="bg-gray-800 p-6 rounded-xl shadow-md">
             <h2 class="text-2xl font-semibold text-white mb-4">{{ match.home_team.name }}</h2>
-            {% if home_lineup and home_lineup.players.all %}
+            {% if home_lineup %}
+                <h3 class="text-xl font-semibold text-gray-300 mb-2">Starters</h3>
                 <ul>
-                    {% for player in home_lineup.players.all %}
-                        <li class="text-gray-300 py-2 border-b border-gray-700">{{ player.first_name }} {{ player.last_name }} ({{ player.get_position_display }})</li>
+                    {% for lineup_player in home_lineup.get_starters %}
+                        <li class="text-gray-300 py-2 border-b border-gray-700">{{ lineup_player.player.first_name }} {{ lineup_player.player.last_name }} ({{ lineup_player.player.get_position_display }})</li>
+                    {% endfor %}
+                </ul>
+                <h3 class="text-xl font-semibold text-gray-300 mt-4 mb-2">Substitutes</h3>
+                <ul>
+                    {% for lineup_player in home_lineup.get_substitutes %}
+                        <li class="text-gray-300 py-2 border-b border-gray-700">{{ lineup_player.player.first_name }} {{ lineup_player.player.last_name }} ({{ lineup_player.player.get_position_display }})</li>
                     {% endfor %}
                 </ul>
             {% else %}
@@ -40,10 +47,17 @@
         <!-- Away Team Lineup -->
         <div class="bg-gray-800 p-6 rounded-xl shadow-md">
             <h2 class="text-2xl font-semibold text-white mb-4">{{ match.away_team.name }}</h2>
-            {% if away_lineup and away_lineup.players.all %}
+            {% if away_lineup %}
+                <h3 class="text-xl font-semibold text-gray-300 mb-2">Starters</h3>
                 <ul>
-                    {% for player in away_lineup.players.all %}
-                        <li class="text-gray-300 py-2 border-b border-gray-700">{{ player.first_name }} {{ player.last_name }} ({{ player.get_position_display }})</li>
+                    {% for lineup_player in away_lineup.get_starters %}
+                        <li class="text-gray-300 py-2 border-b border-gray-700">{{ lineup_player.player.first_name }} {{ lineup_player.player.last_name }} ({{ lineup_player.player.get_position_display }})</li>
+                    {% endfor %}
+                </ul>
+                <h3 class="text-xl font-semibold text-gray-300 mt-4 mb-2">Substitutes</h3>
+                <ul>
+                    {% for lineup_player in away_lineup.get_substitutes %}
+                        <li class="text-gray-300 py-2 border-b border-gray-700">{{ lineup_player.player.first_name }} {{ lineup_player.player.last_name }} ({{ lineup_player.player.get_position_display }})</li>
                     {% endfor %}
                 </ul>
             {% else %}
