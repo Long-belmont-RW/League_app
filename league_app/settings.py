@@ -36,7 +36,10 @@ INSTALLED_APPS = [
     'content.apps.ContentConfig',
     'fantasy.apps.FantasyConfig',
 
+
     # Third Party
+    'theme',
+    'tailwind',
     'cloudinary_storage', # For media files
     'cloudinary',         # For media files
     'allauth',
