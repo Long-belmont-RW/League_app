@@ -35,44 +35,33 @@ from django.urls import reverse
 logger = logging.getLogger(__name__)
 
 # Home View (Displays recent matches and top scorers)
+# league/views.py
+
 def home(request):
+    # 1. Initialize ALL variables first so they exist even if no league is found
     active_league = League.objects.filter(is_active=True).first()
     matches = Match.objects.none()
     top_scorers = PlayerSeasonParticipation.objects.none()
-    # team_of_the_week = None
-    
-    # # Dropdown population
-    # leagues = League.objects.filter(is_active=True)
-    # weeks = TeamOfTheWeek.objects.values_list('week_number', flat=True).distinct().order_by('week_number')
+    upcoming_matches = Match.objects.none()  # Default to empty queryset
+    league_table = TeamSeasonParticipation.objects.none() # Default to empty queryset
+    live_match = None # Default to None
 
-    # # Search/filter logic
-    # selected_league_id = request.GET.get('league')
-    # selected_week = request.GET.get('week')
-
-    # if selected_league_id and selected_week:
-    #     try:
-    #         team_of_the_week = TeamOfTheWeek.objects.prefetch_related('players').get(
-    #             league_id=selected_league_id, 
-    #             week_number=selected_week
-    #         )
-    #     except TeamOfTheWeek.DoesNotExist:
-    #         team_of_the_week = None
-    # else:
-    #     # Default to the latest team of the week
-    #     team_of_the_week = TeamOfTheWeek.objects.prefetch_related('players').order_by('-league__year', '-week_number').first()
-
+    # 2. Only populate them if we actually have an active league
     if active_league:
         matches = Match.objects.filter(season=active_league, status=MatchStatus.FINISHED).select_related('home_team', 'away_team').order_by('-date')[:5]
+        
         top_scorers = PlayerSeasonParticipation.objects.filter(
             league=active_league, is_active=True
         ).select_related('player').order_by('-goals')[:5]
 
         upcoming_matches = Match.objects.filter(season=active_league, status=MatchStatus.SCHEDULED).select_related('home_team', 'away_team').order_by('-date')[:5]
+        
         league_table = TeamSeasonParticipation.objects.filter(league=active_league)[:3]
         
         live_section_data = build_live_section(active_league)
         live_match = live_section_data.get('live_match')
 
+    # 3. Now it is safe to put them in context because they definitely exist
     context = {
         'matches': matches,
         'top_scorers': top_scorers,
@@ -80,11 +69,6 @@ def home(request):
         'upcoming_matches': upcoming_matches,
         'league_table': league_table,
         'live_match': live_match,
-        # 'team_of_the_week': team_of_the_week,
-        # 'leagues': leagues,
-        # 'weeks': weeks,
-        # 'selected_league': int(selected_league_id) if selected_league_id else None,
-        # 'selected_week': int(selected_week) if selected_week else None,
     }
     return render(request, 'home.html', context)
 
