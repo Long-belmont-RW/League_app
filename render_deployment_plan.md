@@ -279,7 +279,7 @@ services:
 
 3.  **Get `CLOUDINARY_URL`:**
     *   Sign up for a free Cloudinary account.
-    *   On your Cloudinary Dashboard, find the "API Environment variable". It will look like `CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>`.
+    *   On your Cloudinary Dashboard, find the "API Environment variable". It will look like 
     *   Copy this entire string.
 
 4.  **Add to Render Dashboard:**
