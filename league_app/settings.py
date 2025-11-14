@@ -15,8 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# The 'RENDER' environment variable is set automatically by Render.
-DEBUG = 'RENDER' not in os.environ
+DEBUG = os.environ.get('DEBUG') == 'TRUE'
 
 ALLOWED_HOSTS = []
 
@@ -95,7 +94,7 @@ WSGI_APPLICATION = 'league_app.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        # Feel free to alter this value to suit your needs.
+       
         conn_max_age=600,
         conn_health_checks=True,
     )

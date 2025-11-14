@@ -18,6 +18,7 @@ media/
 # Environment
 .env
 .env.example
+.env.render
 
 # IDE / Editor
 .vscode/
