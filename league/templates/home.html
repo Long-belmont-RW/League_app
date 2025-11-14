@@ -299,9 +299,11 @@
                                 </svg>
                                 Top Scorers
                             </h2>
+                            {% if active_league%}
                              <a href="{% url 'top_stats' active_league.id%}" class="text-indigo-400 hover:text-indigo-300 text-xs font-medium transition-colors">
                                 View Full →
                             </a>
+                            {% endif%}
                         </div>
                         
                         <div class="p-6">
