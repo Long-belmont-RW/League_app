@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'widget_tweaks',
     'debug_toolbar',
+    'anymail',
 
     # Default
     'django.contrib.admin',
@@ -191,13 +192,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # EMAIL SETTINGS (BREVO/SMTP)
 # ==============================================================================
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS') == 'True'
+# Use Anymail's Brevo backend (API) instead of standard SMTP
+EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
 
-# Use the specific env vars you set for Brevo
-EMAIL_HOST_USER = os.environ.get('BREVO_SMTP_LOGIN')
-EMAIL_HOST_PASSWORD = os.environ.get('BREVO_SMTP_PASSWORD')
+ANYMAIL = {
+    # Use your existing Brevo API Key (v3)
+    # You can find this in Brevo Dashboard -> Settings -> SMTP & API -> Generate new API Key
+    "SENDINBLUE_API_KEY": os.environ.get('BREVO_API_KEY'),
+}
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')

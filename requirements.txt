@@ -51,3 +51,4 @@ dj-database-url
 whitenoise
 cloudinary
 dj3-cloudinary-storage
+django-anymail[brevo]
