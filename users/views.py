@@ -32,6 +32,7 @@ from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmVi
 from django.urls import reverse_lazy, reverse
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.contrib.admin.views.decorators import staff_member_required
 
 # Helper function to get dashboard URL based on user role
 def get_dashboard_url(user):
@@ -149,7 +150,7 @@ def register_view(request):
 
     return render(request, 'registration/register.html', {'form': form, 'invitation': invitation})
 
-@user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
+@staff_member_required
 def admin_dashboard_view(request): 
 
     #Component Data
@@ -171,15 +172,6 @@ def admin_dashboard_view(request):
     #Get the latest match
     latest_match = Match.objects.order_by('-date').first()
 
-
-
-    # Check if the user is an admin
-    # Redirect if not an admin
-    if request.user.role != 'admin' or request.user.is_superuser == False:
-        logger.warning(f"Unauthorized access attempt by user: {request.user.username}")
-        messages.error(request, "Only admins can access this page.")
-        return redirect('login')
-    
     profile = UserProfile.objects.filter(user=request.user).first()
     context = {
         'profile': profile,
@@ -198,13 +190,8 @@ def admin_dashboard_view(request):
     return render(request, 'admin_dashboard.html', context)
 
 
-@user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
+@staff_member_required
 def bulk_upload_players_view(request):
-    # Match admin check behavior with admin_dashboard_view
-    if request.user.role != 'admin' or request.user.is_superuser is False:
-        messages.error(request, "Only admins can access this page.")
-        return redirect('login')
-
     if request.method == 'POST':
         form = PlayerBulkUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -544,8 +531,7 @@ def fan_dashboard_view(request):
 
 
 
-@login_required
-@user_passes_test(lambda u: u.role == 'admin')
+@staff_member_required
 def create_user_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
