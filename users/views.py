@@ -30,6 +30,7 @@ import string
 
 from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmView
 from django.urls import reverse_lazy, reverse
+from django.core.mail import send_mail
 
 # Helper function to get dashboard URL based on user role
 def get_dashboard_url(user):
@@ -663,8 +664,20 @@ def add_player_view(request):
                     )
                     
                     # For development, print the password. In production, you'd email it.
-                    print(f"Generated password for {user.email}: {password}")
-                    messages.success(request, f"Player {user.first_name} {user.last_name} has been created and added to your team. Their temporary password is: {password}")
+                    # print(f"Generated password for {user.email}: {password}")
+                    
+                    # Send email with login details
+                    subject = 'Your League App Account Details'
+                    message = f'Hello {user.first_name},\n\nYour account for the League App has been created.\nYour email: {user.email}\nYour temporary password: {password}\n\nPlease log in and change your password as soon as possible.'
+                    from_email = os.environ.get('DEFAULT_FROM_EMAIL', 'leagueaun@gmail.com') # Use environment variable or default
+                    recipient_list = [user.email]
+                    
+                    try:
+                        send_mail(subject, message, from_email, recipient_list)
+                        messages.success(request, f"Player {user.first_name} {user.last_name} has been created and added to your team. An email with login details has been sent to {user.email}.")
+                    except Exception as mail_e:
+                        logger.error(f"Failed to send email to {user.email}: {mail_e}")
+                        messages.warning(request, f"Player {user.first_name} {user.last_name} has been created and added to your team, but failed to send login details email. Please inform the player manually. Temporary password: {password}")
 
                 return redirect('coach_dashboard')
             except Exception as e:
