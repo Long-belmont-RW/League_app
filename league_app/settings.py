@@ -201,4 +201,4 @@ ANYMAIL = {
     "SENDINBLUE_API_KEY": os.environ.get('BREVO_API_KEY'),
 }
 
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'leagueaun@gmail.com')

@@ -68,7 +68,7 @@ def process_invitation(request, email, role, team_id=None):
     send_mail(
         'You have been invited to join the AUN League',
         plain_message,
-        'from@example.com',
+        None,
         [email],
         fail_silently=False,
         html_message=html_message
