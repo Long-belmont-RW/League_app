@@ -31,6 +31,7 @@ import string
 from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmView
 from django.urls import reverse_lazy, reverse
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 # Helper function to get dashboard URL based on user role
 def get_dashboard_url(user):
@@ -549,9 +550,50 @@ def create_user_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            messages.success(request, f'User {user.username} created successfully!')
-            return redirect('admin_dashboard')
+            try:
+                with transaction.atomic():
+                    user = form.save(commit=False)
+                    
+                    # Generate a random password
+                    password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+                    user.set_password(password)
+                    user.save()
+
+                    # Send email with login details
+                    login_link = request.build_absolute_uri(reverse('login'))
+                    
+                    context = {
+                        'user': user,
+                        'password': password,
+                        'login_link': login_link,
+                    }
+                    
+                    html_message = render_to_string('users/emails/admin_created_user_welcome.html', context)
+                    plain_message = (
+                        f"Hello {user.username},\n\n"
+                        f"An administrator has created an account for you on the League App.\n\n"
+                        f"Here are your login details:\n"
+                        f"Email: {user.email}\n"
+                        f"Temporary Password: {password}\n\n"
+                        f"Please log in using the details above and change your password as soon as possible for security reasons.\n"
+                        f"You can log in here: {login_link}\n\n"
+                        f"Thank you,\nThe League App Team"
+                    )
+                    
+                    subject = 'Welcome to the League App - Your Account Details'
+                    from_email = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@example.com')
+                    recipient_list = [user.email]
+                    
+                    try:
+                        send_mail(subject, plain_message, from_email, recipient_list, html_message=html_message)
+                        messages.success(request, f"User {user.username} created successfully! An email with login details has been sent.")
+                    except Exception as mail_e:
+                        logger.error(f"Failed to send email to {user.email}: {mail_e}")
+                        messages.warning(request, f"User {user.username} created successfully, but failed to send login details email. Please inform the user manually. Temporary password: {password}")
+
+                return redirect('admin_dashboard')
+            except Exception as e:
+                messages.error(request, f"An error occurred: {e}")
     else:
         form = CustomUserCreationForm()
     return render(request, 'create_user.html', {'form': form})
@@ -667,13 +709,33 @@ def add_player_view(request):
                     # print(f"Generated password for {user.email}: {password}")
                     
                     # Send email with login details
-                    subject = 'Your League App Account Details'
-                    message = f'Hello {user.first_name},\n\nYour account for the League App has been created.\nYour email: {user.email}\nYour temporary password: {password}\n\nPlease log in and change your password as soon as possible.'
-                    from_email = os.environ.get('DEFAULT_FROM_EMAIL', 'leagueaun@gmail.com') # Use environment variable or default
+                    login_link = request.build_absolute_uri(reverse('login'))
+                    
+                    context = {
+                        'user': user,
+                        'password': password,
+                        'login_link': login_link,
+                    }
+                    
+                    html_message = render_to_string('users/emails/player_welcome_email.html', context)
+                    plain_message = (
+                        f"Hello {user.first_name},\n\n"
+                        f"Welcome to the League App! Your coach has added you to their team.\n\n"
+                        f"Here are your login details:\n"
+                        f"Email: {user.email}\n"
+                        f"Temporary Password: {password}\n\n"
+                        f"Please log in using the details above and change your password as soon as possible for security reasons.\n"
+                        f"You can log in here: {login_link}\n\n"
+                        f"If you have any questions, please contact your coach or the league administration.\n\n"
+                        f"Thank you,\nThe League App Team"
+                    )
+                    
+                    subject = 'Welcome to the League App - Your Account Details'
+                    from_email = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@example.com')
                     recipient_list = [user.email]
                     
                     try:
-                        send_mail(subject, message, from_email, recipient_list)
+                        send_mail(subject, plain_message, from_email, recipient_list, html_message=html_message)
                         messages.success(request, f"Player {user.first_name} {user.last_name} has been created and added to your team. An email with login details has been sent to {user.email}.")
                     except Exception as mail_e:
                         logger.error(f"Failed to send email to {user.email}: {mail_e}")

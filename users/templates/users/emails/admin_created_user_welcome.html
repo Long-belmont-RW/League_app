@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome to the League App!</title>
+</head>
+<body>
+    <p>Hello {{ user.username }},</p>
+
+    <p>An administrator has created an account for you on the League App.</p>
+
+    <p>Here are your login details:</p>
+    <ul>
+        <li><strong>Email:</strong> {{ user.email }}</li>
+        <li><strong>Temporary Password:</strong> {{ password }}</li>
+    </ul>
+
+    <p>Please log in using the details above and change your password as soon as possible for security reasons.</p>
+
+    <p>You can log in here: <a href="{{ login_link }}">{{ login_link }}</a></p>
+
+    <p>Thank you,<br>The League App Team</p>
+</body>
+</html>
