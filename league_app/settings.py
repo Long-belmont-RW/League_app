@@ -202,3 +202,6 @@ ANYMAIL = {
 }
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'leagueaun@gmail.com')
+
+###all auth fix
+SOCIALACCOUNT_LOGIN_ON_GET = True
