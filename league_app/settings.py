@@ -230,3 +230,13 @@ if 'RENDER' in os.environ:
 else:
     # Local development (Windows)
     NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+
+
+
+
+# DEBUGGING STATIC PATHS
+print("--- DEBUG: STATIC FILE CONFIG ---")
+print(f"BASE_DIR: {BASE_DIR}")
+print(f"Looking for static files in: {os.path.join(BASE_DIR, 'static')}")
+print(f"Does that folder exist? {os.path.exists(os.path.join(BASE_DIR, 'static'))}")
+print("---------------------------------")
