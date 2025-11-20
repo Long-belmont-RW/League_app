@@ -223,4 +223,10 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+# If we are on Render (production), tell Django where to find npm
+if 'RENDER' in os.environ:
+    # Render usually installs npm here when NODE_VERSION is set
+    NPM_BIN_PATH = '/usr/local/bin/npm' 
+else:
+    # Local development (Windows)
+    NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
