@@ -38,8 +38,8 @@ INSTALLED_APPS = [
 
 
     # Third Party
+   'tailwind',
     'theme',
-    'tailwind',
     'cloudinary_storage', # For media files
     'cloudinary',         # For media files
     'allauth',
@@ -121,15 +121,22 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-# Use Whitenoise to serve static files in production
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Cloudinary for Media Files
 CLOUDINARY_STORAGE = {
     'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL')
 }
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
+
+
 
 
 # ==============================================================================
@@ -205,3 +212,11 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'leagueaun@gmail.com')
 
 ###all auth fix
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Tailwind Configuration
+TAILWIND_APP_NAME = 'theme'
+
+# Required for Tailwind to work in development
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
