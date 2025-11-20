@@ -120,9 +120,9 @@ DATABASES = {
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-# Add this line back (needed for compatibility)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Add this line back (needed for compatibility)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Cloudinary for Media Files
 CLOUDINARY_STORAGE = {
@@ -133,8 +133,8 @@ STORAGES = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",   
-          },
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
 }
 MEDIA_URL = '/media/'
 
