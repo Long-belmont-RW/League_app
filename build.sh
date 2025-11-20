@@ -4,6 +4,7 @@ set -o errexit
 
 pip install -r requirements.txt
 
-# The --clear flag deletes the existing staticfiles folder before copying
-python manage.py collectstatic --no-input --clear --ignore=cloudinary*
+
+# Ignore BOTH cloudinary and admin files during collection/compression
+python manage.py collectstatic --no-input --clear --ignore=cloudinary* --ignore=admin*
 python manage.py migrate
