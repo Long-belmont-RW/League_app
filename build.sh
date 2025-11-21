@@ -3,6 +3,8 @@ set -o errexit
 
 pip install -r requirements.txt
 
+
+python dump_static.py
 # FORCE DELETE the actual staticfiles directory used by Render
 rm -rf /opt/render/project/src/staticfiles
 
