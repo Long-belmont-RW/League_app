@@ -129,12 +129,9 @@ STORAGES = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-
-# Prevent build failures if a referenced file is missing
-WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = "/media/"
 
