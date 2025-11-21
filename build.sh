@@ -25,6 +25,12 @@ python manage.py tailwind build
 # 4. Collect Static Files
 # We use --no-input to avoid prompts
 # We clear the existing directory to ensure a clean build
+# Debug: Check if static files exist
+echo "Current directory: $PWD"
+ls -la
+echo "Listing static directory:"
+ls -R static || echo "Static directory not found"
+
 echo "Collecting static files..."
 python manage.py collectstatic --no-input --clear
 
