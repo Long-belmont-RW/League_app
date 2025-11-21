@@ -121,7 +121,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # ⚠️ REQUIRED FOR CLOUDINARY STORAGE COMPATIBILITY
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 # Django 5.2-compliant storage API
 STORAGES = {
