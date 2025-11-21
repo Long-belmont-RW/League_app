@@ -3,9 +3,10 @@ set -o errexit
 
 pip install -r requirements.txt
 
-# Important: wipe broken staticfiles folder
-rm -rf staticfiles
+# FORCE DELETE the actual staticfiles directory used by Render
+rm -rf /opt/render/project/src/staticfiles
 
+# Build fresh static files
 python manage.py collectstatic --no-input
 
 python manage.py migrate
