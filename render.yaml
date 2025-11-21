@@ -6,9 +6,7 @@ services:
     # The region should match your database region
     region: ohio
     plan: free # Or your desired plan
-    buildCommand: |
-      pip install -r requirements.txt
-      python manage.py collectstatic --no-input
+    buildCommand: "./build.sh"
     startCommand: "gunicorn league_app.wsgi:application"
     envVars:
       - key: DATABASE_URL
