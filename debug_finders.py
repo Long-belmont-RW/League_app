@@ -10,50 +10,39 @@ from django.conf import settings
 from django.contrib.staticfiles import finders
 
 print("="*50)
-print("DEBUG: FINDERS DIAGNOSTIC")
+print("DEBUG: FINDERS DIAGNOSTIC (STRICT MODE)")
 print("="*50)
 
-# 1. Check Specific Files
-target_file = "images/league_banner.jpg"
-print(f"1. Searching for specific file: '{target_file}'")
-found = finders.find(target_file)
-print(f"   Found at: {found}")
+print(f"DEBUG: STATIC_ROOT = {settings.STATIC_ROOT}")
+print(f"DEBUG: STATICFILES_DIRS = {settings.STATICFILES_DIRS}")
+print(f"DEBUG: STATICFILES_FINDERS = {settings.STATICFILES_FINDERS}")
 
-admin_file = "admin/css/base.css"
-print(f"2. Searching for admin file: '{admin_file}'")
-found_admin = finders.find(admin_file)
-print(f"   Found at: {found_admin}")
+print("\n1. Testing get_finders() (Exact collectstatic logic):")
+all_finders = list(finders.get_finders())
+print(f"   Found {len(all_finders)} finders: {[f for f in all_finders]}")
 
-# 2. Test FileSystemFinder
-print("\n3. Testing FileSystemFinder explicitly:")
-try:
-    fs_finder = finders.FileSystemFinder()
-    count = 0
-    for path, storage in fs_finder.list([]):
-        print(f"   - Found: {path}")
-        count += 1
-        if count >= 5:
-            print("   ... (stopping after 5)")
-            break
-    if count == 0:
-        print("   WARNING: FileSystemFinder found NO files.")
-except Exception as e:
-    print(f"   ERROR in FileSystemFinder: {e}")
+total_files = 0
+for finder in all_finders:
+    print(f"\n   Scanning finder: {finder}...")
+    try:
+        # collectstatic calls list(ignore_patterns)
+        # We pass None to ignore_patterns for now, or empty list
+        count = 0
+        for path, storage in finder.list(ignore_patterns=None):
+            print(f"      - Found: {path}")
+            count += 1
+            total_files += 1
+            if count >= 5:
+                print("      ... (stopping output after 5, but continuing count)")
+        print(f"   -> Finder found {count} files.")
+    except Exception as e:
+        print(f"   ERROR in finder {finder}: {e}")
 
-# 3. Test AppDirectoriesFinder
-print("\n4. Testing AppDirectoriesFinder explicitly:")
-try:
-    app_finder = finders.AppDirectoriesFinder()
-    count = 0
-    for path, storage in app_finder.list([]):
-        print(f"   - Found: {path}")
-        count += 1
-        if count >= 5:
-            print("   ... (stopping after 5)")
-            break
-    if count == 0:
-        print("   WARNING: AppDirectoriesFinder found NO files.")
-except Exception as e:
-    print(f"   ERROR in AppDirectoriesFinder: {e}")
+print(f"\nTotal files found by all finders: {total_files}")
+
+if total_files == 0:
+    print("\nCRITICAL: get_finders() returned NO files. This explains why collectstatic fails.")
+else:
+    print("\nSUCCESS: Finders are working. If collectstatic fails, it's a storage/writing issue.")
 
 print("="*50)
