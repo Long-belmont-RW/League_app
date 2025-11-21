@@ -31,6 +31,9 @@ ls -la
 echo "Listing static directory:"
 ls -R static || echo "Static directory not found"
 
+echo "Running Finders Diagnostic..."
+python debug_finders.py
+
 echo "Collecting static files..."
 python manage.py collectstatic --no-input --clear -v 2
 
