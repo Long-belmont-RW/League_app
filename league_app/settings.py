@@ -133,6 +133,9 @@ STORAGES = {
     },
 }
 
+# Prevent build failures if a referenced file is missing
+WHITENOISE_MANIFEST_STRICT = False
+
 MEDIA_URL = "/media/"
 
 CLOUDINARY_STORAGE = {
