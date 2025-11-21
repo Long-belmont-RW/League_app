@@ -178,10 +178,12 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 TAILWIND_APP_NAME = "theme"
 
 # NPM path for Render or Windows dev
-if "RENDER" in os.environ:
-    NPM_BIN_PATH = "/usr/local/bin/npm"
-else:
-    NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+NPM_BIN_PATH = os.environ.get("NPM_BIN_PATH")
+if not NPM_BIN_PATH:
+    if "RENDER" in os.environ:
+        NPM_BIN_PATH = "/usr/local/bin/npm"
+    else:
+        NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 
 
 # ==============================================================================

@@ -12,6 +12,7 @@ NODE_DIST=node-$NODE_VERSION-linux-x64
 curl -O https://nodejs.org/dist/$NODE_VERSION/$NODE_DIST.tar.xz
 tar -xJvf $NODE_DIST.tar.xz
 export PATH=$PWD/$NODE_DIST/bin:$PATH
+export NPM_BIN_PATH=$PWD/$NODE_DIST/bin/npm
 node -v
 npm -v
 
