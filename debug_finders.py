@@ -46,3 +46,13 @@ else:
     print("\nSUCCESS: Finders are working. If collectstatic fails, it's a storage/writing issue.")
 
 print("="*50)
+print(f"DEBUG: Active STATICFILES_STORAGE = {settings.STATICFILES_STORAGE}")
+print(f"DEBUG: Active STORAGES = {settings.STORAGES}")
+
+from django.core.management import call_command
+print("\n5. Running collectstatic programmatically via call_command:")
+try:
+    call_command('collectstatic', interactive=False, clear=True, verbosity=2)
+except Exception as e:
+    print(f"ERROR running collectstatic: {e}")
+
