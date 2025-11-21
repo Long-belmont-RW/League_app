@@ -120,7 +120,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
-# ⚠️ REQUIRED FOR CLOUDINARY STORAGE COMPATIBILITY (fixes your error)
+# ⚠️ REQUIRED FOR CLOUDINARY STORAGE COMPATIBILITY
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Django 5.2-compliant storage API
