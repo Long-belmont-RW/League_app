@@ -66,9 +66,8 @@ def manual_collect():
                     copied_count += 1
                     
                     # Verbose output for first few files or specific ones
-                    if copied_count <= 5 or "admin" in path:
-                        # print(f"  [COPY] {path}")
-                        pass
+                    if copied_count <= 5 or "admin" in path or "lineup-manager.js" in path:
+                        print(f"  [COPY] {path}")
 
                 except Exception as e:
                     print(f"  [ERROR] Failed to copy {path}: {e}")
