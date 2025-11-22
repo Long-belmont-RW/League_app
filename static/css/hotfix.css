@@ -72,3 +72,14 @@
         grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     }
 }
+
+/* Force player card to fill pitch position without squashing */
+.pitch-position .player-card {
+    width: 100% !important;
+    height: 100% !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    max-width: none !important;
+    min-width: 0 !important;
+}
