@@ -39,20 +39,8 @@ python manage.py collectstatic --no-input --clear -v 2
 
 # Fallback: If collectstatic failed to populate staticfiles, copy manually
 if [ -z "$(ls -A staticfiles 2>/dev/null)" ] || [ "$(ls -A staticfiles | wc -l)" -eq 0 ]; then
-    echo "WARNING: collectstatic failed to copy files. Attempting manual copy..."
-    mkdir -p staticfiles
-    
-    # Copy project static files
-    if [ -d "static" ]; then
-        echo "Copying static/..."
-        cp -r static/* staticfiles/
-    fi
-    
-    # Copy Tailwind static files
-    # if [ -d "theme/static" ]; then
-    #     echo "Copying theme/static/..."
-    #     cp -r theme/static/* staticfiles/
-    # fi
+    echo "WARNING: collectstatic failed to copy files. Running smart manual copy..."
+    python manual_collect.py
     
     echo "Manual copy completed."
     ls -R staticfiles
