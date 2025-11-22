@@ -23,7 +23,7 @@
     min-height: 0;
     padding: 0.25rem;
     font-size: 0.75rem;
-    margin: 0.25rem; /* Add margin to cards */
+    font-size: 0.75rem;
 }
 
 .player-card img {
@@ -60,7 +60,7 @@
     .player-card {
         font-size: 0.65rem;
         padding: 0.125rem;
-        margin: 0.125rem;
+        padding: 0.125rem;
     }
 
     .player-card img {
