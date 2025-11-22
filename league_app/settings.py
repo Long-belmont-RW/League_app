@@ -182,6 +182,8 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
 
+SOCIALACCOUNT_ADAPTER = 'users.adapter.MySocialAccountAdapter'
+
 
 # ==============================================================================
 # TAILWIND CONFIGURATION
