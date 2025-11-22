@@ -288,7 +288,16 @@ class LineupManager {
       animation: 150,
       ghostClass: "player-ghost",
       dragClass: "player-dragging",
-      onEnd: () => this.updateState(),
+      onEnd: (evt) => {
+        const source = evt.from;
+        if (
+          source.classList.contains("pitch-position") &&
+          source.children.length === 0
+        ) {
+          source.innerHTML = this.createEmptyPlaceholder();
+        }
+        this.updateState();
+      },
     };
 
     this.pitchGrid.querySelectorAll(".pitch-position").forEach((pos) => {
