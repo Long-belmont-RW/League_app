@@ -295,6 +295,13 @@ class LineupManager {
       const sortableInstance = new Sortable(pos, {
         ...commonSortableOptions,
         filter: ".empty-player-placeholder",
+        onAdd: (evt) => {
+          const placeholder = evt.to.querySelector(".empty-player-placeholder");
+          if (placeholder) {
+            placeholder.remove();
+          }
+          this.updateState();
+        },
       });
       this.sortableInstances.push(sortableInstance);
     });
