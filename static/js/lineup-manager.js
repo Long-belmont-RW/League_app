@@ -129,13 +129,26 @@ class LineupManager {
       this.vibrate([20]);
     });
 
-    if (this.addSubstituteBtn) {
       this.addSubstituteBtn.addEventListener("click", (event) => {
         event.preventDefault();
         this.handleAddSubstituteSlot();
         this.vibrate([10]);
       });
+
+
+    if (this.modal) {
+      const closeButtons = this.modal.querySelectorAll("[data-modal-close]");
+      closeButtons.forEach((btn) => {
+        const handler = () => {
+          this.closeModal();
+          this.vibrate([10]);
+        };
+        btn.addEventListener("click", handler);
+        this.boundModalCloseHandlers.set(btn, handler);
+      });
     }
+
+    this.modal?.addEventListener("click", this.boundHandleModalTap);
   }
 
   initResponsiveInteractions() {
@@ -334,20 +347,7 @@ class LineupManager {
       this.modalTrigger.addEventListener("click", this.boundOpenModal);
     }
 
-    if (this.modal) {
-      const closeButtons = this.modal.querySelectorAll("[data-modal-close]");
-      closeButtons.forEach((btn) => {
-        const handler = () => {
-          this.closeModal();
-          this.vibrate([10]);
-        };
-        btn.addEventListener("click", handler);
-        this.boundModalCloseHandlers.set(btn, handler);
-      });
-    }
-
     this.panel.addEventListener("click", this.boundHandleTap);
-    this.modal?.addEventListener("click", this.boundHandleModalTap);
 
     if (!localStorage.getItem(`lineup_tutorial_shown_${this.teamType}`)) {
       setTimeout(() => {
@@ -367,16 +367,10 @@ class LineupManager {
     if (!this.mobileModeInitialized || !this.panel) return;
 
     this.panel.removeEventListener("click", this.boundHandleTap);
-    this.modal?.removeEventListener("click", this.boundHandleModalTap);
 
     if (this.modalTrigger) {
       this.modalTrigger.removeEventListener("click", this.boundOpenModal);
     }
-
-    this.boundModalCloseHandlers.forEach((handler, button) => {
-      button.removeEventListener("click", handler);
-    });
-    this.boundModalCloseHandlers.clear();
 
     this.mobileModeInitialized = false;
     this.closeModal();
