@@ -12,6 +12,9 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.urls import reverse
 from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 from league.models import (
     Player,
@@ -215,7 +218,10 @@ def import_players_csv_for_team(team: Team, league: League, uploaded_file) -> Bu
                     to=[user.email]
                 )
                 msg.attach_alternative(html_content, "text/html")
-                msg.send()
+                try:
+                    msg.send()
+                except Exception as e:
+                    logger.error(f"Failed to send welcome email to {user.email}: {e}")
 
         if notifications:
             transaction.on_commit(_send_all)
