@@ -407,16 +407,16 @@ class LineupManager {
         const icon = this.selectedSlot.type === "pitch" ? "⚽" : "🔄";
 
         modalHeader.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-2xl shadow-lg">
-              ${icon}
-            </div>
-            <div>
-              <div class="text-xl font-bold text-white">Select Player</div>
-              <div class="text-sm text-gray-400">For: ${slotType}</div>
-            </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-lg shadow-lg flex-shrink-0">
+            ${icon}
           </div>
-        `;
+          <div class="min-w-0">
+            <div class="text-lg font-bold text-white leading-tight truncate">Select Player</div>
+            <div class="text-xs text-gray-400 font-normal truncate">For: ${slotType}</div>
+          </div>
+        </div>
+      `;
       }
 
       const existingSubtitle = this.modal.querySelector(
