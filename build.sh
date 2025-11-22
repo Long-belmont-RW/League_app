@@ -49,10 +49,10 @@ if [ -z "$(ls -A staticfiles 2>/dev/null)" ] || [ "$(ls -A staticfiles | wc -l)"
     fi
     
     # Copy Tailwind static files
-    if [ -d "theme/static" ]; then
-        echo "Copying theme/static/..."
-        cp -r theme/static/* staticfiles/
-    fi
+    # if [ -d "theme/static" ]; then
+    #     echo "Copying theme/static/..."
+    #     cp -r theme/static/* staticfiles/
+    # fi
     
     echo "Manual copy completed."
     ls -R staticfiles
