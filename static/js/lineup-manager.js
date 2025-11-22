@@ -660,7 +660,7 @@ class LineupManager {
         destinationElement.appendChild(playerElement);
       } else {
         // Moving to empty pitch slot
-
+        destinationElement.innerHTML = "";
         destinationElement.appendChild(playerElement);
 
         if (sourceElement.classList.contains("pitch-position")) {
