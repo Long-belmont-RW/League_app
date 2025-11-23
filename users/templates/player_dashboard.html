@@ -92,6 +92,19 @@
         <!-- Content Area -->
         <main class="p-4 sm:p-6 lg:p-8">
             
+            <!-- No Team Warning -->
+            {% if not player_team %}
+            <div class="bg-yellow-500/10 border border-yellow-500/50 rounded-xl p-4 mb-8 flex items-start space-x-3">
+                <svg class="w-6 h-6 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                <div>
+                    <h3 class="text-yellow-500 font-bold">No Team Assigned</h3>
+                    <p class="text-yellow-200/70 text-sm mt-1">You are not currently assigned to a team for this season. Please contact your coach or an administrator to get added to a team.</p>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Season Stats Overview -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
                 <div class="bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30 rounded-xl p-4 text-center">
@@ -260,7 +273,7 @@
                             {% if team_table %}
                             <div class="space-y-2">
                                 {% for row in team_table %}
-                                <div class="flex items-center justify-between p-3 rounded-lg {% if row.team.id == player_team.team.id %}bg-indigo-500/20 border border-indigo-500/50{% else %}bg-gray-700/30{% endif %} hover:bg-gray-700/50 transition-colors">
+                                <div class="flex items-center justify-between p-3 rounded-lg {% if player_team and row.team.id == player_team.team.id %}bg-indigo-500/20 border border-indigo-500/50{% else %}bg-gray-700/30{% endif %} hover:bg-gray-700/50 transition-colors">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-6 text-center">
                                             <span class="text-sm font-bold text-gray-400">{{ forloop.counter }}</span>

@@ -364,9 +364,7 @@ def player_dashboard_view(request):
         # If not, redirect to login or show an error message
         
         if not player_team:
-            redirect('home')
-            logger.error(f"Player team not found for user: {request.user.username}")
-            messages.error(request, "Player team not found.")
+            logger.info(f"Player team not found for user: {request.user.username}. Dashboard will show limited view.")
 
 
     else:
@@ -381,57 +379,52 @@ def player_dashboard_view(request):
 
     
     
-
-
-    # Upcoming matches and next match
-    
-    upcoming_matches = (
-        Match.objects.filter(
-            Q(home_team=player_team.team) | Q(away_team=player_team.team),
-            season=latest_league,
-            status=MatchStatus.SCHEDULED,
-        )
-        .select_related('home_team', 'away_team')
-        .order_by('date')
-    )
-    
-    next_match = upcoming_matches.first()
-    logger.info(
-        f"Next match for player {player_profile.user.username}: {getattr(next_match, 'id', None)}"
-    )
-
-    # Is player named in lineup for next match?
+    # Initialize variables
+    upcoming_matches = []
+    next_match = None
     is_in_lineup = False
-    if next_match and player_team:
-        try:
-            is_in_lineup = Lineup.objects.filter(
-                match=next_match, team=player_team.team, players=player_profile.player
-            ).exists()
-        except Exception:
-            is_in_lineup = False
-
-    # Latest completed match
-    latest_completed_match = (
-        Match.objects.filter(
-            Q(home_team=player_team.team) | Q(away_team=player_team.team),
-            season=latest_league,
-            status=MatchStatus.FINISHED,
-        )
-        .select_related('home_team', 'away_team')
-        .order_by('-date')
-        .first()
-    )
-
-    # Recent contributions (last 5 matches)
-    recent_stats = (
-        PlayerStats.objects.filter(player=player_profile.player, match__season=latest_league)
-        .select_related('match', 'match__home_team', 'match__away_team')
-        .order_by('-match__date')[:5]
-    )
-
-    # Season totals from participation record
+    latest_completed_match = None
     season_totals = None
+    
     if player_team:
+        # Upcoming matches and next match
+        upcoming_matches = (
+            Match.objects.filter(
+                Q(home_team=player_team.team) | Q(away_team=player_team.team),
+                season=latest_league,
+                status=MatchStatus.SCHEDULED,
+            )
+            .select_related('home_team', 'away_team')
+            .order_by('date')
+        )
+        
+        next_match = upcoming_matches.first()
+        logger.info(
+            f"Next match for player {player_profile.user.username}: {getattr(next_match, 'id', None)}"
+        )
+
+        # Is player named in lineup for next match?
+        if next_match:
+            try:
+                is_in_lineup = Lineup.objects.filter(
+                    match=next_match, team=player_team.team, players=player_profile.player
+                ).exists()
+            except Exception:
+                is_in_lineup = False
+
+        # Latest completed match
+        latest_completed_match = (
+            Match.objects.filter(
+                Q(home_team=player_team.team) | Q(away_team=player_team.team),
+                season=latest_league,
+                status=MatchStatus.FINISHED,
+            )
+            .select_related('home_team', 'away_team')
+            .order_by('-date')
+            .first()
+        )
+
+        # Season totals from participation record
         season_totals = {
             'goals': player_team.goals,
             'assists': player_team.assists,
@@ -440,6 +433,16 @@ def player_dashboard_view(request):
             'clean_sheets': player_team.clean_sheets,
             'matches_played': player_team.matches_played,
         }
+    else:
+        messages.info(request, "You are not currently assigned to a team for this season.")
+
+    # Recent contributions (last 5 matches)
+    recent_stats = (
+        PlayerStats.objects.filter(player=player_profile.player, match__season=latest_league)
+        .select_related('match', 'match__home_team', 'match__away_team')
+        .order_by('-match__date')[:5]
+    )
+
 
     # Mini league table
     team_table = (
