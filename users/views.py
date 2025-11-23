@@ -236,6 +236,10 @@ def coach_dashboard_view(request):
     coach_team = CoachSeasonParticipation.objects.filter(coach=coach_profile.coach, league=latest_league).first()
     logger.info(f"Coach team: {coach_team.team.name if coach_team else 'None'}")
 
+    #Get all teams the coach has coached
+    all_teams = CoachSeasonParticipation.objects.filter(coach=coach_profile.coach).values_list('team__name', flat=True)
+    logger.info(f"All teams for coach {coach_profile.user.username}: {list(all_teams)}")
+
     #Get the coach team season participation object
     team_stats = None
     upcoming_matches = []
@@ -255,10 +259,6 @@ def coach_dashboard_view(request):
     else:
         team_stats = TeamSeasonParticipation.objects.filter(team=coach_team.team, league=latest_league).first()
         logger.info(f"Team stats: {team_stats} for team {coach_team.team.name if coach_team.team else 'None'} in league {latest_league.year if latest_league else 'None'}")
-
-        #Get all teams the coach has coached
-        all_teams = CoachSeasonParticipation.objects.filter(coach=coach_profile.coach).values_list('team__name', flat=True)
-        logger.info(f"All teams for coach {coach_profile.user.username}: {list(all_teams)}")
 
         # --- New/Modified Query for Upcoming Matches ---
         now = timezone.now()  # Get the current time in the active timezone     
