@@ -237,70 +237,81 @@ def coach_dashboard_view(request):
     logger.info(f"Coach team: {coach_team.team.name if coach_team else 'None'}")
 
     #Get the coach team season participation object
+    team_stats = None
+    upcoming_matches = []
+    completed_matches = []
+    latest_completed_match = None
+    wins = []
+    losses = []
+    draws = []
+    latest_match = None
+    players = []
+    team_progress = 0
+    win_ratio = 0
+
     if not coach_team:
-        logger.error(f"Coach team not found for user: {request.user.username}")
-        messages.error(request, "Coach team not found.")
-        return redirect('login')
+        logger.info(f"Coach team not found for user: {request.user.username}. Dashboard will show limited view.")
+        messages.info(request, "You are not currently assigned to a team for this season.")
     else:
         team_stats = TeamSeasonParticipation.objects.filter(team=coach_team.team, league=latest_league).first()
         logger.info(f"Team stats: {team_stats} for team {coach_team.team.name if coach_team.team else 'None'} in league {latest_league.year if latest_league else 'None'}")
 
-    #Get all teams the coach has coached
-    all_teams = CoachSeasonParticipation.objects.filter(coach=coach_profile.coach).values_list('team__name', flat=True)
-    logger.info(f"All teams for coach {coach_profile.user.username}: {list(all_teams)}")
+        #Get all teams the coach has coached
+        all_teams = CoachSeasonParticipation.objects.filter(coach=coach_profile.coach).values_list('team__name', flat=True)
+        logger.info(f"All teams for coach {coach_profile.user.username}: {list(all_teams)}")
 
-    # --- New/Modified Query for Upcoming Matches ---
-    now = timezone.now()  # Get the current time in the active timezone     
-    upcoming_matches = Match.objects.filter(
-        Q(home_team=coach_team.team) | Q(away_team=coach_team.team), season=latest_league, status=MatchStatus.SCHEDULED)
-    logger.info(f"Upcoming matches for coach {coach_profile.user.username}: {upcoming_matches.count()} matches found")
-
-
-    #Get all completed matches for the coach's team
-    completed_matches = Match.objects.filter(
-        Q(home_team=coach_team.team) | Q(away_team=coach_team.team), season=latest_league, status=MatchStatus.FINISHED)
-    # Get the latest *completed* match for the coach
-    latest_completed_match = completed_matches.order_by('-date').first()
-    logger.debug(f"Latest completed match for coach {coach_profile.user.username}: {latest_completed_match.id if latest_completed_match else 'None'}")
-
-    #Get all matches won by the coach's team
-    wins = completed_matches.filter(
-        Q(home_team=coach_team.team, home_score__gt=F('away_score')) |
-        Q(away_team=coach_team.team, away_score__gt=F('home_score'))
-    )
-    logger.info(f"Total wins for coach {coach_profile.user.username}: {wins.count()}")
-
-    #Get all matches lost by the coach's team
-    losses = completed_matches.filter(
-        Q(home_team=coach_team.team, home_score__lt=F('away_score')) |
-        Q(away_team=coach_team.team, away_score__lt=F('home_score'))
-    )
-    logger.info(f"Total losses for coach {coach_profile.user.username}: {losses.count()}")
-
-    #Get all matches drawn by the coach's team
-    draws = completed_matches.filter(
-        Q(home_team=coach_team.team, home_score=F('away_score')) |
-        Q(away_team=coach_team.team, away_score=F('home_score'))
-    )
-    logger.info(f"Total draws for coach {coach_profile.user.username}: {draws.count()}")
+        # --- New/Modified Query for Upcoming Matches ---
+        now = timezone.now()  # Get the current time in the active timezone     
+        upcoming_matches = Match.objects.filter(
+            Q(home_team=coach_team.team) | Q(away_team=coach_team.team), season=latest_league, status=MatchStatus.SCHEDULED)
+        logger.info(f"Upcoming matches for coach {coach_profile.user.username}: {upcoming_matches.count()} matches found")
 
 
+        #Get all completed matches for the coach's team
+        completed_matches = Match.objects.filter(
+            Q(home_team=coach_team.team) | Q(away_team=coach_team.team), season=latest_league, status=MatchStatus.FINISHED)
+        # Get the latest *completed* match for the coach
+        latest_completed_match = completed_matches.order_by('-date').first()
+        logger.debug(f"Latest completed match for coach {coach_profile.user.username}: {latest_completed_match.id if latest_completed_match else 'None'}")
 
-    # Get the latest match for the coach
-    latest_match = upcoming_matches.first()
-    logger.info(f"Latest match for coach {coach_profile.user.username}: {latest_match.id if latest_match else 'None'}")
-    if not latest_match:
-        logger.error(f"No matches found for coach: {coach_profile.user.username}")
-    
-    #Get players from the coach's team
-    players = PlayerSeasonParticipation.objects.filter(team=coach_team.team, league=latest_league).select_related('player')[:10]
-    logger.info(f"Players coached by {coach_profile.user.username}: {[player.player.last_name for player in players]}")
-    
+        #Get all matches won by the coach's team
+        wins = completed_matches.filter(
+            Q(home_team=coach_team.team, home_score__gt=F('away_score')) |
+            Q(away_team=coach_team.team, away_score__gt=F('home_score'))
+        )
+        logger.info(f"Total wins for coach {coach_profile.user.username}: {wins.count()}")
+
+        #Get all matches lost by the coach's team
+        losses = completed_matches.filter(
+            Q(home_team=coach_team.team, home_score__lt=F('away_score')) |
+            Q(away_team=coach_team.team, away_score__lt=F('home_score'))
+        )
+        logger.info(f"Total losses for coach {coach_profile.user.username}: {losses.count()}")
+
+        #Get all matches drawn by the coach's team
+        draws = completed_matches.filter(
+            Q(home_team=coach_team.team, home_score=F('away_score')) |
+            Q(away_team=coach_team.team, away_score=F('home_score'))
+        )
+        logger.info(f"Total draws for coach {coach_profile.user.username}: {draws.count()}")
+
+
+
+        # Get the latest match for the coach
+        latest_match = upcoming_matches.first()
+        logger.info(f"Latest match for coach {coach_profile.user.username}: {latest_match.id if latest_match else 'None'}")
+        if not latest_match:
+            logger.error(f"No matches found for coach: {coach_profile.user.username}")
+        
+        #Get players from the coach's team
+        players = PlayerSeasonParticipation.objects.filter(team=coach_team.team, league=latest_league).select_related('player')[:10]
+        logger.info(f"Players coached by {coach_profile.user.username}: {[player.player.last_name for player in players]}")
+        
+        team_progress = get_team_season_progress(team=coach_team.team)
+        win_ratio = get_win_ratio(team=coach_team.team)
 
     #Tracking Stats
     season_progress = get_season_progress()
-    team_progress = get_team_season_progress(team=coach_team.team)
-    win_ratio = get_win_ratio(team=coach_team.team)
 
 
     context = {
