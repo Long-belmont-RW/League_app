@@ -8,6 +8,7 @@ services:
     plan: free # Or your desired plan
     buildCommand: "./build.sh"
     startCommand: "gunicorn league_app.wsgi:application"
+    preDeployCommand: "python manage.py migrate"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
