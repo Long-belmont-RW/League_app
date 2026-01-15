@@ -48,6 +48,6 @@ else
     echo "collectstatic successfully populated staticfiles."
 fi
 
-5. Run Migrations
+# 5. Run Migrations
 echo "Running migrations..."
 python manage.py migrate
