@@ -15,7 +15,7 @@ from channels.auth import AuthMiddlewareStack
 from django.urls import path
 from users.consumers import NotificationsConsumer
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'league_app.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'league_app.settings.production')
 
 django_asgi_app = get_asgi_application()
 

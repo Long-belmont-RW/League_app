@@ -3,7 +3,7 @@ import sys
 import django
 
 # Setup Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "league_app.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "league_app.settings.local")
 django.setup()
 
 from django.conf import settings
@@ -53,7 +53,7 @@ import sys
 import django
 
 # Setup Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "league_app.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "league_app.settings.local")
 django.setup()
 
 from django.conf import settings
@@ -135,3 +135,4 @@ except Exception as e:
     print(f"   ERROR writing to STATIC_ROOT: {e}")
 
 print("="*50)
+

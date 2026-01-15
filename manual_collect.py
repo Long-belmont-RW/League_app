@@ -11,7 +11,7 @@ def manual_collect():
     print("="*50)
     
     # Setup Django
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "league_app.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "league_app.settings.local")
     django.setup()
 
     static_root = settings.STATIC_ROOT

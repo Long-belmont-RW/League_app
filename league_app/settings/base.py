@@ -1,10 +1,12 @@
-# league_app/settings.py
+# league_app/settings/base.py
 
 import os
 from pathlib import Path
 import dj_database_url
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Added extra .parent because this file is in league_app/settings/base.py
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # ==============================================================================
@@ -179,9 +181,9 @@ SOCIALACCOUNT_PROVIDERS = {
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Allauth Configuration
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+# Allauth Configuration
+ACCOUNT_SIGNUP_FIELDS = ['email', 'password']
+ACCOUNT_LOGIN_METHODS = {'email'}
 SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
