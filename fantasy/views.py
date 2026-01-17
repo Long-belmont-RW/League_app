@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
+from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -35,61 +36,6 @@ def fantasy_league_detail(request: HttpRequest, league_id: int) -> HttpResponse:
 def my_fantasy_team(request: HttpRequest, league_id: int) -> HttpResponse:
     league = get_object_or_404(FantasyLeague, id=league_id)
     team = FantasyTeam.objects.filter(user=request.user, fantasy_league=league).first()
-
-    if request.method == "POST" and "create_team" in request.POST and team is None:
-        form = FantasyTeamCreateForm(request.POST)
-        if form.is_valid():
-            team = form.save(commit=False)
-            team.user = request.user
-            team.fantasy_league = league
-            team.balance = league.budget_cap
-            team.save()
-            messages.success(request, "Fantasy team created")
-            return redirect("fantasy:my_team", league_id=league.id)
-    elif request.method == "POST" and team is not None and "add_player" in request.POST:
-        add_form = AddFantasyPlayerForm(request.POST, fantasy_team=team)
-        if add_form.is_valid():
-            add_form.save()
-            messages.success(request, "Player added to team")
-            return redirect("fantasy:my_team", league_id=league.id)
-        else:
-            messages.error(request, "; ".join([str(e) for e in add_form.errors.values()]))
-    elif request.method == "POST" and team is not None and "remove_player" in request.POST:
-        if team.user_id != request.user.id:
-            return HttpResponseForbidden()
-        remove_form = RemoveFantasyPlayerForm(request.POST, fantasy_team=team)
-        if remove_form.is_valid():
-            remove_form.save()
-            messages.success(request, "Player removed from team")
-            return redirect("fantasy:my_team", league_id=league.id)
-        else:
-            messages.error(request, "; ".join([str(e) for e in remove_form.errors.values()]))
-    elif request.method == "POST" and team is not None and "set_captain" in request.POST:
-        if team.user_id != request.user.id:
-            return HttpResponseForbidden()
-        cap_form = SetCaptainForm(request.POST, fantasy_team=team)
-        if cap_form.is_valid():
-            cap_form.save()
-            messages.success(request, "Captain set")
-            return redirect("fantasy:my_team", league_id=league.id)
-        else:
-            messages.error(request, "; ".join([str(e) for e in cap_form.errors.values()]))
-    elif request.method == "POST" and team is not None and "set_vice_captain" in request.POST:
-        if team.user_id != request.user.id:
-            return HttpResponseForbidden()
-        vcap_form = SetViceCaptainForm(request.POST, fantasy_team=team)
-        if vcap_form.is_valid():
-            vcap_form.save()
-            messages.success(request, "Vice-captain set")
-            return redirect("fantasy:my_team", league_id=league.id)
-        else:
-            messages.error(request, "; ".join([str(e) for e in vcap_form.errors.values()]))
-
-    form = FantasyTeamCreateForm()
-    add_form = AddFantasyPlayerForm(fantasy_team=team) if team else None
-    remove_form = RemoveFantasyPlayerForm(fantasy_team=team) if team else None
-    set_captain_form = SetCaptainForm(fantasy_team=team) if team else None
-    set_vice_captain_form = SetViceCaptainForm(fantasy_team=team) if team else None
     # Filters for available players
     q = request.GET.get("q", "").strip()
     pos = request.GET.get("position", "").strip()
@@ -172,6 +118,22 @@ def my_fantasy_team(request: HttpRequest, league_id: int) -> HttpResponse:
         fws[3:]
     )
 
+    # Prepare pitch rows for the template
+    # Format: {"label": str, "slots": [FantasyPlayer|None, ...]}
+    def make_row(label, players, capacity):
+        row_slots = players[:capacity]
+        # Pad with None
+        while len(row_slots) < capacity:
+            row_slots.append(None)
+        return {"label": label, "slots": row_slots}
+
+    pitch_rows = [
+        make_row("Goalkeepers", gks, 1),
+        make_row("Defenders", dfs, 4),
+        make_row("Midfielders", mfs, 3),
+        make_row("Forwards", fws, 3),
+    ]
+
     real_team_counts = {}
     
     # No try/except block needed as we handle data safely now
@@ -191,13 +153,8 @@ def my_fantasy_team(request: HttpRequest, league_id: int) -> HttpResponse:
         {
             "league": league,
             "team": team,
-            "form": form,
-            "add_form": add_form,
             "available_players": available_players,
             "active_players": active_players,
-            "remove_form": remove_form,
-            "set_captain_form": set_captain_form,
-            "set_vice_captain_form": set_vice_captain_form,
             "transfers_left": transfers_left,
             "player_points_map": player_points_map,
             "current_week": current_week,
@@ -210,6 +167,7 @@ def my_fantasy_team(request: HttpRequest, league_id: int) -> HttpResponse:
             "max_per_real_team": league.max_per_real_team,
             "max_team_size": league.max_team_size,
             "substitute_players": substitute_players,
+            "pitch_rows": pitch_rows,
         },
     )
 
@@ -261,5 +219,92 @@ def fantasy_transfers(request: HttpRequest, league_id: int) -> HttpResponse:
         return redirect("fantasy:my_team", league_id=league.id)
     transfers = team.transfers.select_related("fantasy_match_week", "player_in", "player_out").order_by("-created_at")
     return render(request, "fantasy/transfers.html", {"league": league, "team": team, "transfers": transfers})
+
+
+@login_required
+@require_POST
+def create_fantasy_team(request: HttpRequest, league_id: int) -> HttpResponse:
+    league = get_object_or_404(FantasyLeague, id=league_id)
+    team = FantasyTeam.objects.filter(user=request.user, fantasy_league=league).first()
+    if team:
+        messages.warning(request, "You already have a team in this league.")
+        return redirect("fantasy:my_team", league_id=league.id)
+
+    form = FantasyTeamCreateForm(request.POST)
+    if form.is_valid():
+        team = form.save(commit=False)
+        team.user = request.user
+        team.fantasy_league = league
+        team.balance = league.budget_cap
+        team.save()
+        messages.success(request, "Fantasy team created")
+    else:
+        messages.error(request, "Error creating team")
+    
+    return redirect("fantasy:my_team", league_id=league.id)
+
+
+@login_required
+@require_POST
+def add_player_to_team(request: HttpRequest, league_id: int) -> HttpResponse:
+    league = get_object_or_404(FantasyLeague, id=league_id)
+    team = get_object_or_404(FantasyTeam, user=request.user, fantasy_league=league)
+    
+    form = AddFantasyPlayerForm(request.POST, fantasy_team=team)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Player added to team")
+    else:
+        messages.error(request, "; ".join([str(e) for e in form.errors.values()]))
+        
+    return redirect("fantasy:my_team", league_id=league.id)
+
+
+@login_required
+@require_POST
+def remove_player_from_team(request: HttpRequest, league_id: int) -> HttpResponse:
+    league = get_object_or_404(FantasyLeague, id=league_id)
+    team = get_object_or_404(FantasyTeam, user=request.user, fantasy_league=league)
+    
+    form = RemoveFantasyPlayerForm(request.POST, fantasy_team=team)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Player removed from team")
+    else:
+        messages.error(request, "; ".join([str(e) for e in form.errors.values()]))
+
+    return redirect("fantasy:my_team", league_id=league.id)
+
+
+@login_required
+@require_POST
+def set_captain(request: HttpRequest, league_id: int) -> HttpResponse:
+    league = get_object_or_404(FantasyLeague, id=league_id)
+    team = get_object_or_404(FantasyTeam, user=request.user, fantasy_league=league)
+    
+    form = SetCaptainForm(request.POST, fantasy_team=team)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Captain set")
+    else:
+        messages.error(request, "; ".join([str(e) for e in form.errors.values()]))
+
+    return redirect("fantasy:my_team", league_id=league.id)
+
+
+@login_required
+@require_POST
+def set_vice_captain(request: HttpRequest, league_id: int) -> HttpResponse:
+    league = get_object_or_404(FantasyLeague, id=league_id)
+    team = get_object_or_404(FantasyTeam, user=request.user, fantasy_league=league)
+    
+    form = SetViceCaptainForm(request.POST, fantasy_team=team)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Vice-captain set")
+    else:
+        messages.error(request, "; ".join([str(e) for e in form.errors.values()]))
+
+    return redirect("fantasy:my_team", league_id=league.id)
 
 
