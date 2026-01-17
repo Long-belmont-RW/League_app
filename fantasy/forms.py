@@ -8,6 +8,7 @@ from django.db.models import Count, F
 from league.models import Player
 from .models import FantasyLeague, FantasyTeam, FantasyPlayer
 from .utils import get_current_week, is_before_deadline
+from league.models import PlayerSeasonParticipation
 
 
 class FantasyTeamCreateForm(forms.ModelForm):
@@ -45,15 +46,15 @@ class AddFantasyPlayerForm(forms.Form):
             raise forms.ValidationError("Team is at maximum size")
 
         # Per-real-team constraint
-        from league.models import PlayerSeasonParticipation
         current_season_participation = PlayerSeasonParticipation.objects.filter(player=player, is_active=True).first()
         team_id = current_season_participation.team_id if current_season_participation else None
+        team_name = current_season_participation.team.name if current_season_participation else None
         if team_id:
             real_team_count = self.fantasy_team.fantasy_players.filter(
                 active_to__isnull=True, player__playerseasonparticipation__team_id=team_id, player__playerseasonparticipation__is_active=True
             ).count()
             if real_team_count >= league.max_per_real_team:
-                raise forms.ValidationError("Exceeded allowed number of players from this real team")
+                raise forms.ValidationError(f"Exceeded allowed number of players from this real team: {team_name}")
 
         cleaned["player"] = player
         # Enforce weekly transfer limit
