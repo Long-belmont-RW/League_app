@@ -21,6 +21,9 @@
             <div>
                 Balance: <span class="font-semibold text-white">£{{ team.balance|floatformat:1 }}m</span>
             </div>
+            <div>
+                 Squad: <span class="font-semibold text-white">{{ active_players|length }} / {{ max_team_size }}</span>
+            </div>
             {% if transfers_left is not None %}
             <div>
                 Transfers Left: <span class="font-semibold text-white">{{ transfers_left }}</span>
@@ -188,74 +191,5 @@
     </div>
     {% endif %}
 </div>
-
-<!-- NOTE: You will need to create these new partial templates and a custom template tag -->
-
-<!-- 1. Create a new file: fantasy/partials/empty_player_card.html -->
-<!--
-<div class="w-20 h-32 bg-gray-700/50 rounded-lg flex items-center justify-center text-gray-400 text-center border-2 border-dashed border-gray-600">
-    <span class="text-sm">Empty</span>
-</div>
--->
-
-
-<!-- 2. Update your existing file: fantasy/partials/player_card.html -->
-<!-- Make sure to handle the 'is_bench' variable for bench players -->
-<!--
-<div class="w-20 text-center">
-    <div class="relative">
-        <img src="{% static 'images/player_default.png' %}" alt="{{ fp.player.last_name }}" class="w-full h-auto rounded-t-md">
-        <div class="absolute top-0 right-0 flex gap-1 p-1">
-            {% if fp.is_captain %}
-            <span class="flex items-center justify-center w-5 h-5 text-xs bg-yellow-500 text-black font-bold rounded-full">C</span>
-            {% endif %}
-            {% if fp.is_vice_captain %}
-            <span class="flex items-center justify-center w-5 h-5 text-xs bg-gray-400 text-black font-bold rounded-full">V</span>
-            {% endif %}
-        </div>
-    </div>
-    <div class="bg-gray-900 p-1 rounded-b-md">
-        <p class="text-white text-sm font-semibold truncate">{{ fp.player.last_name }}</p>
-        <p class="text-gray-400 text-xs">£{{ fp.price_at_purchase|floatformat:1 }}m</p>
-    </div>
-    {% if not is_bench %}
-    <div class="mt-1 flex justify-center gap-1">
-         <form method="post" class="inline-block">
-            {% csrf_token %}
-            <input type="hidden" name="set_captain" value="1" />
-            <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
-            <button title="Make Captain" type="submit" class="px-1.5 py-0.5 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 {% if not deadline_open or fp.is_captain %}opacity-50 cursor-not-allowed{% endif %}" {% if not deadline_open or fp.is_captain %}disabled{% endif %}>C</button>
-        </form>
-         <form method="post" class="inline-block">
-            {% csrf_token %}
-            <input type="hidden" name="set_vice_captain" value="1" />
-            <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
-            <button title="Make Vice-Captain" type="submit" class="px-1.5 py-0.5 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 {% if not deadline_open or fp.is_vice_captain %}opacity-50 cursor-not-allowed{% endif %}" {% if not deadline_open or fp.is_vice_captain %}disabled{% endif %}>V</button>
-        </form>
-        <form method="post" class="inline-block">
-            {% csrf_token %}
-            <input type="hidden" name="remove_player" value="1" />
-            <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
-            <button title="Remove Player" type="submit" class="px-1.5 py-0.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 {% if not deadline_open %}opacity-50 cursor-not-allowed{% endif %}" {% if not deadline_open %}disabled{% endif %}>X</button>
-        </form>
-    </div>
-    {% endif %}
-</div>
--->
-
-<!-- 3. Create a new custom template tag to get items from a list by index -->
-<!-- In your fantasy_extras.py file, add the following:
-from django import template
-
-register = template.Library()
-
-@register.filter
-def get_at_index(list, index):
-    if list and 0 <= index < len(list):
-        return list[index]
-    return None
-
-# ... other filters ...
--->
 
 {% endblock %}

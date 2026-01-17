@@ -102,7 +102,24 @@ def my_fantasy_team(request: HttpRequest, league_id: int) -> HttpResponse:
         )
     available_players = available_players_qs.order_by("last_name", "first_name")[:100]
 
-    active_players = team.fantasy_players.filter(active_to__isnull=True).select_related("player") if team else []
+    
+    if team:
+        from django.db.models import Prefetch
+        from league.models import PlayerSeasonParticipation
+        
+        active_players = list(
+            team.fantasy_players.filter(active_to__isnull=True)
+            .select_related("player")
+            .prefetch_related(
+                Prefetch(
+                    "player__playerseasonparticipation_set",
+                    queryset=PlayerSeasonParticipation.objects.filter(is_active=True).select_related("team"),
+                    to_attr="active_participation_list"
+                )
+            )
+        )
+    else:
+        active_players = []
 
     # Transfers left and weekly points mapping
     transfers_left = None
@@ -126,21 +143,47 @@ def my_fantasy_team(request: HttpRequest, league_id: int) -> HttpResponse:
 
     # Aggregate position counts and per-real-team counts
     position_counts = {"GK": 0, "DF": 0, "MF": 0, "FW": 0}
+    # Separate starters and subs for context (though mostly used for subs logic)
+    gks = []
+    dfs = []
+    mfs = []
+    fws = []
+
     for fp in active_players:
         pos_code = getattr(fp.player, "position", None)
         if pos_code in position_counts:
             position_counts[pos_code] += 1
+        
+        if pos_code == "GK":
+            gks.append(fp)
+        elif pos_code == "DF":
+            dfs.append(fp)
+        elif pos_code == "MF":
+            mfs.append(fp)
+        elif pos_code == "FW":
+            fws.append(fp)
+
+    # Simple 1-4-3-3 split logic for bench calculation
+    # Starters are just the first N in the list
+    substitute_players = (
+        gks[1:] + 
+        dfs[4:] + 
+        mfs[3:] + 
+        fws[3:]
+    )
 
     real_team_counts = {}
-    try:
-        from league.models import PlayerSeasonParticipation
-        for fp in active_players:
-            psp = PlayerSeasonParticipation.objects.filter(player=fp.player, is_active=True).first()
-            if psp and psp.team:
-                name = psp.team.name
-                real_team_counts[name] = real_team_counts.get(name, 0) + 1
-    except Exception:
-        real_team_counts = {}
+    
+    # No try/except block needed as we handle data safely now
+    for fp in active_players:
+        # Use prefetched participation
+        # We used active_participation_list from the Prefetch
+        participations = getattr(fp.player, 'active_participation_list', [])
+        psp = participations[0] if participations else None
+        
+        if psp and psp.team:
+            name = psp.team.name
+            real_team_counts[name] = real_team_counts.get(name, 0) + 1
 
     return render(
         request,
@@ -166,6 +209,7 @@ def my_fantasy_team(request: HttpRequest, league_id: int) -> HttpResponse:
             "real_team_counts": real_team_counts,
             "max_per_real_team": league.max_per_real_team,
             "max_team_size": league.max_team_size,
+            "substitute_players": substitute_players,
         },
     )
 
