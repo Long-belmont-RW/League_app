@@ -1,81 +1,53 @@
 {% load static %} {% load fantasy_extras %}
 
-<div class="w-20 text-center">
-  <div class="relative">
-    <img
-      src="{% static 'images/player_default.png' %}"
-      alt="{{ fp.player.last_name }}"
-      class="w-full h-auto rounded-t-md"
-    />
-    <div class="absolute top-0 right-0 flex gap-1 p-1">
-      {% if fp.is_captain %}
-      <span
-        class="flex items-center justify-center w-5 h-5 text-xs bg-yellow-500 text-black font-bold rounded-full"
-        >C</span
-      >
-      {% endif %} {% if fp.is_vice_captain %}
-      <span
-        class="flex items-center justify-center w-5 h-5 text-xs bg-gray-400 text-black font-bold rounded-full"
-        >V</span
-      >
-      {% endif %}
-    </div>
-  </div>
-  <div class="bg-gray-900 p-1 rounded-b-md">
-    <p class="text-white text-sm font-semibold truncate">
-      {{ fp.player.last_name }}
-    </p>
-    <p class="text-gray-400 text-xs">
-      £{{ fp.price_at_purchase|floatformat:1 }}m
-    </p>
-  </div>
-  {% if not is_bench %}
-  <div class="mt-1 flex justify-center gap-1">
-    <form method="post" action="{% url 'fantasy:set_captain' league.id %}" class="inline-block">
-      {% csrf_token %}
-      <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
-      <button
-        title="Make Captain"
-        type="submit"
-        class="px-1.5 py-0.5 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 {% if not deadline_open or fp.is_captain %}opacity-50 cursor-not-allowed{% endif %}"
-        {%
-        if
-        not
-        deadline_open
-        or
-        fp.is_captain
-        %}disabled{%
-        endif
-        %}
-      >
-        C
-      </button>
-    </form>
-    <form method="post" action="{% url 'fantasy:set_vice_captain' league.id %}" class="inline-block">
-      {% csrf_token %}
-      <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
-      <button
-        title="Make Vice-Captain"
-        type="submit"
-        class="px-1.5 py-0.5 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 {% if not deadline_open or fp.is_vice_captain %}opacity-50 cursor-not-allowed{% endif %}"
-        {%
-        if
-        not
-        deadline_open
-        or
-        fp.is_vice_captain
-        %}disabled{%
-        endif
-        %}
-      >
-        V
-      </button>
-    </form>
-        <form method="post" action="{% url 'fantasy:remove_player' league.id %}" class="inline-block">
+<div class="w-20 text-center transform transition-all duration-300 hover:scale-105 group relative">
+  <!-- Glowing effect behind card on hover -->
+  <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-0 group-hover:opacity-50 transition duration-300"></div>
+  
+  <div class="relative flex flex-col h-full bg-gray-900/60 backdrop-blur-md rounded-lg overflow-hidden border border-white/10 shadow-lg group-hover:shadow-blue-500/20">
+      <div class="relative">
+        <img
+          src="{% static 'images/player_default.png' %}"
+          alt="{{ fp.player.last_name }}"
+          class="w-full h-auto object-cover"
+        />
+        <div class="absolute top-0 right-0 flex gap-1 p-1">
+          {% if fp.is_captain %}
+          <div class="flex items-center justify-center w-5 h-5 text-[10px] bg-gradient-to-br from-yellow-400 to-yellow-600 text-black font-bold rounded-full shadow-lg border border-yellow-300 ring-1 ring-black/20" title="Captain">C</div>
+          {% endif %} 
+          {% if fp.is_vice_captain %}
+          <div class="flex items-center justify-center w-5 h-5 text-[10px] bg-gradient-to-br from-gray-300 to-gray-500 text-black font-bold rounded-full shadow-lg border border-gray-200 ring-1 ring-black/20" title="Vice-Captain">V</div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="p-1.5 flex-1 flex flex-col justify-between">
+        <p class="text-white text-xs font-bold truncate leading-tight tracking-wide mb-0.5 group-hover:text-blue-200 transition-colors">
+          {{ fp.player.last_name }}
+        </p>
+        <p class="text-gray-300 text-[10px] font-mono">
+          £{{ fp.price_at_purchase|floatformat:1 }}
+        </p>
+      
+        {% if not is_bench %}
+        <div class="mt-1 flex justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute bottom-0 inset-x-0 bg-black/80 backdrop-blur-sm p-1">
+          <form method="post" action="{% url 'fantasy:set_captain' league.id %}" class="inline-block">
             {% csrf_token %}
             <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
-            <button title="Remove Player" type="submit" class="px-1.5 py-0.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 {% if not deadline_open %}opacity-50 cursor-not-allowed{% endif %}" {% if not deadline_open %}disabled{% endif %}>X</button>
-        </form>
+            <button title="Make Captain" type="submit" class="w-5 h-5 flex items-center justify-center text-[10px] bg-yellow-600/80 text-white rounded hover:bg-yellow-500 {% if not deadline_open or fp.is_captain %}opacity-50 cursor-not-allowed{% endif %}" {% if not deadline_open or fp.is_captain %}disabled{% endif %}>C</button>
+          </form>
+          <form method="post" action="{% url 'fantasy:set_vice_captain' league.id %}" class="inline-block">
+            {% csrf_token %}
+            <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
+            <button title="Make Vice-Captain" type="submit" class="w-5 h-5 flex items-center justify-center text-[10px] bg-gray-600/80 text-white rounded hover:bg-gray-500 {% if not deadline_open or fp.is_vice_captain %}opacity-50 cursor-not-allowed{% endif %}" {% if not deadline_open or fp.is_vice_captain %}disabled{% endif %}>V</button>
+          </form>
+          <form method="post" action="{% url 'fantasy:remove_player' league.id %}" class="inline-block">
+              {% csrf_token %}
+              <input type="hidden" name="fantasy_player_id" value="{{ fp.id }}" />
+              <button title="Remove Player" type="submit" class="w-5 h-5 flex items-center justify-center text-[10px] bg-red-600/80 text-white rounded hover:bg-red-500 {% if not deadline_open %}opacity-50 cursor-not-allowed{% endif %}" {% if not deadline_open %}disabled{% endif %}>X</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
   </div>
-  {% endif %}
 </div>
