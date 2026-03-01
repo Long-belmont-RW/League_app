@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, CharField
 
 
 class FantasyLeague(models.Model):
@@ -34,7 +34,7 @@ class FantasyLeague(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
-    def __str__(self) -> str:
+    def __str__(self) -> CharField:
         return self.name
 
 

@@ -1,4 +1,5 @@
-<nav class="bg-gradient-to-b from-gray-800 to-gray-900 text-white shadow-lg sticky top-0 left-0 right-0 z-50 border-b border-gray-700">
+<nav class="text-white z-50 fixed top-0 left-0 right-0 border-b border-indigo-500/20"
+     style="background: rgba(15, 15, 30, 0.85); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);">
   <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
     <!-- Enhanced Logo/Brand with gradient and icon -->
     <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse group">
@@ -261,17 +262,25 @@
   </div>
 </nav>
 
-<!-- Optional: Add this script for active link highlighting -->
 <script>
-  // Highlight active navigation link based on current URL
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
+    // Active link highlighting
     const currentPath = window.location.pathname;
     const navLinks = document.querySelectorAll('nav a[href]');
-    
     navLinks.forEach(link => {
       if (link.getAttribute('href') === currentPath) {
         link.classList.add('text-white', 'bg-gray-700/50');
         link.classList.remove('text-gray-300');
+      }
+    });
+
+    // Scroll-aware shadow
+    const navbar = document.querySelector('nav');
+    window.addEventListener('scroll', function () {
+      if (window.scrollY > 10) {
+        navbar.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.5)';
+      } else {
+        navbar.style.boxShadow = 'none';
       }
     });
   });
